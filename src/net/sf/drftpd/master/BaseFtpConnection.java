@@ -48,7 +48,6 @@ import net.sf.drftpd.util.Time;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.drftpd.commands.UnhandledCommandException;
 import org.tanesha.replacer.FormatterException;
 import org.tanesha.replacer.ReplacerEnvironment;
 import org.tanesha.replacer.ReplacerFormat;
@@ -59,7 +58,7 @@ import org.tanesha.replacer.ReplacerFormat;
  *
  * @author <a href="mailto:rana_b@yahoo.com">Rana Bhattacharyya</a>
  * @author mog
- * @version $Id: BaseFtpConnection.java,v 1.89 2004/06/02 03:04:47 mog Exp $
+ * @version $Id: BaseFtpConnection.java,v 1.89.2.1 2004/06/19 23:37:26 mog Exp $
  */
 public class BaseFtpConnection implements Runnable {
 	private static final Logger debuglogger =
@@ -439,11 +438,8 @@ public class BaseFtpConnection implements Runnable {
 		FtpReply reply;
 		try {
 			reply = _commandManager.execute(this);
-		} catch (UnhandledCommandException e) {
-			reply = new FtpReply(500, e.getMessage());
-			logger.warn("", e);
 		} catch (Throwable e) {
-			reply = new FtpReply(500, e.toString());
+			reply = new FtpReply(500, e.getMessage());
 			logger.warn("", e);
 		}
 		if (reply != null)

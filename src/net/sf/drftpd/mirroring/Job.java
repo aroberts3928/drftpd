@@ -30,7 +30,7 @@ import net.sf.drftpd.remotefile.LinkedRemoteFileInterface;
 /**
  * @author zubov
  * @author mog
- * @version $Id: Job.java,v 1.19 2004/05/20 14:08:59 zubov Exp $
+ * @version $Id: Job.java,v 1.19.2.2 2004/06/24 20:40:30 zubov Exp $
  */
 public class Job {
 	protected int _transferNum;

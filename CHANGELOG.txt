@@ -1,3 +1,49 @@
+2004/07/10 Morgan Christiansson <drftpd@mog.se>
+* Released 1.1.4.
+* SITE FIND is added to 1.1.x, thanks pyrrhic.
+
+2004/07/07 Matthew Zimmerman <zubov@users.sourceforge.net>
+* Integrated "site give" and "site take" with FtpConfig so give and take
+  permission can be defined in perms.conf
+* Fixed the double announce error with the sitebot
+
+2004/06/29 Morgan Christiansson <drftpd@mog.se>
+* Added ListUtils to "ant slavejar" target.
+
+2004/06/28 Matthew Zimmerman <zubov@users.sourceforge.net>
+* Fixed gadmin's being able to give a leech slot when they are not 
+allowed, thanks wikd
+
+2004/06/27 Morgan Christiansson <drftpd@mog.se>
+* Added org.drftpd.plugins.Exec per request of darcangel.
+  See http://drftpd.org/modules.php?name=Forums&file=viewtopic&t=49
+* Fixed permission on SITE UNNUKE command.
+* Renamed .passed to .pass in trial.conf, .passed will still work for now.
+* Added .pass=setgrp iND as example in trial.conf.dist.
+* Actions in trial must now be in lowercase.
+
+2004/06/23 Morgan Christiansson <drftpd@mog.se>
+* Added logging of the previously swallowed exception on failed remerge().
+* Fixed master.bat and slave.bat to look for wrapper.exe in drftpd root dir.
+
+2004/06/23 Matthew Zimmerman <zubov@users.sourceforge.net>
+* Fixed a bug where you could give more credits than you have using the       
+SITE GIVE command
+
+2004/06/20 Morgan Christiansson <drftpd@mog.se>
+* Added better check against illegal filenames, thanks SMAN.
+* Updated wrapper control scripts.
+* Removed PreTime plugin from 1.1.x.
+
+2004/06/11 Morgan Christiansson <drftpd@mog.se>
+* Backported fixes from CVS HEAD.
+* Made filelist case sensitive again,
+  case insensitive filelist is in HEAD and will be included in 1.2
+
+2004/06/04 Morgan Christiansson <drftpd@mog.se>
+* Created drftpd-1-1-2-patches branch.
+* Fixed SITE RELOAD.
+
 2004/06/02 Matthew Zimmerman <zubov@users.sourceforge.net>
 * Added UPGRADING.txt, use it!
 * Changed default bufferSize to 0 in slaves.conf, if bufferSize is kept 

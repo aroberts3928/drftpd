@@ -23,8 +23,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -44,7 +46,7 @@ import org.apache.oro.text.regex.MalformedPatternException;
 
 /**
  * @author mog
- * @version $Id: FtpConfig.java,v 1.53 2004/05/31 12:14:37 mog Exp $
+ * @version $Id: FtpConfig.java,v 1.53.2.3 2004/07/07 17:13:56 zubov Exp $
  */
 public class FtpConfig {
 	private static final Logger logger = Logger.getLogger(FtpConfig.class);
@@ -68,10 +70,10 @@ public class FtpConfig {
 		return arr;
 	}
 
-	public static ArrayList makeUsers(StringTokenizer st) {
+	public static ArrayList makeUsers(Enumeration st) {
 		ArrayList users = new ArrayList();
-		while (st.hasMoreTokens()) {
-			users.add(st.nextToken());
+		while (st.hasMoreElements()) {
+			users.add(st.nextElement());
 		}
 		return users;
 	}
@@ -125,6 +127,14 @@ public class FtpConfig {
 		User fromUser,
 		LinkedRemoteFileInterface path) {
 		return checkPathPermission("deleteown", fromUser, path);
+	}
+	
+	public boolean checkGive(User user) {
+		return checkPermission("give", user);
+	}
+	
+	public boolean checkTake(User user) {
+		return checkPermission("take", user);
 	}
 
 	public boolean checkDenyDataUnencrypted(User user) {
@@ -345,6 +355,10 @@ public class FtpConfig {
 		throws IOException {
 		loadConfig2();
 		_connManager = connManager;
+		loadConfig1(cfg);
+	}
+
+	protected void loadConfig1(Properties cfg) throws UnknownHostException {
 		_slaveStatusUpdateTime =
 			Long.parseLong(cfg.getProperty("slaveStatusUpdateTime", "3000"));
 		_serverName = cfg.getProperty("master.bindname", "slavemaster");
@@ -452,7 +466,9 @@ public class FtpConfig {
 						"userrejectsecure".equals(cmd)
 							|| "userrejectinsecure".equals(cmd)
 							|| "denydiruncrypted".equals(cmd)
-							|| "denydatauncrypted".equals(cmd)) {
+							|| "denydatauncrypted".equals(cmd) 
+							|| "give".equals(cmd)
+							|| "take".equals(cmd)) {
 						if (permissions.containsKey(cmd))
 							throw new RuntimeException(
 								"Duplicate key in perms.conf: "

@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 
 /**
  * @author mog
- * @version $Id: ListUtils.java,v 1.22 2004/06/02 00:32:42 mog Exp $
+ * @version $Id: ListUtils.java,v 1.22.2.1 2004/06/19 23:37:28 mog Exp $
  */
 public class ListUtils {
 
@@ -45,8 +45,10 @@ public class ListUtils {
 	public static final String PADDING = "          ";
 
 	public static boolean isLegalFileName(String fileName) {
-		if(fileName == null) throw new RuntimeException();
+		if (fileName == null)
+			throw new RuntimeException();
 		return fileName.indexOf("/") == -1
+			&& fileName.indexOf("?") == -1
 			&& fileName.indexOf('*') == -1
 			&& !fileName.equals(".")
 			&& !fileName.equals("..");
@@ -122,26 +124,29 @@ public class ListUtils {
 			SFVStatus sfvstatus = sfvfile.getStatus();
 			if (sfvfile.size() != 0) {
 				statusDirName = "[ ";
-				if(sfvstatus.getMissing() != 0) {
-					statusDirName += sfvstatus.getMissing()	+ " files missing = ";
+				if (sfvstatus.getMissing() != 0) {
+					statusDirName += sfvstatus.getMissing()
+						+ " files missing = ";
 				}
 
-				statusDirName +=
-					(sfvstatus.getPresent() == 0
-							? "0"
-							: ""+(sfvstatus.getPresent() * 100) / sfvfile.size())
+				statusDirName
+					+= (sfvstatus.getPresent() == 0
+						? "0"
+						: "" + (sfvstatus.getPresent() * 100) / sfvfile.size())
 					+ "% complete";
 
-				if(sfvstatus.getOffline() != 0) {
-					statusDirName += " | " +
-						sfvstatus.getOffline()+ " files offline = "
+				if (sfvstatus.getOffline() != 0) {
+					statusDirName += " | "
+						+ sfvstatus.getOffline()
+						+ " files offline = "
 						+ ((sfvstatus.getAvailable() * 100)
-						/ sfvstatus.getPresent())
+							/ sfvstatus.getPresent())
 						+ "% online";
 				}
 				statusDirName += " ]";
 
-				if(statusDirName == null) throw new RuntimeException();
+				if (statusDirName == null)
+					throw new RuntimeException();
 				listFiles.add(
 					new StaticRemoteFile(
 						null,
@@ -183,7 +188,8 @@ public class ListUtils {
 	public static String padToLength(String value, int length) {
 		if (value.length() >= length)
 			return value;
-		if(PADDING.length() < length) throw new RuntimeException("padding must be longer than length");
+		if (PADDING.length() < length)
+			throw new RuntimeException("padding must be longer than length");
 		return PADDING.substring(0, length - value.length()) + value;
 	}
 

@@ -13,8 +13,8 @@
 # These settings can be modified to fit the needs of your application
 
 # Application
-APP_NAME="slave"
-APP_LONG_NAME="DrFTPD Slave"
+APP_NAME="drftpd-slave"
+APP_LONG_NAME="Distributed FTP Daemon Slave Server"
 
 # Wrapper
 WRAPPER_CMD="bin/wrapper"
@@ -211,6 +211,18 @@ stopit() {
     fi
 }
 
+status() {
+    getpid
+    if [ "X$pid" = "X" ]
+    then
+        echo "$APP_LONG_NAME is not running."
+        exit 1
+    else
+        echo "$APP_LONG_NAME is running ($pid)."
+        exit 0
+    fi
+}
+
 dump() {
     echo "Dumping $APP_LONG_NAME..."
     getpid
@@ -250,12 +262,16 @@ case "$1" in
         start
         ;;
 
+    'status')
+        status
+        ;;
+
     'dump')
         dump
         ;;
 
     *)
-        echo "Usage: $0 { console | start | stop | restart | dump }"
+        echo "Usage: $0 { console | start | stop | restart | status | dump }"
         exit 1
         ;;
 esac

@@ -58,7 +58,7 @@ import org.drftpd.sections.SectionManagerInterface;
 import org.drftpd.slave.socket.SocketSlaveManager;
 
 /**
- * @version $Id: ConnectionManager.java,v 1.110 2004/06/01 17:16:49 mog Exp $
+ * @version $Id: ConnectionManager.java,v 1.110.2.3 2004/06/29 04:00:42 zubov Exp $
  */
 public class ConnectionManager {
 
@@ -143,7 +143,7 @@ public class ConnectionManager {
 	private List _conns = Collections.synchronizedList(new ArrayList());
 
 	private ArrayList _ftpListeners = new ArrayList();
-	private JobManager _jm;
+	protected JobManager _jm;
 
 	protected LinkedRemoteFile _root;
 	private SectionManagerInterface _sections;
@@ -194,12 +194,6 @@ public class ConnectionManager {
 		loadSectionManager(cfg);
 
 		loadPlugins(cfg);
-
-		try { // only need to reload for SlaveSelection using JobManager settings
-			getSlaveManager().getSlaveSelectionManager().reload();
-		} catch (IOException e1) {
-			throw new FatalException(e1);
-		}
 
 		loadTimer();
 		getSlaveManager().addShutdownHook();
@@ -387,6 +381,7 @@ public class ConnectionManager {
 			return; // already loaded
 		try {
 			_jm = new JobManager(this);
+			getSlaveManager().getSlaveSelectionManager().reload();
 			_jm.startJobs();
 		} catch (IOException e) {
 			throw new FatalException("Error loading JobManager", e);

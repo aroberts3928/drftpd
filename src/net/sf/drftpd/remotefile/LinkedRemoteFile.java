@@ -44,6 +44,7 @@ import net.sf.drftpd.master.config.FtpConfig;
 import net.sf.drftpd.slave.Slave;
 import net.sf.drftpd.slave.Transfer;
 import net.sf.drftpd.slave.TransferStatus;
+import net.sf.drftpd.util.ListUtils;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -52,7 +53,7 @@ import org.apache.log4j.Logger;
  * Represents the file attributes of a remote file.
  * 
  * @author mog
- * @version $Id: LinkedRemoteFile.java,v 1.145 2004/06/02 03:04:48 mog Exp $
+ * @version $Id: LinkedRemoteFile.java,v 1.145.2.3 2004/06/25 20:31:36 mog Exp $
  */
 public class LinkedRemoteFile
 	implements Serializable, Comparable, LinkedRemoteFileInterface {
@@ -74,14 +75,6 @@ public class LinkedRemoteFile
 
 		public CaseInsensitiveHashtable(Map t) {
 			super(t);
-		}
-
-		public synchronized Object get(Object key) {
-			return super.get(((String)key).toLowerCase());
-		}
-
-		public synchronized Object put(Object key, Object value) {
-			return super.put(((String)key).toLowerCase(), value);
 		}
 
 	}
@@ -270,8 +263,8 @@ public class LinkedRemoteFile
 		String name,
 		FtpConfig cfg) {
 
-		if (name.indexOf('*') != -1 || name.indexOf('?') != -1)
-			throw new IllegalArgumentException("Illegal character (*?) in filename");
+		if (!ListUtils.isLegalFileName(name))
+			throw new IllegalArgumentException("Illegal filename");
 
 		if (!file.isFile() && !file.isDirectory())
 			throw new IllegalArgumentException(
@@ -712,7 +705,7 @@ public class LinkedRemoteFile
 			if (file.isDeleted())
 				iter.remove();
 		}
-		return Collections.unmodifiableMap(ret);
+		return ret;
 	}
 
 	public String getGroupname() {
@@ -1382,12 +1375,16 @@ public class LinkedRemoteFile
 									+ "."
 									+ rslave.getName()
 									+ ".conflict");
+							mergedir._files.remove(slavefile.getName());
 							slavefile._name =
 								slavefile.getName()
 									+ "."
 									+ rslave.getName()
 									+ ".conflict";
+							// this is enough so it won't be deleted in remergePass2()
+							mergedir._files.put(slavefile.getName(), slavefile);
 							slavefile.addSlave(rslave);
+							slavefile._parent = this;
 							_files.put(slavefile.getName(), slavefile);
 							logger.log(
 								Level.WARN,

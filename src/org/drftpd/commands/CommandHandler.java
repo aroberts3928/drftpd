@@ -22,11 +22,10 @@ import net.sf.drftpd.master.FtpReply;
 
 /**
  * @author mog
- * @version $Id: CommandHandler.java,v 1.1 2004/06/01 15:40:34 mog Exp $
+ * @version $Id: CommandHandler.java,v 1.1.2.1 2004/06/04 21:48:00 mog Exp $
  */
 public interface CommandHandler {
 	public abstract FtpReply execute(BaseFtpConnection conn)
 		throws UnhandledCommandException;
 	public String[] getFeatReplies();
-	public void unload();
 }

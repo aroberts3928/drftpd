@@ -17,17 +17,14 @@
  */
 package net.sf.drftpd.event.listeners;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import net.sf.drftpd.Bytes;
 import net.sf.drftpd.event.UserEvent;
-import net.sf.drftpd.event.listeners.Trial.Limit;
-import net.sf.drftpd.master.config.Permission;
 import net.sf.drftpd.util.CalendarUtils;
 
 import org.apache.log4j.BasicConfigurator;
@@ -35,7 +32,7 @@ import org.drftpd.tests.DummyUser;
 
 /**
  * @author mog
- * @version $Id: TrialTest.java,v 1.7 2004/06/01 15:40:26 mog Exp $
+ * @version $Id: TrialTest.java,v 1.7.2.1 2004/06/27 22:22:48 mog Exp $
  */
 public class TrialTest extends TestCase {
 	/**
@@ -65,15 +62,15 @@ public class TrialTest extends TestCase {
 		action(period);
 	}
 	private void assertUserFailed() {
-		assertTrue(user.getGroups().toString(), user.isMemberOf("failed"));
-		assertFalse(user.getGroups().toString(), user.isMemberOf("passed"));
+		assertTrue(user.getGroups().toString(), user.isMemberOf("FAiLED"));
+		assertFalse(user.getGroups().toString(), user.isMemberOf("PASSED"));
 	}
 	private void assertUserNeither() {
 		assertEquals(user.getGroups().toString(), 0, user.getGroups().size());
 	}
 	private void assertUserPassed() {
-		assertTrue(user.getGroups().toString(), user.isMemberOf("passed"));
-		assertFalse(user.getGroups().toString(), user.isMemberOf("failed"));
+		assertTrue(user.getGroups().toString(), user.isMemberOf("PASSED"));
+		assertFalse(user.getGroups().toString(), user.isMemberOf("FAiLED"));
 	}
 	private Calendar getJUnitCalendar() {
 		Calendar cal = Calendar.getInstance();
@@ -82,23 +79,16 @@ public class TrialTest extends TestCase {
 		return cal;
 	}
 
-	private Limit getJUnitLimit() {
-		Limit limit = new Limit();
-		limit.setActionFailed("chgrp failed");
-		limit.setActionPassed("chgrp passed");
-		limit.setBytes(TESTBYTES);
-		limit.setName(Trial.getPeriodName(period));
-		limit.setPerm(new Permission(Arrays.asList(new String[] { "*" })));
-		return limit;
-	}
-
 	private Trial getJUnitTrial() throws Exception {
-		ArrayList limits = new ArrayList();
-		Limit limit = getJUnitLimit();
-		limit.setPeriod(period);
-		limits.add(limit);
+		Properties p = new Properties();
+		p.setProperty("1.period",Trial.getPeriodName2(period));
+		p.setProperty("1.fail", "chgrp FAiLED");
+		p.setProperty("1.pass", "chgrp PASSED");
+		p.setProperty("1.quota", ""+TESTBYTES);
+		p.setProperty("1.name", Trial.getPeriodName(period));
+		p.setProperty("1.perm","*");
 		Trial trial = new Trial();
-		trial.reload(limits);
+		trial.reload(p);
 		return trial;
 	}
 

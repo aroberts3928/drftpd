@@ -20,7 +20,7 @@ wrapper.java.classpath.5=lib/martyr.jar
 wrapper.java.classpath.6=lib/jdom.jar
 wrapper.java.classpath.7=lib/JSX1.0.7.4.jar
 wrapper.java.classpath.8=lib/replacer.jar
-wrapper.java.classpath.8=lib/xstream-1.0.jar
+wrapper.java.classpath.9=lib/xstream-1.0.jar
 
 # Java Library Path (location of Wrapper.DLL or libwrapper.so)
 wrapper.java.library.path.1=lib
@@ -88,16 +88,14 @@ wrapper.ntservice.name=drftpd-master
 wrapper.ntservice.displayname=DrFTPD Master
 
 # Description of the service
-wrapper.ntservice.description=DistRibuted FTP Daemon Master http://drftpd.mog.se
+wrapper.ntservice.description=Distributed FTP Daemon Master http://drftpd.org
 
 # Service dependencies.  Add dependencies as needed starting from 1
 wrapper.ntservice.dependency.1=
 
-# Mode in which the service is installed.  
-# [ AUTO_START | DEMAND_START ]
+# Mode in which the service is installed.  AUTO_START or DEMAND_START
 wrapper.ntservice.starttype=AUTO_START
 
 # Allow the service to interact with the desktop.
-# [ true | false ]
 wrapper.ntservice.interactive=false
 

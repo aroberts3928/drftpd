@@ -43,7 +43,7 @@ import org.drftpd.plugins.SiteBot;
 
 /**
  * @author mog
- * @version $Id: Trial.java,v 1.26 2004/06/01 17:16:42 mog Exp $
+ * @version $Id: Trial.java,v 1.26.2.1 2004/06/27 22:22:48 mog Exp $
  */
 public class Trial implements FtpListener {
 	public static class Limit {
@@ -252,6 +252,7 @@ public class Trial implements FtpListener {
 		//moveCalendarToEndOfPeriod(cal, period);
 		return cal;
 	}
+
 	public static String getPeriodName(int s) {
 		switch (s) {
 			case PERIOD_DAILY :
@@ -260,6 +261,19 @@ public class Trial implements FtpListener {
 				return "month";
 			case PERIOD_WEEKLY :
 				return "week";
+			default :
+				throw new IllegalArgumentException("" + s);
+		}
+	}
+
+	public static String getPeriodName2(int s) {
+		switch (s) {
+			case PERIOD_DAILY :
+				return "daily";
+			case PERIOD_MONTHLY :
+				return "monthly";
+			case PERIOD_WEEKLY :
+				return "weekly";
 			default :
 				throw new IllegalArgumentException("" + s);
 		}
@@ -487,7 +501,7 @@ public class Trial implements FtpListener {
 		}
 	}
 
-	private void reload(Properties props) {
+	protected void reload(Properties props) {
 		ArrayList limits = new ArrayList();
 		for (int i = 1;; i++) {
 			if (props.getProperty(i + ".quota") == null)
@@ -495,9 +509,11 @@ public class Trial implements FtpListener {
 			Limit limit = new Limit();
 			limit.setName(FtpConfig.getProperty(props, i + ".name"));
 			limit.setActionPassed(
-				props.getProperty(i + ".passed", "").toLowerCase());
+				props.getProperty(
+					i + ".pass",
+					props.getProperty(i + ".passed", "")));
 			limit.setActionFailed(
-				props.getProperty(i + ".fail", "").toLowerCase());
+				props.getProperty(i + ".fail", ""));
 			if (limit.getActionFailed().equals("")
 				&& limit.getActionPassed().equals(""))
 				throw new IllegalArgumentException(

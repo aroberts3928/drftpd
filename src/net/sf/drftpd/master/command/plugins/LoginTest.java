@@ -17,11 +17,8 @@
  */
 package net.sf.drftpd.master.command.plugins;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -44,7 +41,7 @@ import org.drftpd.tests.DummyUserManager;
 
 /**
  * @author mog
- * @version $Id: LoginTest.java,v 1.5 2004/06/01 15:40:30 mog Exp $
+ * @version $Id: LoginTest.java,v 1.5.2.2 2004/06/27 22:22:49 mog Exp $
  */
 public class LoginTest extends TestCase {
 	private DummyUser _user;
@@ -65,25 +62,19 @@ public class LoginTest extends TestCase {
 		return new TestSuite(LoginTest.class);
 	}
 
-	public void setUp() {
-		BasicConfigurator.configure();
+	private void internalSetUp() {
 		_login = (Login) new Login().initialize(null, null);
-		_conn = new DummyBaseFtpConnection(null);
+		_conn = new DummyBaseFtpConnection(null) {
+			public FtpConfig getConfig() {
+				return new FC();
+			}
+		};
 		_conn.setConnectionManager(new ConnectionManager() {
 			public FtpReply canLogin(BaseFtpConnection baseconn, User user) {
 				return null;
 			}
 			public FtpConfig getConfig() {
-				return new FtpConfig() {
-					public List getBouncerIps() {
-						try {
-							return Collections.singletonList(
-								InetAddress.getByName("10.0.0.1"));
-						} catch (UnknownHostException e) {
-							throw new RuntimeException(e);
-						}
-					}
-				};
+				return new FC();
 			}
 			public UserManager getUserManager() {
 				return _userManager;
@@ -95,11 +86,36 @@ public class LoginTest extends TestCase {
 		_conn.setUserManager(_userManager);
 	}
 
+	public void setUp() {
+		BasicConfigurator.configure();
+	}
+	public static class FC extends FtpConfig {
+		public FC() {
+			Properties cfg = new Properties();
+			cfg.setProperty("bouncer_ip", "10.0.1.1 10.0.0.1");
+			try {
+				loadConfig1(cfg);
+			} catch (UnknownHostException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		//		public List getBouncerIps() {
+		//			try {
+		//				return Arrays.asList(
+		//					new InetAddress[] {
+		//						InetAddress.getByName("10.0.1.1"),
+		//						InetAddress.getByName("10.0.0.1")});
+		//			} catch (UnknownHostException e) {
+		//				throw new RuntimeException(e);
+		//			}
+		//		}
+	}
 	public void testUSER()
 		throws
 			UnknownHostException,
 			UnhandledCommandException,
 			DuplicateElementException {
+		internalSetUp();
 		_conn.setClientAddress(InetAddress.getByName("127.0.0.1"));
 
 		FtpReply reply;
@@ -112,7 +128,7 @@ public class LoginTest extends TestCase {
 		reply = _login.execute(_conn);
 		assertEquals(530, reply.getCode());
 		assertNull(_conn.getUserNull());
-		
+
 		_user.addIPMask("*@127.0.0.1");
 		reply = _login.execute(_conn);
 		assertEquals(331, reply.getCode());
@@ -124,6 +140,7 @@ public class LoginTest extends TestCase {
 			UnhandledCommandException,
 			DuplicateElementException,
 			UnknownHostException {
+		internalSetUp();
 		_conn.setClientAddress(InetAddress.getByName("10.0.0.2"));
 		_conn.setRequest(new FtpRequest("IDNT user@127.0.0.1:localhost"));
 		FtpReply reply;
@@ -132,8 +149,9 @@ public class LoginTest extends TestCase {
 		assertEquals(530, reply.getCode());
 		assertNull(_login._idntAddress);
 
+		internalSetUp();
 		_conn.setClientAddress(InetAddress.getByName("10.0.0.1"));
-		//execute same command again
+		_conn.setRequest(new FtpRequest("IDNT user@127.0.0.1:localhost"));
 		reply = _login.execute(_conn);
 		assertNull(String.valueOf(reply), reply);
 

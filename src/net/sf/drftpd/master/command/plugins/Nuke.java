@@ -34,7 +34,6 @@ import net.sf.drftpd.ObjectNotFoundException;
 import net.sf.drftpd.event.NukeEvent;
 import net.sf.drftpd.master.BaseFtpConnection;
 import net.sf.drftpd.master.FtpReply;
-import net.sf.drftpd.master.command.CommandHandlerBundle;
 import net.sf.drftpd.master.command.CommandManager;
 import net.sf.drftpd.master.command.CommandManagerFactory;
 import net.sf.drftpd.master.queues.NukeLog;
@@ -47,6 +46,7 @@ import net.sf.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.drftpd.commands.CommandHandler;
+import org.drftpd.commands.CommandHandlerFactory;
 import org.drftpd.commands.UnhandledCommandException;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -57,9 +57,9 @@ import org.jdom.input.SAXBuilder;
  * amount -> amount before multiplier
  * 
  * @author mog
- * @version $Id: Nuke.java,v 1.18 2004/06/01 15:40:30 mog Exp $
+ * @version $Id: Nuke.java,v 1.18.2.2 2004/06/27 22:22:49 mog Exp $
  */
-public class Nuke implements CommandHandlerBundle {
+public class Nuke implements CommandHandlerFactory, CommandHandler {
 
 	private static final Logger logger = Logger.getLogger(Nuke.class);
 
@@ -74,7 +74,8 @@ public class Nuke implements CommandHandlerBundle {
 		LinkedRemoteFileInterface nukeDir,
 		Hashtable nukees) {
 		for (Iterator iter = nukeDir.getFiles().iterator(); iter.hasNext();) {
-			LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
+			LinkedRemoteFileInterface file =
+				(LinkedRemoteFileInterface) iter.next();
 			if (file.isDirectory()) {
 				nukeRemoveCredits(file, nukees);
 			}
@@ -116,10 +117,10 @@ public class Nuke implements CommandHandlerBundle {
 	 *     multiplier is 3, user loses size * ratio + size * 2, etc.
 	 */
 	private FtpReply doSITE_NUKE(BaseFtpConnection conn) {
-		if (!conn.getUserNull().isNuker()) {
+		if (!conn.getUserNull().isNuker())
 			return FtpReply.RESPONSE_530_ACCESS_DENIED;
-		}
-		if(!conn.getRequest().hasArgument()) {
+
+		if (!conn.getRequest().hasArgument()) {
 			return new FtpReply(501, conn.jprintf(Nuke.class, "nuke.usage"));
 		}
 
@@ -177,7 +178,9 @@ public class Nuke implements CommandHandlerBundle {
 			String username = (String) iter.next();
 			User user;
 			try {
-				user = conn.getConnectionManager().getUserManager().getUserByName(username);
+				user =
+					conn.getConnectionManager().getUserManager().getUserByName(
+						username);
 			} catch (NoSuchUserException e1) {
 				response.addComment(
 					"Cannot remove credits from "
@@ -222,7 +225,10 @@ public class Nuke implements CommandHandlerBundle {
 		}
 		try {
 			nukeDir = nukeDir.renameTo(toDirPath, toName);
-			nukeDir.createDirectory(conn.getUserNull().getUsername(), conn.getUserNull().getGroupName(), "REASON-"+reason);
+			nukeDir.createDirectory(
+				conn.getUserNull().getUsername(),
+				conn.getUserNull().getGroupName(),
+				"REASON-" + reason);
 		} catch (IOException ex) {
 			logger.warn("", ex);
 			response.addComment(
@@ -307,6 +313,9 @@ public class Nuke implements CommandHandlerBundle {
 	 * 	See the section about glftpd.conf.
 	 */
 	private FtpReply doSITE_UNNUKE(BaseFtpConnection conn) {
+		if (!conn.getUserNull().isNuker())
+			return FtpReply.RESPONSE_530_ACCESS_DENIED;
+
 		StringTokenizer st =
 			new StringTokenizer(conn.getRequest().getArgument());
 		if (!st.hasMoreTokens()) {
@@ -362,7 +371,9 @@ public class Nuke implements CommandHandlerBundle {
 			String nukeeName = nukeeObj.getUsername();
 			User nukee;
 			try {
-				nukee = conn.getConnectionManager().getUserManager().getUserByName(nukeeName);
+				nukee =
+					conn.getConnectionManager().getUserManager().getUserByName(
+						nukeeName);
 			} catch (NoSuchUserException e) {
 				response.addComment(nukeeName + ": no such user");
 				continue;
@@ -412,14 +423,18 @@ public class Nuke implements CommandHandlerBundle {
 				"Illegaltargetexception: means parent doesn't exist",
 				e1);
 		}
-		
+
 		try {
-			LinkedRemoteFileInterface reasonDir = nukeDir.getFile("REASON-" + nuke.getReason());
-			if(reasonDir.isDirectory()) reasonDir.delete();
+			LinkedRemoteFileInterface reasonDir =
+				nukeDir.getFile("REASON-" + nuke.getReason());
+			if (reasonDir.isDirectory())
+				reasonDir.delete();
 		} catch (FileNotFoundException e3) {
-			logger.debug("Failed to delete 'REASON-"+reason+"' dir in UNNUKE", e3);
+			logger.debug(
+				"Failed to delete 'REASON-" + reason + "' dir in UNNUKE",
+				e3);
 		}
-		
+
 		nuke.setCommand("UNNUKE");
 		nuke.setReason(reason);
 		nuke.setUser(conn.getUserNull());

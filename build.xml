@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: build.xml,v 1.40 2004/06/02 22:47:14 mog Exp $ -->
+<!-- $Id: build.xml,v 1.39.2.5 2004/06/30 11:11:52 mog Exp $ -->
 <project name="drftpd" basedir="." default="compile">
 
   <target name="all" depends="compile"/>
@@ -21,6 +21,7 @@
 
   <target name="prepare" depends="init">
     <mkdir dir="${outputDir}" />
+    <mkdir dir="logs" />
   </target>
 
   <target name="compile-jfreechart" depends="compile">
@@ -82,6 +83,7 @@
       <include name="net/sf/drftpd/util/SSLGetContext.class" />
       <include name="net/sf/drftpd/util/PortRange.class" />
       <include name="net/sf/drftpd/util/AddAsciiOutputStream.class" />
+      <include name="net/sf/drftpd/util/ListUtils.class"/>
       <!-- until we have lightweight LinkedRemoteFile -->
       <include name="net/sf/drftpd/master/*" />
       <include name="net/sf/drftpd/master/config/FtpConfig.class" />
@@ -106,7 +108,7 @@
     </jar>
   </target>
 
-  <target name="dist" depends="compile">
+  <target name="dist" depends="compile-jsx">
     <fail unless="version">
       You need to specify version to build.
       Use argument -Dversion=0.11.0-CVS for example.
@@ -124,6 +126,7 @@
     	<include name="master.bat"/>
     	<include name="genkey.sh"/>
     	<include name="genkey.bat"/>
+	<include name="wrapper.exe"/>
     	<include name="conf/*.dist" />
     	<include name="conf/log4j-*.properties" />
     	<include name="lib/*"/>
@@ -132,8 +135,7 @@
     	<include name="ftp-data/text/**"/>
     	<include name="extsources/*"/>
     	<include name="bin/*"/>
-    	<exclude name="src/org/drftpd/friendly/**"/>
-    	<exclude name="classes/org/drftpd/friendly/**"/>
+        <include name="logs"/>
     </patternset>
 
     <tar destfile="drftpd-${version}.tar">

@@ -91,7 +91,7 @@ import f00f.net.irc.martyr.services.AutoResponder;
 
 /**
  * @author mog
- * @version $Id: SiteBot.java,v 1.11 2004/05/12 00:45:13 mog Exp $
+ * @version $Id: SiteBot.java,v 1.11.2.2 2004/07/07 19:39:11 zubov Exp $
  */
 public class SiteBot implements FtpListener, Observer {
 
@@ -652,13 +652,14 @@ public class SiteBot implements FtpListener, Observer {
 
 		//env.add("nukees", event.getNukees().keySet());
 
-		if (cmd.equals("NUKE")) {
+		if (cmd.equals("NUKE") || cmd.equals("UNNUKE")) {
+			String cmdName = cmd.toLowerCase();
 			say(
 				section,
-				ReplacerUtils.jprintf("nuke", env, SiteBot.class.getName()));
+				ReplacerUtils.jprintf(cmdName, env, SiteBot.class.getName()));
 
 			ReplacerFormat raceformat =
-				ReplacerUtils.finalFormat(SiteBot.class, "nuke.nukees");
+				ReplacerUtils.finalFormat(SiteBot.class, cmdName + ".nukees");
 
 			int position = 1;
 			long nobodyAmount = 0;
@@ -709,10 +710,10 @@ public class SiteBot implements FtpListener, Observer {
 				say(section, SimplePrintf.jprintf(raceformat, raceenv));
 
 			}
-		} else if (cmd.equals("UNNUKE")) {
+		} //else if (cmd.equals("UNNUKE")) {
 
-			say(section, ReplacerUtils.jprintf("unnuke", env, SiteBot.class));
-		}
+			//say(section, ReplacerUtils.jprintf("unnuke", env, SiteBot.class));
+		//}
 	}
 
 	private void actionPerformedSlave(SlaveEvent event)
@@ -794,7 +795,7 @@ public class SiteBot implements FtpListener, Observer {
 						.forName(classname)
 						.getConstructor(new Class[] { SiteBot.class })
 						.newInstance(new Object[] { this });
-				_conn.addCommandObserver(obs);
+				//_conn.addCommandObserver(obs);
 				IRCPluginInterface plugin = (IRCPluginInterface) obs;
 				if (plugin.getCommands() != null) {
 					_commands = _commands + plugin.getCommands() + " ";

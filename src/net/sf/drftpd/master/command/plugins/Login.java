@@ -28,7 +28,6 @@ import net.sf.drftpd.event.UserEvent;
 import net.sf.drftpd.master.BaseFtpConnection;
 import net.sf.drftpd.master.FtpReply;
 import net.sf.drftpd.master.FtpRequest;
-import net.sf.drftpd.master.command.CommandHandlerBundle;
 import net.sf.drftpd.master.command.CommandManager;
 import net.sf.drftpd.master.command.CommandManagerFactory;
 import net.sf.drftpd.master.usermanager.NoSuchUserException;
@@ -43,9 +42,10 @@ import org.drftpd.commands.UnhandledCommandException;
 import socks.server.Ident;
 
 /**
- * @version $Id: Login.java,v 1.29 2004/06/02 00:32:40 mog Exp $
+ * @version $Id: Login.java,v 1.29.2.1 2004/06/19 23:37:26 mog Exp $
  */
-public class Login implements CommandHandlerFactory, CommandHandler, Cloneable {
+public class Login
+	implements CommandHandlerFactory, CommandHandler, Cloneable {
 
 	private static final Logger logger = Logger.getLogger(Login.class);
 	/**
@@ -56,13 +56,18 @@ public class Login implements CommandHandlerFactory, CommandHandler, Cloneable {
 
 	/**
 	 * Syntax: IDNT ident@ip:dns
-	 * Returns nothing.
+	 * Returns nothing on success.
 	 */
 	private FtpReply doIDNT(BaseFtpConnection conn) {
-		if (_idntAddress != null
-			|| !conn.getConnectionManager().getConfig().getBouncerIps().contains(
-				conn.getClientAddress())) {
-			logger.warn("IDNT from non-bnc " + conn.getClientAddress());
+		if (_idntAddress != null) {
+			logger.error("Multiple IDNT commands");
+			return new FtpReply(530, "Multiple IDNT commands");
+		}
+		if (!conn
+			.getConfig()
+			.getBouncerIps()
+			.contains(conn.getClientAddress())) {
+			logger.warn("IDNT from non-bnc");
 			return FtpReply.RESPONSE_530_ACCESS_DENIED;
 		}
 		String arg = conn.getRequest().getArgument();
@@ -246,13 +251,11 @@ public class Login implements CommandHandlerFactory, CommandHandler, Cloneable {
 	public CommandHandler initialize(
 		BaseFtpConnection conn,
 		CommandManager initializer) {
-		Login login;
 		try {
-			login = (Login) clone();
+			return (Login) clone();
 		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e);
 		}
-		return login;
 	}
 
 	public void load(CommandManagerFactory initializer) {

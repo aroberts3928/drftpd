@@ -36,14 +36,14 @@ import net.sf.drftpd.master.ConnectionManager;
  * @author mog
  *
  * Istantiates the CommandManager instances that holds per-connection CommandHandlers.
- * @version $Id: CommandManagerFactory.java,v 1.8 2004/06/01 15:40:29 mog Exp $
+ * @version $Id: CommandManagerFactory.java,v 1.8.2.1 2004/06/04 21:48:00 mog Exp $
  */
 public class CommandManagerFactory {
 
 	private ConnectionManager _connMgr;
 	//private static final Logger logger = Logger.getLogger(CommandManagerFactory.class);
 	/**
-	 * Class => CommandHandler
+	 * Class => CommandHandlerFactory
 	 */
 	private Hashtable _hnds;
 	/**
@@ -56,7 +56,7 @@ public class CommandManagerFactory {
 	}
 	private void unload() {
 		for (Iterator iter = _hnds.values().iterator(); iter.hasNext();) {
-			((CommandHandlerBundle) iter.next()).unload();
+			((CommandHandlerFactory) iter.next()).unload();
 		}
 	}
 

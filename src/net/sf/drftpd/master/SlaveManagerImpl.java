@@ -67,7 +67,7 @@ import org.jdom.output.XMLOutputter;
 
 /**
  * @author mog
- * @version $Id: SlaveManagerImpl.java,v 1.94 2004/05/31 02:47:15 mog Exp $
+ * @version $Id: SlaveManagerImpl.java,v 1.94.2.1 2004/06/25 20:31:36 mog Exp $
  */
 public class SlaveManagerImpl
 	extends UnicastRemoteObject
@@ -331,9 +331,11 @@ public class SlaveManagerImpl
 		try {
 			remerge(rslave);
 		} catch (IOException e) {
+			logger.warn("", e);
 			rslave.setOffline("IOException during remerge()");
 			return;
 		} catch (SlaveUnavailableException e) {
+			logger.warn("", e);
 			rslave.setOffline("Slave Unavailable during remerge()");
 			return;
 		}
