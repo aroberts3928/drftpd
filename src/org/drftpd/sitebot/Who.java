@@ -105,10 +105,14 @@ public class Who extends IRCCommand {
 								.getTranferSlave().getName());
 						switch (conn.getDirection()) {
 						case Transfer.TRANSFER_RECEIVING_UPLOAD:
-							out.add(SimplePrintf.jprintf(formatup, env));
+							if (up) {
+								out.add(SimplePrintf.jprintf(formatup, env));
+							}
 							break;
 						case Transfer.TRANSFER_SENDING_DOWNLOAD:
-							out.add(SimplePrintf.jprintf(formatdown, env));
+							if (down) {
+								out.add(SimplePrintf.jprintf(formatdown, env));
+							}
 							break;
 						default:
 							if (idle) {
