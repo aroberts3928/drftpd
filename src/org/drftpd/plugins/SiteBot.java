@@ -1447,7 +1447,7 @@ public class SiteBot extends FtpListener implements Observer {
 				for (Iterator<WhoisEntry> iter = _identWhoisList.iterator(); iter
 						.hasNext();) {
 					WhoisEntry we = iter.next();
-					if (we._nick.equals(nick)) {
+					if (we._nick.equalsIgnoreCase(nick)) {
 						we._user.getKeyedMap().setObject(
 								UserManagement.IRCIDENT, fullIdent);
 						iter.remove();
