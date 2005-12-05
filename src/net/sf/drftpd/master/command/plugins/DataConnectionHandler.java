@@ -1293,6 +1293,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 //_transfer is already set up by doPASV()
             } else {
             	// reset(); already done in finally block
+            	_transferFile.delete();
                 return Reply.RESPONSE_503_BAD_SEQUENCE_OF_COMMANDS;
             }
 

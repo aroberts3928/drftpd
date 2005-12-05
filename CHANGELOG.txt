@@ -1,3 +1,7 @@
+2005/12/05 Anonymous Coward <tdsoul@gmail.com>
+* fixed case sensitive site invite
+* fix a bug allowing 0 byte files to remain after a failed transfer attempt
+
 2005/10/14 Matt Zimmerman <zubov@users.sourceforge.net>
 * 2.0.2 released
  - Check notes describing the changes on sourceforge
