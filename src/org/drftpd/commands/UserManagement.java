@@ -1215,12 +1215,13 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             "OK, gave " + Bytes.formatBytes(credits) + " of your credits to " +
             myUser.getName());
     }
+    
     private Reply doSITE_GROUP(BaseFtpConnection conn) throws ImproperUsageException {
     	FtpRequest request = conn.getRequest();
     	
     	boolean ip = false;
     	float ratio = 0; 
-    	int numLogin = 0, numLoginIP = 0, maxUp = 0, maxDn = 0;
+    	int numLogin = 0, numLoginIP = 0, maxUp = 0, maxDn = 0, idle = 0;
     	String opt, group;
     	
     	if (!conn.getUserNull().isAdmin()) {
@@ -1255,7 +1256,9 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         		throw new ImproperUsageException();
         	}
         	maxDn = Integer.parseInt(st.nextToken());
-        } else {        
+        } else if (opt.equals("idle_time")) {
+        	idle = Integer.parseInt(st.nextToken());
+        } else {
         	return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
 
@@ -1268,10 +1271,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         try {
         	users = conn.getGlobalContext().getUserManager().getAllUsersByGroup(group);
         } catch (UserFileException ex) {
-            logger.log(Level.FATAL,
-                    "IO error from getAllUsersByGroup(" + group + ")", ex);
-
-                return new Reply(200, "IO error: " + ex.getMessage());
+        	logger.fatal("IO error from getAllUsersByGroup(" + group + ")", ex);
+        	return new Reply(200, "IO error: " + ex.getMessage());
         }
         response.addComment("Changing '" + group + "' members " + opt);
         
@@ -1282,13 +1283,13 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             	if (opt.equals("num_logins")) { 
             		userToChange.getKeyedMap().setObject(UserManagement.MAXLOGINS, numLogin);
             		if (ip) { userToChange.getKeyedMap().setObject(UserManagement.MAXLOGINSIP, numLoginIP); }
-            	}
-            	if (opt.equals("max_sim")) {
+            	} else if (opt.equals("max_sim")) {
             		userToChange.setMaxSimDown(maxDn);
             		userToChange.setMaxSimUp(maxUp);
-            	}
-            	if (opt.equals("ratio")) {
+            	} else if (opt.equals("ratio")) {
             		userToChange.getKeyedMap().setObject(UserManagement.RATIO, new Float(ratio));
+            	} else if (opt.equals("idle_time")) {
+            		userToChange.setIdleTime(new Integer(idle));
             	}
             	response.addComment("Changed " + userToChange.getName() + "!");
             }
