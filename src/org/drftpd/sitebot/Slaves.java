@@ -18,6 +18,8 @@
 package org.drftpd.sitebot;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import net.sf.drftpd.ObjectNotFoundException;
 import net.sf.drftpd.SlaveUnavailableException;
@@ -62,11 +64,11 @@ public class Slaves extends IRCCommand {
     
     public ArrayList<String> doSlaves(String args, MessageCommand msgc) {
         ArrayList<String> out = new ArrayList<String>();
-        ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);
     	for(RemoteSlave rslave : getGlobalContext().getSlaveManager().getSlaves()) {
             out.add(makeStatusString(rslave));
         }
     	if (out.isEmpty()) {
+            ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);
             out.add(ReplacerUtils.jprintf("slaves.notfound", env, Slaves.class));
     	}
         return out;
@@ -75,7 +77,9 @@ public class Slaves extends IRCCommand {
     private String makeStatusString(RemoteSlave rslave) {
         ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);
         env.add("slave", rslave.getName());
-
+        for (Entry<Object,Object> entry : rslave.getProperties().entrySet() ) {
+        	env.add((String) entry.getKey(),entry.getValue());
+        }
         try {
             SlaveStatus status;
 
