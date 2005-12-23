@@ -733,8 +733,8 @@ public class SiteBot extends FtpListener implements Observer {
                 raceenv.add("size", Bytes.formatBytes(stat.getAmount()));
 
                 long nukedamount = Nuke.calculateNukedAmount(stat.getAmount(),
-                        raceuser.getKeyedMap().getObjectFloat(UserManagement.RATIO),
-                        event.getMultiplier());
+						getGlobalContext().getConfig().getCreditCheckRatio(
+								event.getPath(), raceuser), event.getMultiplier());
                 raceenv.add("nukedamount", Bytes.formatBytes(nukedamount));
                 say(section, SimplePrintf.jprintf(raceformat, raceenv));
             }
@@ -786,8 +786,8 @@ public class SiteBot extends FtpListener implements Observer {
                 raceenv.add("size", Bytes.formatBytes(stat.getAmount()));
 
                 long nukedamount = Nuke.calculateNukedAmount(stat.getAmount(),
-                        raceuser.getKeyedMap().getObjectFloat(UserManagement.RATIO),
-                        event.getMultiplier());
+						getGlobalContext().getConfig().getCreditCheckRatio(
+								event.getPath(), raceuser), event.getMultiplier());
                 raceenv.add("nukedamount", Bytes.formatBytes(nukedamount));
                 say(section, SimplePrintf.jprintf(raceformat, raceenv));
             }

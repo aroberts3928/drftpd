@@ -42,7 +42,10 @@ public class GlobPathPermission extends PathPermission {
         if (file.isDirectory()) {
             path = path.concat("/");
         }
+        return this.checkPath(path);
+    }
 
+    public boolean checkPath(String path) {
         Perl5Matcher m = new Perl5Matcher();
 
         return m.matches(path, _pat);

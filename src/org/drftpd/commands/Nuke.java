@@ -268,14 +268,16 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
             long size = ((Long) nukees2.get(nukee)).longValue();
 
             long debt = calculateNukedAmount(size,
-                    nukee.getKeyedMap().getObjectFloat(UserManagement.RATIO), multiplier);
+            		conn.getGlobalContext().getConfig().getCreditCheckRatio(nukeDir, nukee), multiplier);
 
             nukedAmount += debt;
             nukeDirSize += size;
             nukee.updateCredits(-debt);
-            nukee.updateUploadedBytes(-size);
-            nukee.getKeyedMap().incrementObjectLong(NUKEDBYTES, debt);
-
+            if (!conn.getGlobalContext().getConfig().checkPathPermission(
+					"nostatsup", nukee, nukeDir)) {
+				nukee.updateUploadedBytes(-size);
+				nukee.getKeyedMap().incrementObjectLong(NUKEDBYTES, debt);
+			}
             nukee.getKeyedMap().incrementObjectLong(NUKED);
             nukee.getKeyedMap().setObject(Nuke.LASTNUKED, new Long(System.currentTimeMillis()));
 
@@ -404,12 +406,14 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
             }
 
             long nukedAmount = calculateNukedAmount(nukeeObj.getAmount(),
-                    nukee.getKeyedMap().getObjectFloat(UserManagement.RATIO),
+            		conn.getGlobalContext().getConfig().getCreditCheckRatio(nukeDir, nukee),
                     nuke.getMultiplier());
 
             nukee.updateCredits(nukedAmount);
-            nukee.updateUploadedBytes(nukeeObj.getAmount());
-
+            if (!conn.getGlobalContext().getConfig().checkPathPermission(
+					"nostatsup", nukee, nukeDir)) {
+				nukee.updateUploadedBytes(nukeeObj.getAmount());
+			}
             nukee.getKeyedMap().incrementObjectInt(NUKED, -1);
 
             try {

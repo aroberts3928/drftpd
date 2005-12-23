@@ -179,7 +179,12 @@ public class FtpConfig extends Observable implements ConfigInterface {
     }
 
     public float getCreditCheckRatio(LinkedRemoteFileInterface path,
-        User fromUser) {
+            User fromUser) {
+    	return this.getCreditCheckRatio(path.getName(), fromUser);
+    }
+
+    public float getCreditCheckRatio(String path,
+            User fromUser) {
         for (Iterator iter = _creditcheck.iterator(); iter.hasNext();) {
             RatioPathPermission perm = (RatioPathPermission) iter.next();
 

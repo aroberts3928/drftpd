@@ -196,14 +196,17 @@ public class IRCNuke extends IRCCommand {
 			User nukee = nukeeEntry.getKey();
 			long size = nukeeEntry.getValue().longValue();
 
-			long debt = Nuke.calculateNukedAmount(size, nukee.getKeyedMap()
-					.getObjectFloat(UserManagement.RATIO), nukemult);
+			long debt = Nuke.calculateNukedAmount(size, getGlobalContext()
+					.getConfig().getCreditCheckRatio(nukeDir, nukee), nukemult);
 
 			nukedAmount += debt;
 			nukeDirSize += size;
 			nukee.updateCredits(-debt);
+            if (!getGlobalContext().getConfig().checkPathPermission(
+					"nostatsup", nukee, nukeDir)) {
 			nukee.updateUploadedBytes(-size);
 			nukee.getKeyedMap().incrementObjectLong(Nuke.NUKEDBYTES, debt);
+			}
 			nukee.getKeyedMap().incrementObjectLong(Nuke.NUKED);
 			nukee.getKeyedMap().setObject(Nuke.LASTNUKED,
 					new Long(System.currentTimeMillis()));
@@ -284,11 +287,14 @@ public class IRCNuke extends IRCCommand {
 			long nukedAmount =
 				Nuke.calculateNukedAmount(
 					nukeeObj.getAmount(),
-					nukee.getKeyedMap().getObjectFloat(UserManagement.RATIO),
+					getGlobalContext().getConfig().getCreditCheckRatio(nukeDir, nukee),
 					nuke.getMultiplier());
 
 			nukee.updateCredits(nukedAmount);
+            if (!getGlobalContext().getConfig().checkPathPermission(
+					"nostatsup", nukee, nukeDir)) {
 			nukee.updateUploadedBytes(nukeeObj.getAmount());
+			}
             nukee.getKeyedMap().incrementObjectInt(Nuke.NUKED, -1);
 
 			try {

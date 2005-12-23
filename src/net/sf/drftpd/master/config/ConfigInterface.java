@@ -45,6 +45,9 @@ public interface ConfigInterface {
 	public abstract float getCreditCheckRatio(LinkedRemoteFileInterface path,
 			User fromUser);
 
+	public abstract float getCreditCheckRatio(String path,
+			User fromUser);
+
 	public abstract float getCreditLossRatio(LinkedRemoteFileInterface path,
 			User fromUser);
 
