@@ -57,9 +57,13 @@ public class FileUtils {
 	    for (; iter.hasNext();) {
 	        LinkedRemoteFile file = (LinkedRemoteFile) iter.next();
 	        if(file.isDirectory()) {
-	        	LinkedRemoteFile oldestFile2 = getOldestFile(file);
-	        	if(oldestFile.lastModified() > oldestFile2.lastModified())
-	        		oldestFile = oldestFile2;
+	        	try {
+	        		LinkedRemoteFile oldestFile2 = getOldestFile(file);
+	        		if(oldestFile.lastModified() > oldestFile2.lastModified())
+	        			oldestFile = oldestFile2;
+	        	} catch(ObjectNotFoundException e) {
+	        		continue;
+	        	}
 	        } else if (oldestFile.lastModified() > file.lastModified()) {
 	            oldestFile = file;
 	        }
