@@ -16,24 +16,22 @@
  */
 package org.drftpd.mirroring.archivetypes;
 
-import net.sf.drftpd.NoAvailableSlaveException;
-import net.sf.drftpd.ObjectNotFoundException;
-import net.sf.drftpd.mirroring.Job;
-
-import org.apache.log4j.Logger;
-
-import org.drftpd.PropertyHelper;
-import org.drftpd.master.RemoteSlave;
-import org.drftpd.mirroring.ArchiveType;
-import org.drftpd.plugins.Archive;
-
-import org.drftpd.remotefile.LinkedRemoteFileInterface;
-import org.drftpd.sections.SectionInterface;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
+
+import net.sf.drftpd.NoAvailableSlaveException;
+import net.sf.drftpd.mirroring.Job;
+
+import org.apache.log4j.Logger;
+import org.drftpd.PropertyHelper;
+import org.drftpd.master.RemoteSlave;
+import org.drftpd.mirroring.ArchiveType;
+import org.drftpd.plugins.Archive;
+import org.drftpd.remotefile.LinkedRemoteFileInterface;
+import org.drftpd.sections.SectionInterface;
 
 
 /**
@@ -42,41 +40,18 @@ import java.util.Properties;
  */
 public class MoveReleaseOffSlavesToMostFreeSlaves extends ArchiveType {
     private static final Logger logger = Logger.getLogger(MoveReleaseOffSlavesToMostFreeSlaves.class);
-    private HashSet<RemoteSlave> _offOfSlaves;
-    private int _numOfSlaves;
+    private Set<RemoteSlave> _offOfSlaves;
 
     public MoveReleaseOffSlavesToMostFreeSlaves(Archive archive,
         SectionInterface section, Properties props) {
         super(archive, section, props);
-        _offOfSlaves = new HashSet<RemoteSlave>();
-
-        for (int i = 1;; i++) {
-            String slavename = null;
-
-            try {
-                slavename = PropertyHelper.getProperty(props,
-                        getSection().getName() + ".offOfSlave." + i);
-            } catch (NullPointerException e) {
-                break; // done
-            }
-
-            try {
-                _offOfSlaves.add(_parent.getGlobalContext().getSlaveManager()
-						.getRemoteSlave(slavename));
-            } catch (ObjectNotFoundException e) {
-                logger.debug("Unable to get slave " + slavename +
-                    " from the SlaveManager");
-            }
-        }
+        _offOfSlaves = getOffOfSlaves(props);
 
         if (_offOfSlaves.isEmpty()) {
             throw new NullPointerException(
                 "Cannot continue, 0 slaves found to move off MoveReleaseOffSlavesToMostFreeSlaves for for section " +
                 getSection().getName());
         }
-
-        _numOfSlaves = Integer.parseInt(PropertyHelper.getProperty(props,
-                    getSection().getName() + ".numOfSlaves"));
 
         if (_numOfSlaves < 1) {
             throw new IllegalArgumentException(

@@ -44,21 +44,26 @@ import java.util.Properties;
  */
 public class ConstantMirroring extends ArchiveType {
     private static final Logger logger = Logger.getLogger(ConstantMirroring.class);
-    private int _numOfSlaves;
     private long _slaveDeadAfter;
 
     public ConstantMirroring(Archive archive, SectionInterface section,
         Properties p) {
         super(archive, section, p);
-        _numOfSlaves = Integer.parseInt(PropertyHelper.getProperty(p,
-                    section.getName() + ".numOfSlaves"));
         _slaveDeadAfter = 1000 * 60 * Integer.parseInt(p.getProperty(
                 section.getName() + ".slaveDeadAfter", "0"));
 
         if (_numOfSlaves < 2) {
-            throw new IllegalArgumentException(
-                "numOfSlaves has to be > 1 for section " + section.getName());
-        }
+			throw new IllegalArgumentException(
+					"numOfSlaves has to be > 1 for section "
+							+ section.getName());
+		}
+        if (_slaveList.isEmpty()) {
+			_slaveList = null;
+		} else if (_numOfSlaves > _slaveList.size()) {
+			throw new IllegalArgumentException(
+					"numOfSlaves has to be <= the size of the destination slave list for section "
+							+ section.getName());
+		}
     }
 
     public void cleanup(ArrayList jobList) {
@@ -86,8 +91,8 @@ public class ConstantMirroring extends ArchiveType {
 
                 Iterator offlineSlaveIter = slaves.iterator();
 
-                while ((src.getSlaves().size() > _numOfSlaves) &&
-                        offlineSlaveIter.hasNext()) { // remove offline slaves until size is okay
+                while ((slaves.size() > _numOfSlaves) &&
+                        offlineSlaveIter.hasNext()) { // remove OFFline slaves until size is okay
 
                     RemoteSlave slave = (RemoteSlave) offlineSlaveIter.next();
 
@@ -104,7 +109,7 @@ public class ConstantMirroring extends ArchiveType {
                 Iterator onlineSlaveIter = slaves.iterator();
 
                 while ((slaves.size() > _numOfSlaves) &&
-                        onlineSlaveIter.hasNext()) { // remove online slaves until size is okay
+                        onlineSlaveIter.hasNext()) { // remove ONline slaves until size is okay
 
                     RemoteSlave slave = (RemoteSlave) onlineSlaveIter.next();
                     slave.simpleDelete(src.getPath());
