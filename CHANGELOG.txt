@@ -1,3 +1,13 @@
+2006/02/22 Matt Zimmerman <zubov@users.sourceforge.net>
+* Fixed an issue with !uploaders,!downloaders,and !idle that would display the wrong information
+* Added idle_time to "site group"
+* Fixed !new occasionally reporting the wrong information because of an integer overflow
+* Added default_user from CyBeR
+* Updates to the ArchiveTypes
+ - slavename.n= can now be used on all ArchiveTypes to specify the destination set, default is ALL
+* Fixed a null-pointer when the pasv_addr setting is an unresolvable hostname
+* Added a line to list the total # of jobs after SITE LISTJOBS
+
 2005/12/05 Anonymous Coward <tdsoul@gmail.com>
 * fixed case sensitive site invite
 * fix a bug allowing 0 byte files to remain after a failed transfer attempt
