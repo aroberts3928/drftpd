@@ -258,7 +258,7 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 	}
 
 	public void addSlave(RemoteSlave slave) {
-		if (_slaves == null) { // isDirectory()
+		if (isDirectory()) { // isDirectory()
 			throw new IllegalStateException("Cannot addSlave() on a directory");
 		}
 
@@ -785,7 +785,7 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 	 * returns slaves. throws exception if a directory.
 	 */
 	public List<RemoteSlave> getSlaves() {
-		if (_slaves == null) {
+		if (isDirectory()) {
 			throw new IllegalStateException(
 					"getSlaves() called on a directory: " + getPath());
 		}
@@ -1252,7 +1252,7 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 	 * .delete() if it is.
 	 */
 	public boolean removeSlave(RemoteSlave slave) {
-		if (_slaves == null) {
+		if (isDirectory()) {
 			throw new IllegalStateException("Cannot removeSlave() on directory");
 		}
 
