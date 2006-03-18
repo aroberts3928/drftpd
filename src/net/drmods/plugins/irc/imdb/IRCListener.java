@@ -76,6 +76,11 @@ public class IRCListener extends IRCCommand {
         ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);
 		env.add("ircnick", msgc.getSource().getNick());	
         env.add("searchstr", args);
+
+        if (args.equals("")) {
+             out.add(ReplacerUtils.jprintf("imdb.syntax",env,IMDBParser.class));
+             return out;
+        }
         
         IMDBParser imdb = new IMDBParser(args, _filters);
         if (!imdb.foundFilm()) {
