@@ -26,7 +26,6 @@ master.usermanager=org.drftpd.usermanager.javabeans.BeanUserManager
 #leave slaveselection manager as is and use default configs in:
 # 1. slaveselection-up.conf.dist
 # 2. slaveselection-down.conf.dist
-# 3. slaveselection-master.conf.dist
 # alternate is org.drftpd.slaveselection.def.SlaveSelectionManager
 slaveselection=org.drftpd.slaveselection.filter.SlaveSelectionManager
 
