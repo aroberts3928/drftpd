@@ -133,11 +133,11 @@ public abstract class ArchiveType {
             }
 
             try {
-                if (!isArchivedDir(lrf)) {
-                    if ((System.currentTimeMillis() - lrf.lastModified()) > getArchiveAfter()) {
-                        oldDirs.add(lrf);
-                    }
-                }
+                if ((System.currentTimeMillis() - lrf.lastModified()) > getArchiveAfter()) {
+					if (!isArchivedDir(lrf)) {
+						oldDirs.add(lrf);
+					}
+				}
             } catch (IncompleteDirectoryException e) {
                 continue;
             } catch (OfflineSlaveException e) {

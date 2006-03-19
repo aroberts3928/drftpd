@@ -76,9 +76,7 @@ public class ConstantMirroring extends ArchiveType {
             }
 
             if (src.isFile()) {
-                Collection<RemoteSlave> slaves;
-
-                slaves = src.getSlaves();
+                Collection<RemoteSlave> slaves = src.getSlaves();
                 for (Iterator<RemoteSlave> slaveIter = slaves.iterator(); slaveIter.hasNext();) {
                 	RemoteSlave rslave = slaveIter.next();
                 	if (!rslave.isAvailable()) {
