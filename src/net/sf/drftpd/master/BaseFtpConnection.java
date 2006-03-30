@@ -296,7 +296,7 @@ public class BaseFtpConnection implements Runnable {
 
         if ("USER".equals(cmd) || "PASS".equals(cmd) || "QUIT".equals(cmd) ||
                 "HELP".equals(cmd) || "AUTH".equals(cmd) || "PBSZ".equals(cmd) ||
-                "IDNT".equals(cmd)) {
+                "IDNT".equals(cmd) || "PROT".equals(cmd)) {
             return true;
         }
 
