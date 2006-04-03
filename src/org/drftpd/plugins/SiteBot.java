@@ -80,6 +80,7 @@ import org.drftpd.id3.ID3Tag;
 import org.drftpd.master.SlaveManager;
 import org.drftpd.misc.CaseInsensitiveHashMap;
 import org.drftpd.permissions.Permission;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.FileUtils;
 import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
@@ -372,7 +373,11 @@ public class SiteBot extends FtpListener implements Observer {
             logger.warn("IO error reading .sfv", e);
 
             return;
-        }
+        } catch (FileStillTransferringException e) {
+        	logger.info("SFVFile still transferring");
+        	
+        	return;
+		}
 
         if (!sfvfile.hasFile(direvent.getDirectory().getName())) {
             return;

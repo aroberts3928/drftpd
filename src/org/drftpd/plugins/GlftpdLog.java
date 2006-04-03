@@ -52,6 +52,7 @@ import org.drftpd.SFVFile;
 import org.drftpd.SFVFile.SFVStatus;
 import org.drftpd.commands.Nuke;
 import org.drftpd.commands.UserManagement;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.slave.SlaveStatus;
 import org.drftpd.usermanager.NoSuchUserException;
@@ -152,7 +153,10 @@ public class GlftpdLog extends FtpListener {
         } catch (IOException e) {
             // IO error reading .sfv
             return;
-        }
+        } catch (FileStillTransferringException e) {
+			// SFVFile still being uploaded
+        	return;
+		}
 
         long starttime = Long.MAX_VALUE;
 

@@ -111,7 +111,7 @@ public interface LinkedRemoteFileInterface extends RemoteFileInterface {
     public abstract LinkedRemoteFile getRoot();
 
     public abstract SFVFile getSFVFile()
-        throws IOException, FileNotFoundException, NoAvailableSlaveException;
+        throws IOException, FileNotFoundException, NoAvailableSlaveException, FileStillTransferringException;
 
     public abstract long getXferspeed();
 
@@ -160,7 +160,7 @@ public interface LinkedRemoteFileInterface extends RemoteFileInterface {
     public abstract String lookupPath(String path);
 
     public abstract SFVFile lookupSFVFile()
-        throws IOException, FileNotFoundException, NoAvailableSlaveException;
+        throws IOException, FileNotFoundException, NoAvailableSlaveException, FileStillTransferringException;
 
     /**
      * Use addFile() if you want lastModified to be updated.

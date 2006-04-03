@@ -38,6 +38,7 @@ import org.drftpd.master.RemoteSlave;
 import org.drftpd.mirroring.archivetypes.IncompleteDirectoryException;
 import org.drftpd.mirroring.archivetypes.OfflineSlaveException;
 import org.drftpd.plugins.Archive;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.sections.SectionInterface;
 import org.drftpd.sections.def.SectionManager.Section;
@@ -223,11 +224,16 @@ public abstract class ArchiveType {
         }
 
         try {
-            if (!lrf.lookupSFVFile().getStatus().isFinished()) {
-                logger.debug(lrf.getPath() + " is not complete");
-                throw new IncompleteDirectoryException(lrf.getPath() +
-                    " is not complete");
-            }
+            try {
+				if (!lrf.lookupSFVFile().getStatus().isFinished()) {
+				    logger.debug(lrf.getPath() + " is not complete");
+				    throw new IncompleteDirectoryException(lrf.getPath() +
+				        " is not complete");
+				}
+			} catch (FileStillTransferringException e) {
+				logger.debug(lrf.getPath() + " is still transferrring it's SFV");
+				throw new IncompleteDirectoryException(lrf.getPath() + " is still transferrring it's SFV");
+			}
         } catch (FileNotFoundException e) {
         } catch (IOException e) {
         } catch (NoAvailableSlaveException e) {

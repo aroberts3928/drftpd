@@ -65,6 +65,7 @@ import org.drftpd.commands.UnhandledCommandException;
 import org.drftpd.commands.UserManagement;
 import org.drftpd.master.RemoteSlave;
 import org.drftpd.master.RemoteTransfer;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.remotefile.ListUtils;
@@ -1124,7 +1125,13 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 boolean SfvFirstEnforcedPath = zsCfg.checkSfvFirstEnforcedPath(targetDir, 
                 		conn.getUserNull()); 
                 try {
-                    SFVFile sfv = conn.getCurrentDirectory().lookupSFVFile();
+                    SFVFile sfv;
+					try {
+						sfv = conn.getCurrentDirectory().lookupSFVFile();
+					} catch (FileStillTransferringException e) {
+						// I have no idea how to handle this
+						return new Reply(400, "SFVFile still transferring.");
+					}
                     if (checkName.endsWith(".sfv") && 
                     	!zsCfg.multiSfvAllowed()) {
                         return new Reply(533,
@@ -1559,17 +1566,22 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 
                 //compare checksum from transfer to checksum from sfv
                 try {
-                    long sfvChecksum = _transferFile.getParentFileNull()
-                                                    .lookupSFVFile()
-                                                    .getChecksum(_transferFile.getName());
-
-                    if (sfvChecksum == checksum) {
-                        response.addComment(
-                            "checksum from transfer matched checksum in .sfv");
-                    } else {
-                        response.addComment(
-                            "WARNING: checksum from transfer didn't match checksum in .sfv");
-                    }
+                    long sfvChecksum;
+					try {
+						sfvChecksum = _transferFile.getParentFileNull()
+						                                .lookupSFVFile()
+						                                .getChecksum(_transferFile.getName());
+	                    if (sfvChecksum == checksum) {
+	                        response.addComment(
+	                            "checksum from transfer matched checksum in .sfv");
+	                    } else {
+	                        response.addComment(
+	                            "WARNING: checksum from transfer didn't match checksum in .sfv");
+	                    }
+					} catch (FileStillTransferringException e) {
+						response
+								.addComment("checksum from sfv doesn't exist yet, SFVFile is being uploaded");
+					}
                 } catch (NoAvailableSlaveException e1) {
                     response.addComment(
                         "slave with .sfv offline, checksum not verified");
@@ -1589,47 +1601,51 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         } else if (isStor) {
             if (!targetFileName.toLowerCase().endsWith(".sfv")) {
                 try {
-                    long sfvChecksum = targetDir.lookupSFVFile().getChecksum(targetFileName);
+                    long sfvChecksum;
+					try {
+						sfvChecksum  = targetDir.lookupSFVFile().getChecksum(targetFileName);
+	                    if (checksum == sfvChecksum) {
+	                        response.addComment("checksum match: SLAVE/SFV:" +
+	                            Long.toHexString(checksum));
+	                    } else if (checksum == 0) {
+	                        response.addComment(
+	                            "checksum match: SLAVE/SFV: DISABLED");
+	                    } else {
+	                        response.addComment("checksum mismatch: SLAVE: " +
+	                            Long.toHexString(checksum) + " SFV: " +
+	                            Long.toHexString(sfvChecksum));
+	                        response.addComment(" deleting file");
+	                        response.setMessage("Checksum mismatch, deleting file");
+	                        _transferFile.delete();
 
-                    if (checksum == sfvChecksum) {
-                        response.addComment("checksum match: SLAVE/SFV:" +
-                            Long.toHexString(checksum));
-                    } else if (checksum == 0) {
-                        response.addComment(
-                            "checksum match: SLAVE/SFV: DISABLED");
-                    } else {
-                        response.addComment("checksum mismatch: SLAVE: " +
-                            Long.toHexString(checksum) + " SFV: " +
-                            Long.toHexString(sfvChecksum));
-                        response.addComment(" deleting file");
-                        response.setMessage("Checksum mismatch, deleting file");
-                        _transferFile.delete();
+	                        //				getUser().updateCredits(
+	                        //					- ((long) getUser().getRatio() * transferedBytes));
+	                        //				getUser().updateUploadedBytes(-transferedBytes);
+	                        // response.addComment(conn.status());
+	                        return false; // don't modify credits
 
-                        //				getUser().updateCredits(
-                        //					- ((long) getUser().getRatio() * transferedBytes));
-                        //				getUser().updateUploadedBytes(-transferedBytes);
-                        // response.addComment(conn.status());
-                        return false; // don't modify credits
-
-                        //				String badtargetFilename = targetFilename + ".bad";
-                        //
-                        //				try {
-                        //					LinkedRemoteFile badtargetFile =
-                        //						targetDir.getFile(badtargetFilename);
-                        //					badtargetFile.delete();
-                        //					response.addComment(
-                        //						"zipscript - removing "
-                        //							+ badtargetFilename
-                        //							+ " to be replaced with new file");
-                        //				} catch (FileNotFoundException e2) {
-                        //					//good, continue...
-                        //					response.addComment(
-                        //						"zipscript - checksum mismatch, renaming to "
-                        //							+ badtargetFilename);
-                        //				}
-                        //				targetFile.renameTo(targetDir.getPath() +
-                        // badtargetFilename);
-                    }
+	                        //				String badtargetFilename = targetFilename + ".bad";
+	                        //
+	                        //				try {
+	                        //					LinkedRemoteFile badtargetFile =
+	                        //						targetDir.getFile(badtargetFilename);
+	                        //					badtargetFile.delete();
+	                        //					response.addComment(
+	                        //						"zipscript - removing "
+	                        //							+ badtargetFilename
+	                        //							+ " to be replaced with new file");
+	                        //				} catch (FileNotFoundException e2) {
+	                        //					//good, continue...
+	                        //					response.addComment(
+	                        //						"zipscript - checksum mismatch, renaming to "
+	                        //							+ badtargetFilename);
+	                        //				}
+	                        //				targetFile.renameTo(targetDir.getPath() +
+	                        // badtargetFilename);
+	                    }
+					} catch (FileStillTransferringException e) {
+						response.addComment("No sfv to compare to (SFVTransferring), file allowed");
+					}
                 } catch (NoAvailableSlaveException e) {
                     response.addComment(
                         "zipscript - SFV unavailable, slave(s) with .sfv file is offline");

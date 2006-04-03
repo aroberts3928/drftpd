@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 
@@ -696,11 +695,12 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 	}
 
 	public synchronized SFVFile getSFVFile() throws IOException,
-			FileNotFoundException, NoAvailableSlaveException {
+			FileNotFoundException, NoAvailableSlaveException, FileStillTransferringException {
 		
-		/*
-		 *Due to race conditions this method can be called before the file is fully uploaded. 
-		 */
+		if (_xfertime == -1L) {
+			throw new FileStillTransferringException();
+		}
+		
 		if (_sfvFile == null) {
 			Collection<RemoteSlave> availSlaves = new ArrayList<RemoteSlave>(getAvailableSlaves());
 			for (RemoteSlave rslave : availSlaves) {
@@ -1062,7 +1062,7 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 	}
 
 	public SFVFile lookupSFVFile() throws IOException, FileNotFoundException,
-			NoAvailableSlaveException {
+			NoAvailableSlaveException, FileStillTransferringException {
 		if (!isDirectory()) {
 			throw new IllegalStateException(
 					"lookupSFVFile must be called on a directory");

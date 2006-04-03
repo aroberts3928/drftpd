@@ -31,6 +31,7 @@ import net.sf.drftpd.master.UploaderPosition;
 
 import org.drftpd.SFVFile;
 import org.drftpd.dynamicdata.Key;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.usermanager.NoSuchUserException;
 import org.drftpd.usermanager.User;
@@ -82,7 +83,10 @@ public class RaceStatistics extends FtpListener {
         } catch (IOException e) {
             // can't save stats with no sfv file
             return;
-        }
+        } catch (FileStillTransferringException e) {
+        	// can't save stats with no sfv file
+            return;
+		}
 
         if (!sfvfile.hasFile(direvent.getDirectory().getName())) {
             return;

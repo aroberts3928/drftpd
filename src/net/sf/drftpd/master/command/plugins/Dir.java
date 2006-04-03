@@ -52,6 +52,7 @@ import org.drftpd.id3.ID3Tag;
 import org.drftpd.plugins.DIZFile;
 import org.drftpd.plugins.DIZPlugin;
 import org.drftpd.plugins.SiteBot;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.remotefile.ListUtils;
@@ -338,7 +339,9 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
                 //Error fetching SFV, ignore
             } catch (NoAvailableSlaveException e) {
                 //Error fetching SFV, ignore
-            }
+            } catch (FileStillTransferringException e) {
+            	response.addComment("SFVFile still being transferred, no info available");
+			}
         }
 
         return response;
