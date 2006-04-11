@@ -193,6 +193,8 @@ public interface LinkedRemoteFileInterface extends RemoteFileInterface {
 
     public abstract void setOwner(String owner);
 
+    public abstract long getXfertime();
+
     public abstract void setXfertime(long xfertime);
 
     public abstract String toString();

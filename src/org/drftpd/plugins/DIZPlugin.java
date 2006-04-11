@@ -170,7 +170,9 @@ public class DIZPlugin extends FtpListener {
 	public static LinkedRemoteFileInterface getZipFile(
 			LinkedRemoteFileInterface dir) throws NoAvailableSlaveException {
 		for (LinkedRemoteFileInterface aFile : dir.getFiles2()) {
-			if (isZipFile(aFile) && aFile.length() != 0 && aFile.isAvailable()) {
+			if (isZipFile(aFile) && aFile.isAvailable() &&
+                            (aFile.length() != 0) &&
+                            (aFile.getXfertime() != -1)) {
 				return aFile;
 			}
 				
