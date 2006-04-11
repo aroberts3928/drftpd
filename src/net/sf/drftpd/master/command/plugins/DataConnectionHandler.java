@@ -249,10 +249,10 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 address = new InetSocketAddress(_preTransferRSlave.getPASVIP(),_transfer.getAddress().getPort());
                 _isPasv = true;
             } catch (SlaveUnavailableException e) {
-            	reset();
+            	reset(conn);
                 return Reply.RESPONSE_530_SLAVE_UNAVAILABLE;
             } catch (RemoteIOException e) {
-            	reset();
+            	reset(conn);
                 _preTransferRSlave.setOffline(
                     "Slave could not listen for a connection");
                 logger.error("Slave could not listen for a connection", e);
@@ -306,7 +306,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
      */
     private Reply doPORT(BaseFtpConnection conn) {
         FtpRequest request = conn.getRequest();
-        reset();
+        reset(conn);
 
         InetAddress clientAddr = null;
 
@@ -362,7 +362,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
             int lo = Integer.parseInt(st.nextToken());
             clientPort = (hi << 8) | lo;
         } catch (NumberFormatException ex) {
-        	reset();
+        	reset(conn);
             return Reply.RESPONSE_501_SYNTAX_ERROR;
 
             //out.write(ftpStatus.getResponse(552, request, user, null));
@@ -389,7 +389,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
     }
 
     private Reply doPRET(BaseFtpConnection conn) {
-        reset();
+        reset(conn);
 
         FtpRequest request = conn.getRequest();
         FtpRequest ghostRequest = new FtpRequest(request.getArgument());
@@ -529,7 +529,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 
         // argument check
         if (!request.hasArgument()) {
-        	reset();
+        	reset(conn);
             return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
 
@@ -538,13 +538,13 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         try {
             _resumePosition = Long.parseLong(skipNum);
         } catch (NumberFormatException ex) {
-        	reset();
+        	reset(conn);
             return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
 
         if (_resumePosition < 0) {
             _resumePosition = 0;
-            reset();
+            reset(conn);
             return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
 
@@ -901,7 +901,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
     public void load(CommandManagerFactory initializer) {
     }
 
-    protected synchronized void reset() {
+    protected synchronized void reset(BaseFtpConnection conn) {
         _rslave = null;
         if (_transfer != null) {
         	try {
@@ -912,7 +912,11 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         }
         _transfer = null;
         if (_transferFile != null) {
-        	if (_transferFile.getXfertime() == -1) { // if transfer failed on STOR
+        	if ((conn.getRequest().getCommand().equals("STOR") == true) &&
+                    (_transferFile.getXfertime() == -1)) {
+
+                        // Transfer failed on STOR
+
         		_transferFile.setXfertime(0);
         	}
         	_transferFile = null;
@@ -1026,7 +1030,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         ReplacerEnvironment env = new ReplacerEnvironment();
         if (!_encryptedDataChannel &&
                 conn.getGlobalContext().getConfig().checkPermission("denydatauncrypted", conn.getUserNull())) {
-        	reset();
+        	reset(conn);
             return new Reply(530, "USE SECURE DATA CONNECTION");
         }
 
@@ -1516,7 +1520,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 				return response;
 			}
         } finally {
-            reset();
+            reset(conn);
         }
     }
 
