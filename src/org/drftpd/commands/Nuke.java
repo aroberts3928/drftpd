@@ -62,7 +62,7 @@ import java.util.StringTokenizer;
  * amount -> amount before multiplier
  *
  * @author mog
- * @version $Id$
+ * @version $Id: Nuke.java 1374 2005-12-23 17:41:59Z tdsoul $
  */
 public class Nuke implements CommandHandler, CommandHandlerFactory {
     public static final Key NUKED = new Key(Nuke.class, "nuked", Integer.class);
@@ -78,7 +78,9 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
 
     public static long calculateNukedAmount(long size, float ratio,
         int multiplier) {
-        return (long) ((size * ratio) + (size * (multiplier - 1)));
+    	// If ratio is 0, NukedAmount should be 0.
+    	if (ratio == 0) return 0L;
+    	else return (long) ((size * ratio) + (size * (multiplier - 1)));
     }
 
     public static void nukeRemoveCredits(LinkedRemoteFileInterface nukeDir,
