@@ -1037,30 +1037,55 @@ public class SiteBot extends FtpListener implements Observer {
                                   : (Bytes.formatBytes(
                 dir.length() / elapsedSeconds) + "/s"));
 
-        //			ArrayList dirs = new ArrayList();
-        //			LinkedRemoteFileUtils.getAllDirectories(file, dirs);
-        //			int files = 0;
-        //
-        //			for (Iterator iter = dirs.iterator(); iter.hasNext();) {
-        //				LinkedRemoteFile subdir = (LinkedRemoteFile) iter.next();
-        //				files += subdir.dirSize();
-        //			}
         SFVFile sfvfile;
+
+        int totalsfv = 0;
+        int totalfiles = 0;
+        long totalbytes = 0;
+        long totalxfertime = 0;
 
         try {
             sfvfile = file.lookupSFVFile();
+            totalsfv += 1;
+            totalfiles += sfvfile.size();
+            totalbytes += sfvfile.getTotalBytes();
+            totalxfertime += sfvfile.getTotalXfertime();
+        } catch (Exception e) {
+        }
 
-            //env.add("size", Bytes.formatBytes(sfvfile.getTotalBytes()()));
-            env.add("totalfiles", "" + sfvfile.size());
-            env.add("totalspeed", Bytes.formatBytes(sfvfile.getXferspeed()));
-        } catch (Exception ex) {
-            //env.add("size", Bytes.formatBytes(file.length()));
-            env.add("totalfiles", "" + file.getFiles().size());
-            //COULD BE multi-cd, PRE will have to get it owns fillEnvSection with sub-dir .sfv support!
-        	if (ex instanceof FileNotFoundException) {
-        		// no need to spam FileNotFound on SFVFile lookups
-        		return;
-        	}
+        // For the PRE command, totalfiles and totalspeed should reflect all
+        // sub-directories as well.  This should be recursive in order to
+        // search every sub-directory, but this should satisfy most user's
+        // needs for now.
+
+        if (direvent.getCommand().equals("PRE") == true) {
+            for (LinkedRemoteFileInterface subfile : file.getFiles2()) {
+                if (subfile.isDirectory()) {
+                    try {
+                        sfvfile = subfile.lookupSFVFile();
+                        totalsfv += 1;
+                        totalfiles += sfvfile.size();
+                        totalbytes += sfvfile.getTotalBytes();
+                        totalxfertime += sfvfile.getTotalXfertime();
+                    } catch (Exception e) {
+                        continue;
+                    }
+                }
+            }
+        }
+
+        if (totalsfv > 0) {
+            env.add("totalfiles", "" + totalfiles);
+
+            if (totalxfertime > 0) {
+                env.add("totalspeed", Bytes.formatBytes((totalbytes / totalxfertime) * 1000));
+            } else {
+                env.add("totalspeed", Bytes.formatBytes(0)); 
+            }
+        } else {
+            env.add("totalfiles", "" + file.getFiles().size()); 
+            env.add("totalspeed", Bytes.formatBytes(0));
+
             logger.warn("Couldn't get SFV file in announce");
         }
     }
@@ -1116,16 +1141,6 @@ public class SiteBot extends FtpListener implements Observer {
         SectionInterface sectionObj = getGlobalContext()
                                           .getSectionManager().lookup(dir.getPath());
 
-        //		LinkedRemoteFile section = null;
-        //		LinkedRemoteFile tmp2 = dir, tmp1 = dir;
-        //		try {
-        //			while (true) {
-        //				section = tmp2;
-        //				tmp2 = tmp1;
-        //				tmp1 = tmp1.getParentFile();
-        //			}
-        //		} catch (FileNotFoundException success) {
-        //		}
         return new Ret(ResourceBundle.getBundle(SiteBot.class.getName())
                                      .getString(prefix), sectionObj);
     }
