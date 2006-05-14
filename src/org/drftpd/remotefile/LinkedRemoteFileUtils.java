@@ -66,7 +66,7 @@ public class LinkedRemoteFileUtils {
         }
     }
 
-    public static ArrayList getAllFiles(LinkedRemoteFileInterface dir) {
+    public static ArrayList<LinkedRemoteFileInterface> getAllFiles(LinkedRemoteFileInterface dir) {
         ArrayList<LinkedRemoteFileInterface> files=
         	new ArrayList<LinkedRemoteFileInterface>();
         getAllFilesInternal(dir, files);

@@ -84,6 +84,7 @@ import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.FileUtils;
 import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
+import org.drftpd.remotefile.LinkedRemoteFileUtils;
 import org.drftpd.sections.SectionInterface;
 import org.drftpd.sitebot.IRCCommand;
 import org.drftpd.slave.SlaveStatus;
@@ -1044,31 +1045,33 @@ public class SiteBot extends FtpListener implements Observer {
         long totalbytes = 0;
         long totalxfertime = 0;
 
-        try {
-            sfvfile = file.lookupSFVFile();
-            totalsfv += 1;
-            totalfiles += sfvfile.size();
-            totalbytes += sfvfile.getTotalBytes();
-            totalxfertime += sfvfile.getTotalXfertime();
-        } catch (Exception e) {
-        }
+        if (direvent.getCommand().equals("PRE") == false) {
+            try {
+                sfvfile = file.lookupSFVFile();
+                totalsfv += 1;
+                totalfiles += sfvfile.size();
+                totalbytes += sfvfile.getTotalBytes();
+                totalxfertime += sfvfile.getTotalXfertime();
+            } catch (Exception e) {
+            }
+        } else {
+            /* For the PRE command totalfiles and totalspeed should reflect the
+             * totals in all sub-directories.
+             */
 
-        // For the PRE command, totalfiles and totalspeed should reflect all
-        // sub-directories as well.  This should be recursive in order to
-        // search every sub-directory, but this should satisfy most user's
-        // needs for now.
-
-        if (direvent.getCommand().equals("PRE") == true) {
-            for (LinkedRemoteFileInterface subfile : file.getFiles2()) {
-                if (subfile.isDirectory()) {
-                    try {
-                        sfvfile = subfile.lookupSFVFile();
-                        totalsfv += 1;
-                        totalfiles += sfvfile.size();
-                        totalbytes += sfvfile.getTotalBytes();
-                        totalxfertime += sfvfile.getTotalXfertime();
-                    } catch (Exception e) {
-                        continue;
+            if (direvent.getCommand().equals("PRE") == true) {
+                for (LinkedRemoteFileInterface aFile :
+                     LinkedRemoteFileUtils.getAllFiles(file)) {
+                    if (aFile.getName().toLowerCase().endsWith(".sfv")) {
+                        try {
+                            sfvfile = aFile.getSFVFile();
+                            totalsfv += 1;
+                            totalfiles += sfvfile.size();
+                            totalbytes += sfvfile.getTotalBytes();
+                            totalxfertime += sfvfile.getTotalXfertime();
+                        } catch (Exception e) {
+                            continue;
+                        }
                     }
                 }
             }
