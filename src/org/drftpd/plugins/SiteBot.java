@@ -1079,14 +1079,16 @@ public class SiteBot extends FtpListener implements Observer {
 
         if (totalsfv > 0) {
             env.add("totalfiles", "" + totalfiles);
+            env.add("totalsize",  Bytes.formatBytes(totalbytes));
 
             if (totalxfertime > 0) {
                 env.add("totalspeed", Bytes.formatBytes((totalbytes / totalxfertime) * 1000));
             } else {
-                env.add("totalspeed", Bytes.formatBytes(0)); 
+                env.add("totalspeed", Bytes.formatBytes(0));
             }
         } else {
-            env.add("totalfiles", "" + file.getFiles().size()); 
+            env.add("totalfiles", "" + 0);
+            env.add("totalsize",  Bytes.formatBytes(0));
             env.add("totalspeed", Bytes.formatBytes(0));
 
             logger.warn("Couldn't get SFV file in announce");
