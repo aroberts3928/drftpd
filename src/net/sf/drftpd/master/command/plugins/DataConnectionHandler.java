@@ -616,7 +616,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 
             out.println("200- " + fileName + " SFV: " +
                 Checksum.formatChecksum(checkSum.longValue()) + " SLAVE: " +
-                Checksum.formatChecksum(checkSum.longValue()) + " " + status);
+                Checksum.formatChecksum(fileCheckSum) + " " + status);
 
             continue;
         }
