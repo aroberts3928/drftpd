@@ -695,7 +695,8 @@ public class SiteBot extends FtpListener implements Observer {
         env.add("section", section.getName());
 
         //Ret ret = getPropertyFileSuffix("nuke", event.getPath());
-        env.add("path", event.getPath());
+        env.add("path", strippath(event.getPath().substring(section.getPath().
+                                                            length())));
         env.add("reason", event.getReason());
         env.add("multiplier", String.valueOf(event.getMultiplier()));
 
