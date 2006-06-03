@@ -62,7 +62,7 @@ import java.util.StringTokenizer;
  * amount -> amount before multiplier
  *
  * @author mog
- * @version $Id: Nuke.java 1374 2005-12-23 17:41:59Z tdsoul $
+ * @version $Id$
  */
 public class Nuke implements CommandHandler, CommandHandlerFactory {
     public static final Key NUKED = new Key(Nuke.class, "nuked", Integer.class);
@@ -77,10 +77,19 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
     }
 
     public static long calculateNukedAmount(long size, float ratio,
-        int multiplier) {
-    	// If ratio is 0, NukedAmount should be 0.
-    	if (ratio == 0) return 0L;
-    	else return (long) ((size * ratio) + (size * (multiplier - 1)));
+                                            int multiplier) {
+        if (size != 0 && ratio != 0 && multiplier != 0) {
+            return (long) ((size * ratio) + (size * (multiplier - 1)));
+        } else {
+
+            /* If size is 0 then there are no nuked bytes.  If ratio is 0
+             * then this user should not lose credits because they do not earn
+             * credits by uploading files.  If multiplier is 0 then this user
+             * is exempt from losing credits due to this nuke.
+             */
+
+            return 0L;
+        }
     }
 
     public static void nukeRemoveCredits(LinkedRemoteFileInterface nukeDir,
