@@ -481,7 +481,9 @@ public class SiteBot extends FtpListener implements Observer {
 
             int position = 1;
 
-            for (Iterator iter = racers.iterator(); iter.hasNext();) {
+            for (Iterator iter = racers.iterator();
+                 iter.hasNext() && (position <= _maxUserAnnounce);
+                 position++) {
                 UploaderPosition stat = (UploaderPosition) iter.next();
 
                 User raceuser;
@@ -503,7 +505,7 @@ public class SiteBot extends FtpListener implements Observer {
                 raceenv.add("user", raceuser.getName());
                 raceenv.add("group", raceuser.getGroup());
 
-                raceenv.add("position", new Integer(position++));
+                raceenv.add("position", new Integer(position));
                 raceenv.add("size", Bytes.formatBytes(stat.getBytes()));
                 raceenv.add("files", Integer.toString(stat.getFiles()));
                 raceenv.add("percent",
@@ -537,8 +539,6 @@ public class SiteBot extends FtpListener implements Observer {
                             raceuser, getGlobalContext().getUserManager())));
 
                 say(ret.getSection(), SimplePrintf.jprintf(raceformat, raceenv));
-                if (position >= _maxUserAnnounce)
-                    break;
             }
 
             Ret ret3 = getPropertyFileSuffix("store.complete.group", dir);
@@ -551,7 +551,9 @@ public class SiteBot extends FtpListener implements Observer {
 
             position = 1;
 
-            for (Iterator iter = groups.iterator(); iter.hasNext();) {
+            for (Iterator iter = groups.iterator();
+                 iter.hasNext() && (position <= _maxGroupAnnounce);
+                 position++) {
                 GroupPosition stat = (GroupPosition) iter.next();
 
                 ReplacerEnvironment raceenv = new ReplacerEnvironment(GLOBAL_ENV);
@@ -559,7 +561,7 @@ public class SiteBot extends FtpListener implements Observer {
                 raceenv.add("section", ret.getSection().getName());
                 raceenv.add("group", stat.getGroupname());
 
-                raceenv.add("position", new Integer(position++));
+                raceenv.add("position", new Integer(position));
                 raceenv.add("size", Bytes.formatBytes(stat.getBytes()));
                 raceenv.add("files", Integer.toString(stat.getFiles()));
                 raceenv.add("percent",
@@ -569,8 +571,6 @@ public class SiteBot extends FtpListener implements Observer {
                     Bytes.formatBytes(stat.getXferspeed()) + "/s");
 
                 say(ret.getSection(), SimplePrintf.jprintf(raceformat, raceenv));
-                if (position >= _maxGroupAnnounce)
-                    break;
             }
 
             //HALFWAY
