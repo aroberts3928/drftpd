@@ -49,6 +49,8 @@ public class JobManager {
 
 	private boolean _useCRC;
 	
+	private boolean _useSSL;
+	
 	private long _sleepSeconds;
 
 	private GlobalContext _gctx;
@@ -202,7 +204,7 @@ public class JobManager {
 
 		// job is not deleted, we are ready to process
 		
-		job.transfer(useCRC(), sourceSlave, destSlave);
+		job.transfer(useCRC(), useSecureTransfers(), sourceSlave, destSlave);
 		if (job.isDone()) {
 			logger.debug("Job is finished, removing job " + job.getFile());
 			removeJobFromQueue(job);
@@ -224,6 +226,7 @@ public class JobManager {
 			logger.warn("conf/jobmanager.conf missing, using default values");
 			// defaults
 			_useCRC = true;
+			_useSSL = false;
 			_sleepSeconds = 10000; // 10 seconds
 			return;
 		} finally {
@@ -231,15 +234,14 @@ public class JobManager {
 				try {
 					fis.close();
 				} catch (IOException e) {
-					logger
-							.error(
-									"Could not close the FileInputStream of conf/jobmanager.conf",
-									e);
+					logger.error("Could not close the FileInputStream of conf/jobmanager.conf",	e);
 				}
 				fis = null;
 			}
 		}
+		
 		_useCRC = p.getProperty("useCRC", "true").equals("true");
+		_useSSL = p.getProperty("useSSLTransfers", "true").equals("true");
 		_sleepSeconds = 1000 * Integer.parseInt(PropertyHelper.getProperty(p,"sleepSeconds"));
 		if (_runJob != null) {
 			_runJob.cancel();
@@ -279,5 +281,9 @@ public class JobManager {
 
 	private boolean useCRC() {
 		return _useCRC;
+	}
+	
+	private boolean useSecureTransfers() {
+		return _useSSL;
 	}
 }

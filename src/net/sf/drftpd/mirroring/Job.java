@@ -216,7 +216,7 @@ public class Job {
 	 * @return
 	 */
     
-    public void transfer(boolean checkCRC, RemoteSlave sourceSlave,
+    public void transfer(boolean checkCRC, boolean secureTransfer, RemoteSlave sourceSlave,
 			RemoteSlave destSlave) {
 		synchronized (this) {
 			if (_slaveTransfer != null) {
@@ -227,7 +227,7 @@ public class Job {
 						"File already exists on target slave");
 			}
 			_slaveTransfer = new SlaveTransfer(getFile(), sourceSlave,
-					destSlave);
+					destSlave, secureTransfer);
 		}
 
 		logger.info("Sending " + getFile().getName() + " from "
