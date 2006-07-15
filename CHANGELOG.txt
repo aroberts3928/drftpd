@@ -1,4 +1,37 @@
+2006/06/16 fr0w <>
+* Add support for SSL slave-to-slave transfers issued by JobManager.
+
+2006/06/03 dark <>
+* Fixed: Nuke multiplier of 0 should not remove credits.  Thanks _Dink.
+* Fixed: SiteBot output the full path rather than the "section-stripped" path on Nuke. Thanks JJLIT.
+* Fixed: The incorrect checksum is reported when issuing "site rescan".
+* Added: A 'totalsize' variable to the sitebot for announcing the total size of files in an SFV.
+* Fixed: totalfiles variable to more accurately reflect reality on SITE PRE.
+* Fixed: a bug with !kick, which was comparing seconds to milliseconds.
+* Fixed: Time.formatTime() was being passed seconds, instead of the required milliseconds.
+
+2006/05/08 Anonymous Coward <tdsoul@gmail.com>
+* If ratio is 0, nuked amount should always return 0.
+
+2006/04/29 dark <>
+* Fixed an "off by one" bug in the max_sim code, which gave users an extra transfer over the max.
+* Fixed another multi-announce issue
+* DIZPlugin should only get zip files that are not currently transfering
+
+2006/03/30 Matt Zimmerman <zubov@users.sourceforge.net>
+* Introduced the FileStillTransferringException to resolve several issues related to sfv files.
+* Fixed the incompatibility with tlswrap and brought drftpd into compliance with the tls-ftp spec
+* Added imdb.syntax for outputing help when !imdb is not passed any parameters, thanks to JJLIT
+
+2006/03/07 dark <>
+* Fixed a bug related to merging existing files w/o any slaves already assigned to them.
+
+2006/02/24 Matt Zimmerman <zubov@users.sourceforge.net>
+* Fixed a possible deadlock issue when a transfer is aborted.
+* Fixed wrong "idletime" sometimes being displayed by UserManagement.
+
 2006/02/22 Matt Zimmerman <zubov@users.sourceforge.net>
+* 2.0.3 released
 * Fixed an issue with !uploaders,!downloaders,and !idle that would display the wrong information
 * Added idle_time to "site group"
 * Fixed !new occasionally reporting the wrong information because of an integer overflow
