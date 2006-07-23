@@ -49,11 +49,11 @@ sfvfirst.users=*
 sfvdeny.subdir.enabled=true
 
 #list of subdirectories which can exist and still allow 
-#an sfv to be uploaded.
+#an sfv to be uploaded. (globs/regex not allowed here) 
 sfvdeny.subdir.exempt=Sample Cover Covers
 
 #deny MKD when .sfv exists? [true/false]
 sfvdeny.mkd.enabled=true
 
-#List of subdirectories which can be made when .sfv exists
-sfvdeny.mkd.exempt=Sample Cover Covers Subs
+#List of subdirectories which can be made when .sfv exists (regex allowed)
+sfvdeny.mkd.exempt=Sample Covers? Subs
