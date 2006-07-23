@@ -79,6 +79,7 @@ import org.drftpd.commands.UserManagement;
 import org.drftpd.id3.ID3Tag;
 import org.drftpd.master.SlaveManager;
 import org.drftpd.misc.CaseInsensitiveHashMap;
+import org.drftpd.misc.LRUCache;
 import org.drftpd.permissions.Permission;
 import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.FileUtils;
@@ -147,6 +148,7 @@ public class SiteBot extends FtpListener implements Observer {
     protected String _server;
     protected int _port;
     private ArrayList<WhoisEntry> _identWhoisList = new ArrayList<WhoisEntry>();
+    private LRUCache<String,User> _raceleader;
 
 	private String _primaryChannelName;
 
@@ -400,6 +402,7 @@ public class SiteBot extends FtpListener implements Observer {
         if( sfvstatus.getAvailable() == 1
         		&& !direvent.getDirectory().isDeleted()) {
             Ret ret = getPropertyFileSuffix("store.first", dir);
+            _raceleader.put(dir.getName(),direvent.getUser());
             fillEnvSection( env, direvent, ret.getSection(), direvent.getDirectory());
             env.add("files", Integer.toString(sfvfile.size()));
             env.add("expectedsize", (Bytes.formatBytes(sfvfile.getTotalBytes() * sfvfile.size())));
@@ -573,9 +576,8 @@ public class SiteBot extends FtpListener implements Observer {
                 say(ret.getSection(), SimplePrintf.jprintf(raceformat, raceenv));
             }
 
-            //HALFWAY
-        } else if ((sfvfile.size() >= 4) &&
-                (sfvstatus.getMissing() == halfway)) {
+        // Other announcements only on dirs with 4+ files.
+        } else if (sfvfile.size() >= 4) { 
             Collection uploaders = userSort(sfvfile.getFiles(), "bytes", "high");
 
             //			ReplacerEnvironment env = new ReplacerEnvironment(globalEnv);
@@ -601,7 +603,8 @@ public class SiteBot extends FtpListener implements Observer {
             }
             env.add("leaduser", leaduser != null ? leaduser.getName() : stat.getUsername());
             env.add("leadgroup", leaduser != null ? leaduser.getGroup() : "");
-
+            //HALFWAY
+            if (sfvstatus.getMissing() == halfway) {
             Ret ret = getPropertyFileSuffix("store.halfway", dir);
             fillEnvSection(env, direvent, ret.getSection());
 
@@ -635,6 +638,38 @@ public class SiteBot extends FtpListener implements Observer {
             //								+ Bytes.formatBytes(stat.getBytes())
             //								+ "]");
             //					}
+            } else if (_raceleader.get(dir.getName()) != null 
+            		&& !_raceleader.get(dir.getName()).getName().equals( 
+            				leaduser != null ? leaduser.getName() : stat 
+            						.getUsername())) { 
+            	UploaderPosition oldstat = null; 
+            	Iterator iter = uploaders.iterator(); 
+            	while (iter.hasNext()) { 
+            		UploaderPosition tmpstat = (UploaderPosition) iter.next(); 
+            		if (tmpstat != null && tmpstat.getUsername().equals( 
+            				_raceleader.get(dir.getName()).getName())) { 
+            			oldstat = tmpstat; 
+            		} 
+            	} 
+            	if (oldstat != null && stat.getFiles() - oldstat.getFiles() > 2) { 
+            		env.add("overtakenuser", _raceleader.get(dir.getName()) 
+            				.getName()); 
+            		env.add("overtakengroup", _raceleader.get(dir.getName()) 
+            				.getGroup()); 
+
+            		_raceleader.put(dir.getName(), leaduser); 
+            		logger 
+            		.info("New Race Leader '" 
+            				+ _raceleader.get(dir.getName()).getName() 
+            				+ "' by " 
+            				+ (stat.getFiles() - oldstat.getFiles()) 
+            				+ " files."); 
+            		Ret ret = getPropertyFileSuffix("store.newleader", dir); 
+            		fillEnvSection(env, direvent, ret.getSection()); 
+            		say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), 
+            				env)); 
+            	} 
+            } 
         }
     }
 
@@ -1347,6 +1382,7 @@ public class SiteBot extends FtpListener implements Observer {
         		cc.setAutoJoin(new AutoJoin(_conn, channelName, cc._chanKey));
         	}
         }
+		_raceleader = new LRUCache<String,User>(20);
 		
         //maximum announcements for race results
 		try {
