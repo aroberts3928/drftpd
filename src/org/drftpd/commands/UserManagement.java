@@ -1684,7 +1684,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         }
 
         return new Reply(200,
-            "OK, removed " + credits + "b from " + myUser.getName() + ".");
+            "OK, removed " + Bytes.formatBytes(credits) + " from " + myUser.getName() + ".");
     }
 
     /**
