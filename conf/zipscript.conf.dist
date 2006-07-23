@@ -37,8 +37,23 @@ allowedexts=nfo txt jpg diz mpg avi zip m3u
 sfvfirst.pathcheck=*
 
 #ignore paths for sfv first enforcement
-sfvfirst.pathignore=/PRE/* /REQUESTS/* */Subs/ */Cover/ */Covers/
+sfvfirst.pathignore=/PRE/* /REQUESTS/* */Subs/
 
 #who has their restricted by the sfv-first system ?
 #if you wanted siteop group to be exempt, put: !=siteop *
 sfvfirst.users=*
+
+#The sfvdeny features are intended to work in conjunction with sfvfirst,
+#and will automatically be disabled if you have sfvfirst.required=false
+#deny sfv upload if subdirs exist? [true/false]
+sfvdeny.subdir.enabled=true
+
+#list of subdirectories which can exist and still allow 
+#an sfv to be uploaded.
+sfvdeny.subdir.exempt=Sample Cover Covers
+
+#deny MKD when .sfv exists? [true/false]
+sfvdeny.mkd.enabled=true
+
+#List of subdirectories which can be made when .sfv exists
+sfvdeny.mkd.exempt=Sample Cover Covers Subs

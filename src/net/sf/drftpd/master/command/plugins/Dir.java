@@ -515,7 +515,6 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
 			toPath2.append(request.getArgument());
 			toPath = toPath2.toString();
 		}
-		// Try Nuke, then if that doesn't work, try TDPSiteNuke.
 		NukeLog _nukelog = Nuke.getNukeLog();
 		if (_nukelog != null && _nukelog.find_fullpath(toPath)) {
 			try {
@@ -532,7 +531,13 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
 		// end nuke log check
 		// *************************************
 
-        String createdDirName = conn.getGlobalContext().getConfig().getDirName(ret.getPath());
+		if (conn.getGlobalContext().getZsConfig().checkSfvDenyMKD( 
+				ret.getFile(), ret.getPath())) { 
+			return new Reply(530, 
+					"Access denied - Directory '" + ret.getPath() + "' not permitted when .sfv exists in '" + ret.getFile().getPath() + "' (ZipScript+)"); 
+		} 
+
+		String createdDirName = conn.getGlobalContext().getConfig().getDirName(ret.getPath());
 
         if (!ListUtils.isLegalFileName(createdDirName)) {
             return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN;

@@ -1161,13 +1161,22 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     }
                 } catch (FileNotFoundException e1) {
                     // no sfv found in dir 
-                	if ( !zsCfg.checkAllowedExtension(checkName) && 
-                			SfvFirstEnforcedPath ) {
-                		// filename not explicitly permitted
-                		// ForceSfvFirst is on, and file is in an enforced path.
-                        return new Reply(533,
-                        	"Requested action not taken. You must upload sfv first.");
-                	}
+                	if (SfvFirstEnforcedPath) { 
+                		// check if .sfv, and if so should it be allowed. 
+                		String badsubdir = zsCfg.checkSfvDenyUL(targetDir); 
+                		if (checkName.endsWith(".sfv") 
+                				&& badsubdir != "") { 
+                			return new Reply(533, 
+                					"Requested action not taken. You can not upload an SFV here due to subdir '" + badsubdir + "' (ZipScript+)."); 
+                		} 
+                		if (!zsCfg.checkAllowedExtension(checkName)) { 
+                			// filename not explicitly permitted 
+                			// ForceSfvFirst is on, and file is in an enforced 
+                			// path. 
+                			return new Reply(533, 
+                			"Requested action not taken. You must upload sfv first."); 
+                		} 
+                	} 
                 } catch (IOException e1) {
                     //error reading sfv, do nothing
                 } catch (NoAvailableSlaveException e1) {

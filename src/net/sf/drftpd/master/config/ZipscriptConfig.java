@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.oro.text.GlobCompiler;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.drftpd.GlobalContext;
+import org.drftpd.org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.drftpd.permissions.GlobPathPermission;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.usermanager.User;
@@ -69,6 +70,14 @@ public class ZipscriptConfig {
 
 	private String _SfvFirstUsers;
 
+	private boolean _SfvDenySubdirEnabled; 
+
+	private String[] _SfvDenySubdirExempt; 
+
+	private boolean _SfvDenyMKDEnabled; 
+
+	private String[] _SfvDenyMKDExempt; 
+
 	public ZipscriptConfig(GlobalContext gctx) throws IOException {
 		_gctx = gctx;
 		Properties cfg = new Properties();
@@ -109,6 +118,14 @@ public class ZipscriptConfig {
 				+ " sfv";
 		_SfvFirstUsers = cfg.getProperty("sfvfirst.users") == null ? "*" : cfg
 				.getProperty("sfvfirst.users");
+		_SfvDenySubdirEnabled = cfg.getProperty("sfvdeny.subdir.enabled") == null ? false 
+				: cfg.getProperty("sfvdeny.subdir.enabled").trim().equalsIgnoreCase("true"); 
+		_SfvDenySubdirExempt = cfg.getProperty("sfvdeny.subdir.exempt") == null ? "".split("") 
+				: cfg.getProperty("sfvdeny.subdir.exempt").trim().split("\\s+"); 
+		_SfvDenyMKDEnabled = cfg.getProperty("sfvdeny.mkd.enabled") == null     ? false 
+				: cfg.getProperty("sfvdeny.mkd.enabled").trim().equalsIgnoreCase("true"); 
+		_SfvDenyMKDExempt = cfg.getProperty("sfvdeny.mkd.exempt") == null ? "".split("") 
+				: cfg.getProperty("sfvdeny.mkd.exempt").trim().split("\\s+"); 
 
 		// Locals
 		String SfvFirstPathIgnore = cfg.getProperty("sfvfirst.pathignore") == null ? "*"
@@ -202,6 +219,82 @@ public class ZipscriptConfig {
 						"sfvfirst.pathignore", user, dir)) {
 			return true;
 		}
+		return false;
+	}
+
+	/**
+	 * Check to see if a .sfv upload should be denied in dir due to it having
+	 * subdirectories as per the <code>sfvdeny.subdir.enabled</code> and
+	 * <code>sfvdeny.subdir.exempt</code> properties in zipscript.conf.
+	 * 
+	 * <p>This feature is disabled if <code>_SfvFirstRequired</code>
+	 * (zipscript.conf: <code>sfvfirst.required</code>) is not true.
+	 * 
+	 * @param dir	directory in which a .sfv file upload attempt is being made.
+	 * @return 		<code>name of subdir</code> if upload should be denied;
+	 *         		<code>empty string</code> otherwise
+	 * @since 		2.0.4+
+	 * @author 		tdsoul
+	 */
+	public String checkSfvDenyUL(LinkedRemoteFileInterface dir) {
+		if (_SfvFirstRequired && _SfvDenySubdirEnabled && dir.isDirectory()
+				&& dir.getDirectories().size() > 0) {
+			for (LinkedRemoteFileInterface subdir : dir.getDirectories()) {
+				boolean nomatch = true;
+				for (String exempt : _SfvDenySubdirExempt) {
+					if (subdir.getName().equalsIgnoreCase(exempt)) {
+						nomatch = false;
+						break;
+					}
+				}
+				// If this subdir is not exempt, deny.
+				if (nomatch) {
+					logger.warn("SFV upload denied because subdirectory '" + subdir.getName() + "' exists.  Add it to sfvdeny.subdir.exempt in zipscript.conf if you wish to allow.");
+					return subdir.getName();
+				}
+			}
+			// all subdirs are exempt, do not deny.
+		}
+		return "";
+	}
+
+	/**
+	 * Check to see if a MKD should be allowed.
+	 * 
+	 * <p>This feature is disabled if <code>_SfvFirstRequired</code>
+	 * (zipscript.conf: <code>sfvfirst.required</code>) is not true.
+	 * 
+	 * @param dir 		directory in which a MKD is being attempted.
+	 * @param subdir	the name of the subdir that	is being attempted to 
+	 *                  be created in <code>dir</code>.
+	 * @return 			<code>true</code> if MKD should be denied;
+	 *         			<code>false</code> otherwise
+	 * @since 			2.0.4+
+	 * @author 			tdsoul
+	 */
+	public boolean checkSfvDenyMKD(LinkedRemoteFileInterface dir, String subdir) {
+		if (_SfvFirstRequired && _SfvDenyMKDEnabled && dir.isDirectory()
+				&& dir.getFiles().size() > 0) {
+			for (LinkedRemoteFileInterface file : dir.getFiles2()) {
+				if (file.isFile() && file.getName().endsWith(".sfv")) {
+					// Found an sfv, check for permission.
+					for (String _pat : _SfvDenyMKDExempt) {
+						if (SelectorUtils.matchPath(_pat, subdir, false)) {
+							// do not deny MKD, the subdir is in the exempt list.
+							return false;
+						}
+					}
+					// deny MKD because .sfv found, but subdir not in exempt list!
+					logger.warn("Denied MKD of '" + subdir + "' because .sfv exists, add to sfvdeny.mkd.exempt in zipscript.conf if you wish to allow.");
+					return true;
+				}
+			}
+			// no .sfv was found.
+		}
+		/*
+		 * either this is not a directory, or the SfvFirst or SfvDeny system
+		 * is turned off, or there was no .sfv found, so do not deny MKD.
+		 */
 		return false;
 	}
 }
