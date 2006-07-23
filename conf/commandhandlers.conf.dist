@@ -137,6 +137,7 @@ SITE\ REMOVEJOB=net.sf.drftpd.mirroring.JobManagerCommandHandler
 
 SITE\ IRC=org.drftpd.commands.SiteBotManagement
 SITE\ BLOWFISH=org.drftpd.commands.SiteBotManagement
+SITE\ GETKEY=org.drftpd.commands.SiteBotManagement
 
 SITE\ SECTIONS=org.drftpd.commands.Sections
 

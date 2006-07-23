@@ -55,7 +55,8 @@ public class SiteBotManagement implements CommandHandler, CommandHandlerFactory 
             return new Reply(500, "SiteBot not loaded");
         }
         
-        if (conn.getRequest().getCommand().startsWith("SITE BLOWFISH")) {
+        if (conn.getRequest().getCommand().startsWith("SITE BLOWFISH") ||
+        		conn.getRequest().getCommand().startsWith("SITE GETKEY")) {
         	return doSITE_BLOWFISH(conn, sitebot);
         }
 
