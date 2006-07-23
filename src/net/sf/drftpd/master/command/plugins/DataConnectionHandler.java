@@ -70,6 +70,7 @@ import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.remotefile.ListUtils;
 import org.drftpd.remotefile.StaticRemoteFile;
+import org.drftpd.sections.SectionInterface;
 import org.drftpd.slave.ConnectInfo;
 import org.drftpd.slave.Connection;
 import org.drftpd.slave.RemoteIOException;
@@ -112,6 +113,12 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
     private char _type = 'A';
 	private boolean _handshakeCompleted;
 
+	/**
+	 * Holds values needed for Minimum Speed Limit checks.
+	 */
+    private long _lastCheck = 0;
+    private long _delay = 0;
+
     public DataConnectionHandler() {
         super();
         _handshakeCompleted = false;
@@ -124,6 +131,20 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
             _ctx = null;
             logger.warn("Couldn't load SSLContext, SSL/TLS disabled", e);
         }
+    }
+
+    /**
+     * This method is used to check the speed of the transfer
+     * and check if the speed is ok.
+     * @param minSpeed minimum required speed
+     * @return true (continue transfering) or false (stop transfering)
+     */
+    private boolean checkSpeed(long minSpeed) {
+        _lastCheck = System.currentTimeMillis();
+        if (_transfer.getXferSpeed() < minSpeed) {
+        	return false;
+        }
+        return true;
     }
 
     private Reply doAUTH(BaseFtpConnection conn) {
@@ -932,6 +953,9 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         _passiveConnection = null;
         _isPort = false;
         _resumePosition = 0;
+        
+        _lastCheck = 0;
+        _delay = 0;
     }
 
     /**
@@ -1347,6 +1371,11 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 
             TransferStatus status = null;
 
+            SectionInterface section = conn.getGlobalContext().getSectionManager().lookup(_transferFile.getPath());
+            long speedUp = 0, speedDn = 0, avg = 0;
+            boolean check, first = true, slowTransfer = false;
+            String slowReason = "Slow transfer."; // initialize with something, just in case.
+
             //transfer
             try {
                 //TODO ABORtable transfers
@@ -1354,11 +1383,36 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     _transfer.sendFile(_transferFile.getPath(), getType(),
                         _resumePosition);
 
+                    speedDn = section.getMinSpeedDn();
+                    check = (speedDn == 0 ? false : true);
+
                     while (true) {
                         status = _transfer.getTransferStatus();
 
                         if (status.isFinished()) {
                             break;
+                        }
+
+                        // Min speed per section
+                        if (check) {
+                        	_lastCheck = (_lastCheck == 0 ? System.currentTimeMillis() : _lastCheck);
+                        	_delay = System.currentTimeMillis() - _lastCheck;
+							// Min speed per section, check at most every 10 seconds.
+                        	if (first ? _delay >= 30000 : _delay >= 10000) {
+                        		boolean cont = checkSpeed(speedDn);
+                        		first = false;
+                        		if (!cont) {
+									avg = status.getTransfered() / (status.getElapsed() / 1000);
+									slowTransfer = true;
+									slowReason = "Slow transfer: "
+											+ Bytes.formatBytes(avg)
+											+ "/s too slow for section "
+											+ section.getName() + ", at least "
+											+ Bytes.formatBytes(speedDn)
+											+ "/s required.";
+									_transfer.abort(slowReason);
+								}
+                        	}
                         }
 
                         try {
@@ -1370,12 +1424,40 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     _transfer.receiveFile(_transferFile.getPath(), getType(),
                         _resumePosition);
 
+                    speedUp = section.getMinSpeedUp();
+                    check = (speedUp == 0 ? false : true);
+
                     while (true) {
                         status = _transfer.getTransferStatus();
                         _transferFile.setLength(status.getTransfered());
+
                         if (status.isFinished()) {
                             break;
                         }
+
+						// Min speed per section
+                        if (check) {
+                        	_lastCheck = (_lastCheck == 0 ? System.currentTimeMillis() : _lastCheck);
+                        	_delay = System.currentTimeMillis() - _lastCheck;
+                        	// Min speed per section, check at most every 10 seconds.
+                        	if (first ? _delay >= 30000 : _delay >= 10000) {
+                        		boolean cont = checkSpeed(speedUp); 
+                        		first = false; 
+
+                        		if (!cont) { 
+                        			avg = status.getTransfered() / (status.getElapsed() / 1000); 
+                        			slowTransfer = true;
+									slowReason = "Slow transfer: "
+											+ Bytes.formatBytes(avg)
+											+ "/s too slow for section "
+											+ section.getName() + ", at least "
+											+ Bytes.formatBytes(speedUp)
+											+ "/s required.";
+									_transfer.abort(slowReason);
+                        		}
+                        	}
+                        }
+
                         try {
                             Thread.sleep(100);
                         } catch (InterruptedException e1) {
@@ -1410,7 +1492,11 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     logger.error("IOException during transfer", ex);
                     reply = new Reply(426, ex.getMessage());
                 }
-                
+
+                // Add reason if aborted for slow transfer
+                if (slowTransfer)
+                	reply.addComment(slowReason);
+
                 reply.addComment(ex.getMessage());
             	// reset(); already done in finally block
                 return reply;
@@ -1435,9 +1521,9 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 return reply;
             }
 
-            //		TransferThread transferThread = new TransferThread(rslave,
+            // TransferThread transferThread = new TransferThread(rslave,
             // transfer);
-            //		System.err.println("Calling interruptibleSleepUntilFinished");
+            // System.err.println("Calling interruptibleSleepUntilFinished");
             //		try {
             //			transferThread.interruptibleSleepUntilFinished();
             //		} catch (Throwable e1) {

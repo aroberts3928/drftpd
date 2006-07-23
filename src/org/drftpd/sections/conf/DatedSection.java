@@ -25,11 +25,13 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.TimerTask;
 
 
 import org.apache.log4j.Logger;
+import org.drftpd.Bytes;
 import org.drftpd.GlobalContext;
 import org.drftpd.PropertyHelper;
 import org.drftpd.remotefile.FileUtils;
@@ -62,6 +64,8 @@ public class DatedSection implements SectionInterface {
     private SectionManager _mgr;
     private String _name;
     private String _now;
+    private Long _minSpeedUp;
+    private Long _minSpeedDn;
     private RollingCalendar rc = new RollingCalendar();
 
     public DatedSection(SectionManager mgr, int i, Properties p) {
@@ -69,6 +73,16 @@ public class DatedSection implements SectionInterface {
         _name = PropertyHelper.getProperty(p, i + ".name");
         _basePath = PropertyHelper.getProperty(p, i + ".path");
         _now = PropertyHelper.getProperty(p, i + ".now");
+
+        String minSpeed = p.getProperty(i + ".minspeed", "0b/s 0b/s");
+
+        StringTokenizer st = new StringTokenizer(minSpeed);
+
+        String msu = st.nextToken();
+        String msd = st.nextToken();
+
+        _minSpeedUp = Bytes.parseBytes(msu.substring(0, msu.length() - 2));
+        _minSpeedDn = Bytes.parseBytes(msd.substring(0, msd.length() - 2));
 
         if (!_basePath.endsWith("/")) {
             _basePath += "/";
@@ -246,6 +260,14 @@ public class DatedSection implements SectionInterface {
 
 	public String getBasePath() {
 		return _basePath;
+	}
+
+	public Long getMinSpeedDn() {
+		return _minSpeedUp;
+	}
+
+	public Long getMinSpeedUp() {
+		return _minSpeedDn;
 	}
 }
 

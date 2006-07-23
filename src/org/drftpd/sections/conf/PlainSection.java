@@ -21,8 +21,10 @@ import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 
+import org.drftpd.Bytes;
 import org.drftpd.PropertyHelper;
 import org.drftpd.remotefile.FileUtils;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
@@ -37,16 +39,26 @@ public class PlainSection implements SectionInterface {
     private String _dir;
     private SectionManager _mgr;
     private String _name;
+    private long _minSpeedUp;
+    private long _minSpeedDn;
 
     public PlainSection(SectionManager mgr, int i, Properties p) {
         this(mgr, PropertyHelper.getProperty(p, i + ".name"),
-            PropertyHelper.getProperty(p, i + ".path"));
+            PropertyHelper.getProperty(p, i + ".path"), p.getProperty(i + ".minspeed", "0b/s 0b/s"));
     }
 
-    public PlainSection(SectionManager mgr, String name, String path) {
+    public PlainSection(SectionManager mgr, String name, String path, String minSpeed) {
         _mgr = mgr;
         _name = name;
         _dir = path;
+
+        StringTokenizer st = new StringTokenizer(minSpeed);
+
+        String msu = st.nextToken();
+        String msd = st.nextToken();
+
+        _minSpeedUp = Bytes.parseBytes(msu.substring(0, msu.length() - 2));
+        _minSpeedDn = Bytes.parseBytes(msd.substring(0, msd.length() - 2));
 
         if (!_dir.endsWith("/")) {
             _dir += "/";
@@ -92,5 +104,13 @@ public class PlainSection implements SectionInterface {
 
 	public String getBasePath() {
 		return getPath();
+	}
+
+	public Long getMinSpeedDn() {
+		return _minSpeedUp;
+	}
+
+	public Long getMinSpeedUp() {
+		return _minSpeedDn;
 	}
 }

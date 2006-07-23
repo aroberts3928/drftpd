@@ -75,6 +75,14 @@ public class DummySectionManager implements SectionManagerInterface {
 			public String getBasePath() {
 				return getPath();
 			}
+
+			public Long getMinSpeedDn() {
+				return 0L;
+			}
+
+			public Long getMinSpeedUp() {
+				return 0L;
+			}
         };
 
     public DummySectionManager(LinkedRemoteFileInterface sectionDir) {

@@ -62,4 +62,14 @@ public interface SectionInterface {
      * @return getFile().getPath()
      */
     public String getPath();
+
+    /**
+     * @return The min upload speed allowed on this section
+     */
+    public Long getMinSpeedUp();
+
+    /**
+     * @return The min download speed allowed on this section
+     */
+    public Long getMinSpeedDn();
 }

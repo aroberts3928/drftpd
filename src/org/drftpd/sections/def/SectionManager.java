@@ -92,6 +92,8 @@ public class SectionManager implements SectionManagerInterface {
 
     public class Section implements SectionInterface {
         private LinkedRemoteFileInterface _lrf;
+        private Long _minSpeedUp = 0L;
+        private Long _minSpeedDn = 0L;
 
         public Section(LinkedRemoteFileInterface lrf) {
             _lrf = lrf;
@@ -128,6 +130,15 @@ public class SectionManager implements SectionManagerInterface {
 
 		public String getBasePath() {
 			return getPath();
+		}
+
+		//TODO Make a configurable site-wide minimum speed limit for siteops using this section manager. (plus.conf)
+		public Long getMinSpeedDn() {
+			return _minSpeedUp;
+		}
+
+		public Long getMinSpeedUp() {
+			return _minSpeedDn;
 		}
     }
 }

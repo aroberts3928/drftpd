@@ -44,7 +44,7 @@ public class SectionManager implements SectionManagerInterface {
     private static final Class[] CONSTRUCTOR_SIG = new Class[] {
             SectionManager.class, int.class, Properties.class
         };
-    private PlainSection _emptySection = new PlainSection(this, "", "/");
+    private PlainSection _emptySection = new PlainSection(this, "", "/", "0b/s 0b/s");
     private ConnectionManager _mgr;
     private Hashtable<String,SectionInterface> _sections;
 
