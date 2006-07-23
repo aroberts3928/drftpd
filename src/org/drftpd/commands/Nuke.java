@@ -239,32 +239,6 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
             }
         }
 
-        //rename
-        String toDirPath;
-        String toName = "[NUKED]-" + nukeDir.getName();
-
-        try {
-            toDirPath = nukeDir.getParentFile().getPath();
-        } catch (FileNotFoundException ex) {
-            logger.fatal("", ex);
-
-            return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN;
-        }
-
-        try {
-            nukeDir.renameTo(toDirPath, toName);
-            nukeDir.createDirectory(conn.getUserNull().getName(),
-                conn.getUserNull().getGroup(), "REASON-" + reason);
-        } catch (IOException ex) {
-            logger.warn("", ex);
-            response.addComment(" cannot rename to \"" + toDirPath + "/" +
-                toName + "\": " + ex.getMessage());
-            response.setCode(500);
-            response.setMessage("NUKE failed");
-
-            return response;
-        }
-
         long nukeDirSize = 0;
         long nukedAmount = 0;
 
@@ -307,6 +281,33 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
         NukeEvent nuke = new NukeEvent(conn.getUserNull(), "NUKE", nukeDirPath,
                 nukeDirSize, nukedAmount, multiplier, reason, nukees);
         getNukeLog().add(nuke);
+
+        //rename
+        String toDirPath;
+        String toName = "[NUKED]-" + nukeDir.getName();
+
+        try {
+            toDirPath = nukeDir.getParentFile().getPath();
+        } catch (FileNotFoundException ex) {
+            logger.fatal("", ex);
+
+            return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN;
+        }
+
+        try {
+            nukeDir.renameTo(toDirPath, toName);
+            nukeDir.createDirectory(conn.getUserNull().getName(),
+                conn.getUserNull().getGroup(), "REASON-" + reason);
+        } catch (IOException ex) {
+            logger.warn("", ex);
+            response.addComment(" cannot rename to \"" + toDirPath + "/" +
+                toName + "\": " + ex.getMessage());
+            response.setCode(500);
+            response.setMessage("NUKE failed");
+
+            return response;
+        }
+
         conn.getGlobalContext().dispatchFtpEvent(nuke);
 
         return response;

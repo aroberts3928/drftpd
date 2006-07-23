@@ -169,27 +169,6 @@ public class IRCNuke extends IRCCommand {
 			}
 		}
 
-		// rename
-		String toDirPath;
-		String toName = "[NUKED]-" + nukeDir.getName();
-		try {
-			toDirPath = nukeDir.getParentFile().getPath();
-		} catch (FileNotFoundException ex) {
-			logger.fatal("", ex);
-			out.add("FileNotFoundException");
-			return out;
-		}
-		try {
-			nukeDir.renameTo(toDirPath, toName);
-			nukeDir.createDirectory(ftpuser.getName(), ftpuser.getGroup(),
-					"REASON-" + nukemsg);
-		} catch (IOException ex) {
-			logger.warn("", ex);
-			out.add(" cannot rename to \"" + toDirPath + "/" + toName + "\": "
-					+ ex.getMessage());
-			return out;
-		}
-
 		long nukeDirSize = 0;
 		long nukedAmount = 0;
 
@@ -225,6 +204,28 @@ public class IRCNuke extends IRCCommand {
 				nukeDirSize, nukedAmount, nukemult, nukemsg, nukees);
 
 		Nuke.getNukeLog().add(nuke);
+
+		// rename
+		String toDirPath;
+		String toName = "[NUKED]-" + nukeDir.getName();
+		try {
+			toDirPath = nukeDir.getParentFile().getPath();
+		} catch (FileNotFoundException ex) {
+			logger.fatal("", ex);
+			out.add("FileNotFoundException");
+			return out;
+		}
+		try {
+			nukeDir.renameTo(toDirPath, toName);
+			nukeDir.createDirectory(ftpuser.getName(), ftpuser.getGroup(),
+					"REASON-" + nukemsg);
+		} catch (IOException ex) {
+			logger.warn("", ex);
+			out.add(" cannot rename to \"" + toDirPath + "/" + toName + "\": "
+					+ ex.getMessage());
+			return out;
+		}
+
 		getGlobalContext().getConnectionManager().dispatchFtpEvent(nuke);
 		return out;
 	}
