@@ -547,6 +547,11 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
             return Reply.RESPONSE_530_ACCESS_DENIED;
         }
 
+        String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("MKD", conn.getUserNull(), toPath, "directory");
+        if (DeniedReason != null) {
+        	return new Reply(530, "Access denied (" + DeniedReason + ")");
+        }
+
         try {
             LinkedRemoteFile createdDir = dir.createDirectory(conn.getUserNull()
                                                                   .getName(),
@@ -669,6 +674,12 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
             return Reply.RESPONSE_530_ACCESS_DENIED;
         }
 
+        String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("RNFR", conn.getUserNull(),
+        		_renameFrom.getPath(), _renameFrom.isFile() ? "file" : "directory");
+        if (DeniedReason != null) {
+        	return new Reply(530, "Access denied (" + DeniedReason + ")"); 
+        }
+
         return new Reply(350, "File exists, ready for destination name");
     }
 
@@ -710,6 +721,12 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         } else if (!conn.getGlobalContext().getConfig().checkPathPermission("rename", conn.getUserNull(), toDir)) {
             return Reply.RESPONSE_530_ACCESS_DENIED;
         }
+
+        String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("RNTO", conn.getUserNull(),
+        		toDir.getPath(), toDir.isFile() ? "file" : "directory");
+        if (DeniedReason != null) {
+        	return new Reply(530, "Access denied (" + DeniedReason + ")"); 
+        } 
 
         try {
             fromFile.renameTo(toDir.getPath(), name);
@@ -864,6 +881,12 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         if (wipeFile.isDirectory() && (wipeFile.dirSize() != 0) && !recursive) {
             return new Reply(200, "Can't wipe, directory not empty");
         }
+
+        String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("WIPE", 
+        		conn.getUserNull(), wipeFile.getPath(), (wipeFile.isDirectory() ? "directory" : "file")); 
+        if (DeniedReason != null) { 
+        	return new Reply(530, "Access denied (" + DeniedReason + ")"); 
+        } 
 
         //if (conn.getConfig().checkDirLog(conn.getUserNull(), wipeFile)) {
         conn.getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(

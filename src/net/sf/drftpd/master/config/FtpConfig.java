@@ -33,7 +33,9 @@ import org.drftpd.permissions.MessagePathPermission;
 import org.drftpd.permissions.PathPermission;
 import org.drftpd.permissions.PatternPathPermission;
 import org.drftpd.permissions.Permission;
+import org.drftpd.permissions.PreRegexPermission;
 import org.drftpd.permissions.RatioPathPermission;
+import org.drftpd.permissions.RegexPermission;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.slave.Slave;
 
@@ -58,6 +60,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 
 /**
@@ -80,6 +83,7 @@ public class FtpConfig extends Observable implements ConfigInterface {
     private ArrayList<MessagePathPermission> _msgpath = new ArrayList<MessagePathPermission>();
     private String _pasv_addr;
     private Hashtable<String, ArrayList<PathPermission>> _pathsPerms = new Hashtable<String, ArrayList<PathPermission>>();
+    private Hashtable<String, ArrayList<RegexPermission>> _regexPerms = new Hashtable<String, ArrayList<RegexPermission>>();
     private Hashtable<String, Permission> _permissions = new Hashtable<String,Permission>();
     private StringTokenizer _replaceDir = null;
     private StringTokenizer _replaceFile = null;
@@ -394,6 +398,8 @@ public class FtpConfig extends Observable implements ConfigInterface {
                         _permissions.put(cmd, new Permission(makeUsers(st)));
                     } else if("shutdown".equals(cmd)) {
                     	_shutdown = new Permission(makeUsers(st));
+                    } else if ("filter".equals(cmd)) {
+                    	addPreRegexPermission(st.nextToken(), st);
                     } else {
                         if (!cmd.startsWith("#")) {
                             addGlobPathPermission(cmd, st);
@@ -478,6 +484,60 @@ public class FtpConfig extends Observable implements ConfigInterface {
 
             replaceChars(sb, oldChar, newChar);
         }
+    }
+    
+    public void addRegexPermission(String key, RegexPermission permission) {
+        ArrayList<RegexPermission> perms = _regexPerms.get(key);
+
+        if (perms == null) {
+            perms = new ArrayList<RegexPermission>();
+            _regexPerms.put(key, perms);
+        }
+        perms.add(permission);		
+	}
+    
+    private void addPreRegexPermission(String key, StringTokenizer st) throws MalformedPatternException {    	
+    	Pattern p = Pattern.compile(st.nextToken(), Pattern.CASE_INSENSITIVE);
+    	addRegexPermission(key, new PreRegexPermission(p, makeUsers(st)));
+    }
+
+    public String checkRegexPermission(String key, User fromUser,
+    		String path, String type) {
+    	return checkRegexPermission(key, fromUser, path, type, false);
+    }
+
+    public String checkRegexPermission(String key, User fromUser,
+    		String path, String type, boolean defaults) {
+    	Collection coll = ((Collection) _regexPerms.get(key));
+    	
+    	if (coll == null) {
+    		return defaults ? "Bad " + type + " name" : null;
+    	}
+    	
+    	Iterator iter = coll.iterator();
+    	
+    	while (iter.hasNext()) {
+    		RegexPermission perm = (RegexPermission) iter.next();
+    		
+    		// _path == true AND _user == true -> do nuthing, user is allowed to skip the filter
+    		// _path == true AND _user == false -> block action, user is not allowed to skip the filter
+    		// _path == false -> do nothing, path does not match the regexp
+
+    		if (perm.checkPath(path)) {
+    			if (perm.check(fromUser)) {
+    				// allow!
+    				return null;
+    			} else {
+    				// block!
+    				if (perm.getLastMatch() != null) {
+						return "The string \"" + perm.getLastMatch() + "\" not allowed in this " + type + " name";
+					} else {
+						return "Report to siteop if you feel this is in error";
+					}
+    			}
+    		} 
+    	}
+    	return defaults ? "Bad " + type + " name" : null;
     }
 
     /**

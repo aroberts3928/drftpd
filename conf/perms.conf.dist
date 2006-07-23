@@ -88,6 +88,21 @@ unnuke * =siteop =nuke
 nukes * *
 chown * =siteop
 
+# This a Regexp filter
+# This filter ALWAYS use the complete path of a file or a direcory
+# Eg.1:
+# Current Path = /TEST.DIR/ -> MKD TEST
+# The filter will see this as 'MKD /TEST.DIR/TEST/'
+# Eg.2:
+# Current Path = /TEST.DIR/ -> STOR test.upload
+# The filter will see this as 'STOR /TEST.DIR/test.upload'
+#
+# Syntax:
+# filter 	<MKD|STOR|RETR|RNTO|RNFR|WIPE>	regexp					perms
+# Read this topic for some regexp samples...
+#
+# http://www.drftpd.org/phpBB2/viewtopic.php?t=302
+
 # commands for JobManager don't care about path, extra * is just to conform
 addjob * =siteop
 removejob * =siteop

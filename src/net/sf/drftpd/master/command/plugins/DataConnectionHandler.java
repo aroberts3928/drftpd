@@ -1195,13 +1195,21 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     request.getArgument() + ": No such file");
             }
 
+            String DeniedReason = null;
             switch (direction) {
             case Transfer.TRANSFER_SENDING_DOWNLOAD:
 
                 if (!conn.getGlobalContext().getConfig().checkPathPermission("download", conn.getUserNull(), targetDir)) {
                 	// reset(); already done in finally block
                     return Reply.RESPONSE_530_ACCESS_DENIED;
-                }
+                } 
+                DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("RETR", conn.getUserNull(),
+                		targetDir.getPath() + "/" + targetFileName, "file");
+                if (DeniedReason != null) {
+                	// reset(); already done in finally block
+                	return new Reply(530, "Access denied (" + DeniedReason +")");
+                    
+                } 
 
                 break;
 
@@ -1210,6 +1218,12 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 if (!conn.getGlobalContext().getConfig().checkPathPermission("upload", conn.getUserNull(), targetDir)) {
                 	// reset(); already done in finally block
                     return Reply.RESPONSE_530_ACCESS_DENIED;
+                } 
+                DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("STOR", conn.getUserNull(),
+                		targetDir.getPath() + "/" + targetFileName, "file");
+                if (DeniedReason != null) {
+                	// reset(); already done in finally block
+                	return new Reply(530, "Access denied (" + DeniedReason + ")");
                 }
 
                 break;

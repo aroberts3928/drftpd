@@ -80,4 +80,10 @@ public interface ConfigInterface {
 	public abstract void addObserver(Observer observer);
 
 	public abstract String getPasvAddress() throws NullPointerException;
+	
+	public abstract String checkRegexPermission(String key, User fromUser,
+			String path, String type);
+
+	public abstract String checkRegexPermission(String key, User fromUser,
+			String path, String type, boolean defaults);
 }
