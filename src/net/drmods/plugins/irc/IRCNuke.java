@@ -134,6 +134,10 @@ public class IRCNuke extends IRCCommand {
 		}
 		String nukeDirPath = nukeDir.getPath();
 		env.add("nukedir", nukeDirPath);
+		
+		// disconnect anyone transferring in/out of this dirtree 
+		getGlobalContext().getSlaveManager().cancelTransfersInDirectory(nukeDir); 
+	 	
 		// get nukees with string as key
 		Hashtable<String, Long> nukees = new Hashtable<String, Long>();
 		Nuke.nukeRemoveCredits(nukeDir, nukees);
@@ -259,6 +263,9 @@ public class IRCNuke extends IRCCommand {
 			return out;
 		}
 		
+		// disconnect anyone transferring in/out of this dirtree
+		getGlobalContext().getSlaveManager().cancelTransfersInDirectory(nukeDir); 
+
 		String toPath = nukeDir.getParentFileNull().getPath() + "/" + toName;
 		String toDir = nukeDir.getParentFileNull().getPath();
 		NukeEvent nuke;
