@@ -160,6 +160,7 @@
       </fileset>
     </copy>
     <echo>Additional important compile targets are: compile-jsx, compile-xstream</echo>
+    <echo>WARNING: This version of DrFTPD+ is unstable test code, and you should probably NOT use it in a production environment.</echo>
   </target>
 
   <target name="compile-junit">
@@ -216,6 +217,7 @@
     </zip>
 
     <echo>Done!</echo>
+    <echo>WARNING: This version of DrFTPD+ is unstable test code, and you should probably NOT use it in a production environment.</echo>
   </target>
 
   <target name="classjar">
