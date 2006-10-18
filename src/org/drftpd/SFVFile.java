@@ -127,11 +127,39 @@ public class SFVFile extends AbstractSFVFile {
 		return ret;
 	}
 
+    /**
+	 * @return The sum of the size of all files listed in this SFVFile. which
+	 *         have been completely uploaded.
+	 * @since 2.0.4
+	 */
+    public long getTotalBytesCompleted() {
+    	return getTotalBytes(true);
+    }
+    
+    /**
+	 * @return The sum of the size of all files listed in this SFVFile, even
+	 *         those which are still being transfered.
+	 */
     public long getTotalBytes() {
+    	return getTotalBytes(false);
+    }
+    
+    /**
+	 * 
+	 * @param onlyCompletedFiles -
+	 *            Add size of only completed files? If false, files still
+	 *            transferring can be added.
+	 * @return The sum of the size of all files listed in this SFVFile.
+	 * @since 2.0.4
+	 */
+    public long getTotalBytes(boolean onlyCompletedFiles) {
         long totalBytes = 0;
 
         for (Iterator iter = getFiles().iterator(); iter.hasNext();) {
-            totalBytes += ((LinkedRemoteFileInterface) iter.next()).length();
+        	LinkedRemoteFileInterface tmpLRFI = (LinkedRemoteFileInterface) iter.next();
+        	if (!onlyCompletedFiles || tmpLRFI.getXfertime() != -1) {
+        		totalBytes += tmpLRFI.length();
+        	}
         }
 
         return totalBytes;
