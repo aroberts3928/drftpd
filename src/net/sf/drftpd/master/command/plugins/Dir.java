@@ -381,7 +381,7 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         } else if (!conn.getGlobalContext().getConfig().checkPathPermission("delete", conn.getUserNull(), requestedFile)) {
             return Reply.RESPONSE_530_ACCESS_DENIED;
         }
-        
+
         if (requestedFile.isDirectory() && requestedFile.getMap().size() != 0) {
 			return new Reply(550, requestedFile.getPath()
 					+ ": Directory not empty");
@@ -479,43 +479,51 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
             return Reply.RESPONSE_450_SLAVE_UNAVAILABLE;
         }
 
+        // arg cleanup extra /'s, take any / off the end
+        String arg = request.getArgument();
+        arg = arg.replaceAll("/{2,}", "/");
+        if (arg.endsWith("/")) {
+        	arg = arg.substring(0, arg.length() - 1);
+        }
+
+        // are we making one for this directory?
+        String currentPath = conn.getCurrentDirectory().getPath();
+        String toPath = null;
+        if (!arg.startsWith("/")) {
+        	if (currentPath.length() == 1)	/*		// isn't /		*/
+        		toPath = currentPath + arg;
+        	else
+        		toPath = currentPath + "/" + arg;
+        } else {
+        	toPath = arg;
+        }
+
+        // get absolute path
+        toPath = conn.getGlobalContext().getRoot().lookupPath(toPath);
+
+        // lookup
         LinkedRemoteFile.NonExistingFile ret = conn.getCurrentDirectory()
-                                                   .lookupNonExistingFile(request.getArgument());
+                                                   .lookupNonExistingFile(arg);
         LinkedRemoteFile dir = ret.getFile();
 
+        // does it already exist?
         if (ret.exists()) {
-            return new Reply(550,
-                "Requested action not taken. " + request.getArgument() +
-                " already exists");
+        	return new Reply(550,
+        			"Requested action not taken. " + arg +
+        	" already exists");
         }
 
-        //check for NUKED dir
-        /*
-         * save Teflon's for a few weeks?
-        logger.info(conn.getCurrentDirectory().getName());
-        logger.info(request.getArgument());
-        logger.info("[NUKED]-" + ret.getPath());
-        if (conn.getCurrentDirectory().hasFile("[NUKED]-" + ret.getPath())) {
-            return new Reply(550,
-                    "Requested action not taken. " + request.getArgument() +
-                    " is nuked!");
-            
+        // is this a legal name?
+        String createdDirName = conn.getGlobalContext().getConfig().getDirName(ret.getPath());
+        if (!ListUtils.isLegalFileName(createdDirName)) {
+        	return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN;
         }
-        */
-        // *************************************
-		// begin nuke log check
-		String toPath;
-		if (request.getArgument().substring(0, 1).equals("/")) {
-			toPath = request.getArgument();
-		} else {
-			StringBuffer toPath2 = new StringBuffer(conn.getCurrentDirectory()
-					.getPath());
-			if (toPath2.length() != 1)
-				toPath2.append("/"); // isn't /
-			toPath2.append(request.getArgument());
-			toPath = toPath2.toString();
-		}
-		NukeLog _nukelog = Nuke.getNukeLog();
+        if (!conn.getGlobalContext().getConfig().checkPathPermission("makedir", conn.getUserNull(), dir)) {
+            return Reply.RESPONSE_530_ACCESS_DENIED;
+        }
+
+        // check nukelog
+        NukeLog _nukelog = Nuke.getNukeLog();
 		if (_nukelog != null && _nukelog.find_fullpath(toPath)) {
 			try {
 				String reason = _nukelog.get(toPath).getReason();
@@ -528,25 +536,14 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
 								+ e.getMessage());
 			}
 		}
-		// end nuke log check
-		// *************************************
 
-		if (conn.getGlobalContext().getZsConfig().checkSfvDenyMKD( 
-				ret.getFile(), ret.getPath())) { 
-			return new Reply(530, 
-					"Access denied - Directory '" + ret.getPath() + "' not permitted when .sfv exists in '" + ret.getFile().getPath() + "' (ZipScript+)"); 
-		} 
+		if (conn.getGlobalContext().getZsConfig().checkSfvDenyMKD(
+				ret.getFile(), ret.getPath())) {
+			return new Reply(530,
+					"Access denied - Directory '" + ret.getPath() + "' not permitted when .sfv exists in '" + ret.getFile().getPath() + "' (ZipScript+)");
+		}
 
-		String createdDirName = conn.getGlobalContext().getConfig().getDirName(ret.getPath());
-
-        if (!ListUtils.isLegalFileName(createdDirName)) {
-            return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN;
-        }
-
-        if (!conn.getGlobalContext().getConfig().checkPathPermission("makedir", conn.getUserNull(), dir)) {
-            return Reply.RESPONSE_530_ACCESS_DENIED;
-        }
-
+		// ok, create it
         String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("MKD", conn.getUserNull(), toPath, "directory");
         if (DeniedReason != null) {
         	return new Reply(530, "Access denied (" + DeniedReason + ")");
@@ -677,7 +674,7 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("RNFR", conn.getUserNull(),
         		_renameFrom.getPath(), _renameFrom.isFile() ? "file" : "directory");
         if (DeniedReason != null) {
-        	return new Reply(530, "Access denied (" + DeniedReason + ")"); 
+        	return new Reply(530, "Access denied (" + DeniedReason + ")");
         }
 
         return new Reply(350, "File exists, ready for destination name");
@@ -725,8 +722,8 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("RNTO", conn.getUserNull(),
         		toDir.getPath(), toDir.isFile() ? "file" : "directory");
         if (DeniedReason != null) {
-        	return new Reply(530, "Access denied (" + DeniedReason + ")"); 
-        } 
+        	return new Reply(530, "Access denied (" + DeniedReason + ")");
+        }
 
         try {
             fromFile.renameTo(toDir.getPath(), name);
@@ -882,11 +879,11 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
             return new Reply(200, "Can't wipe, directory not empty");
         }
 
-        String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("WIPE", 
-        		conn.getUserNull(), wipeFile.getPath(), (wipeFile.isDirectory() ? "directory" : "file")); 
-        if (DeniedReason != null) { 
-        	return new Reply(530, "Access denied (" + DeniedReason + ")"); 
-        } 
+        String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("WIPE",
+        		conn.getUserNull(), wipeFile.getPath(), (wipeFile.isDirectory() ? "directory" : "file"));
+        if (DeniedReason != null) {
+        	return new Reply(530, "Access denied (" + DeniedReason + ")");
+        }
 
         //if (conn.getConfig().checkDirLog(conn.getUserNull(), wipeFile)) {
         conn.getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(
@@ -1034,7 +1031,7 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
 //        else
 //            return "";
 //    }
-    
+
     public String[] getFeatReplies() {
         return null;
     }
