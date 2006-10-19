@@ -49,7 +49,7 @@ public class ActiveConnection extends Connection {
 	}
 
     public Socket connect() throws IOException {
-        logger.debug("Connecting to " + _addr.getHostName() + ":" +
+        logger.debug("Connecting to " + _addr.getAddress().getHostAddress() + ":" +
             _addr.getPort());
 
         if (_ctx != null) {
