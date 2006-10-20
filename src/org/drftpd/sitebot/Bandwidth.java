@@ -55,10 +55,19 @@ public class Bandwidth extends IRCCommand {
 		ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);
 		SlaveStatus status = getGlobalContext().getSlaveManager().getAllStatus();
 		SiteBot.fillEnvSlaveStatus(env, status, getGlobalContext().getSlaveManager());
+
+		// Ad a couple more variables.
+		ArrayList<BaseFtpConnection> conns = new ArrayList<BaseFtpConnection>(getGlobalContext().getConnectionManager()
+				.getConnections());
+		int idle = conns.size() - status.getTransfersReceiving() - status.getTransfersSending();
+		env.add("idle", idle);
+		env.add("xfers", status.getTransfers());
+		env.add("total", idle + status.getTransfers());
+
 		out.add(ReplacerUtils.jprintf("bw", env, Bandwidth.class));
 		return out;
 	}
-	
+
 	public ArrayList<String> doSpeed(String args, MessageCommand msgc) {
 	    ArrayList<String> out = new ArrayList<String>();
 		ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);

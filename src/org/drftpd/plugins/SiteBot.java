@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
@@ -352,10 +353,10 @@ public class SiteBot extends FtpListener implements Observer {
 
         // ANNOUNCE NFO FILE
         if (direvent.getDirectory().getName().toLowerCase().endsWith(".nfo")) {
-            Ret ret = getPropertyFileSuffix("store.nfo", dir); 
-            fillEnvSection(env, direvent, ret.getSection()); 
+            Ret ret = getPropertyFileSuffix("store.nfo", dir);
+            fillEnvSection(env, direvent, ret.getSection());
             say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), env));
-        } 
+        }
 
         SFVFile sfvfile;
 
@@ -378,7 +379,7 @@ public class SiteBot extends FtpListener implements Observer {
             return;
         } catch (FileStillTransferringException e) {
         	logger.info("SFVFile still transferring");
-        	
+
         	return;
 		}
 
@@ -387,7 +388,7 @@ public class SiteBot extends FtpListener implements Observer {
         }
 
         int halfway = (int) Math.floor((double) sfvfile.size() / 2);
-        
+
         // we don't need to have an sfv in order to announce the mp3 info
         // TODO
         if (sfvfile.getStatus().getPresent() == 1) {
@@ -397,7 +398,7 @@ public class SiteBot extends FtpListener implements Observer {
         ///// start ///// start ////
         String username = direvent.getUser().getName();
         SFVStatus sfvstatus = sfvfile.getStatus();
-        // ANNOUNCE FIRST FILE RCVD 
+        // ANNOUNCE FIRST FILE RCVD
         //   and EXPECTING xxxMB in xxx Files on same line.
         if( sfvstatus.getAvailable() == 1
         		&& !direvent.getDirectory().isDeleted()) {
@@ -405,7 +406,6 @@ public class SiteBot extends FtpListener implements Observer {
             _raceleader.put(dir.getName(),direvent.getUser());
             fillEnvSection( env, direvent, ret.getSection(), direvent.getDirectory());
             env.add("files", Integer.toString(sfvfile.size()));
-            env.add("expectedsize", (Bytes.formatBytes(sfvfile.getTotalBytes() * sfvfile.size())));
             say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), env));
         }
         //check if new racer
@@ -416,10 +416,10 @@ public class SiteBot extends FtpListener implements Observer {
                 // If file just uploaded was deleted (by ZipScript?), move on and do nothing.
                 if (direvent.getDirectory().isDeleted())
                 	break;
-                
+
                 if (sfvFileEntry == direvent.getDirectory())
                 	continue;
-                
+
                 if (sfvFileEntry.getUsername().equals(username)
                 		&& sfvFileEntry.getXfertime() >= 0) {
                     break;
@@ -431,8 +431,6 @@ public class SiteBot extends FtpListener implements Observer {
                     String format = ret.getFormat();
                     fillEnvSection(env, direvent, ret.getSection(),
                         direvent.getDirectory());
-                    env.add("filesleft",
-                        Integer.toString(sfvstatus.getMissing()));
 
                     say(ret.getSection(), SimplePrintf.jprintf(format, env));
                 }
@@ -459,12 +457,13 @@ public class SiteBot extends FtpListener implements Observer {
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
-            
+
             env.add("racers", Integer.toString(racers.size()));
             env.add("groups", Integer.toString(groups.size()));
             env.add("files", Integer.toString(sfvfile.size()));
             env.add("size", Bytes.formatBytes(sfvfile.getTotalBytes()));
             env.add("speed", Bytes.formatBytes(sfvfile.getXferspeed()) + "/s");
+
             say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), env));
 
             //// store.complete.racer ////
@@ -503,7 +502,7 @@ public class SiteBot extends FtpListener implements Observer {
                 }
 
                 ReplacerEnvironment raceenv = new ReplacerEnvironment(GLOBAL_ENV);
-                
+
                 raceenv.add("section", ret.getSection().getName());
                 raceenv.add("user", raceuser.getName());
                 raceenv.add("group", raceuser.getGroup());
@@ -577,7 +576,7 @@ public class SiteBot extends FtpListener implements Observer {
             }
 
         // Other announcements only on dirs with 4+ files.
-        } else if (sfvfile.size() >= 4) { 
+        } else if (sfvfile.size() >= 4) {
             Collection uploaders = userSort(sfvfile.getFiles(), "bytes", "high");
 
             //			ReplacerEnvironment env = new ReplacerEnvironment(globalEnv);
@@ -608,10 +607,38 @@ public class SiteBot extends FtpListener implements Observer {
             Ret ret = getPropertyFileSuffix("store.halfway", dir);
             fillEnvSection(env, direvent, ret.getSection());
 
+            // Compare 1st and second place users.
+				Iterator iter = uploaders.iterator();
+				iter.next(); // get 1st uploader
+				if (iter.hasNext()) { // is there a 2nd?
+					// stat = first position, stat2 = second position.
+					UploaderPosition stat2 = (UploaderPosition) iter.next();
+					// might be set to a negative value, since placing is done by bytes.
+					env.add("filesaheadby", Integer.toString(stat.getFiles()
+							- stat2.getFiles()));
+					try {
+						env.add("aheadby", SimplePrintf.jprintf(
+							getPropertyFileSuffix("store.halfway.aheadby.race",
+									dir).getFormat(), env));
+					} catch (MissingResourceException e) {
+						logger.warn("Missing store.halfway.aheadby.race property",e);
+					}
+				} else {
+					// All alone, no love for this racer.
+					try {
+					env.add("aheadby", SimplePrintf.jprintf(
+							getPropertyFileSuffix(
+									"store.halfway.aheadby.alone", dir)
+									.getFormat(), env));
+					} catch (MissingResourceException e) {
+						logger.warn("Missing store.halfway.aheadby.alone property",e);
+					}
+				}
+
             say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), env));
 
-            //					for (Iterator iter =
-            //						topFileUploaders2(sfvfile.getFiles()).iterator();
+            // for (Iterator iter =
+            // topFileUploaders2(sfvfile.getFiles()).iterator();
             //						iter.hasNext();
             //						) {
             //						UploaderPosition stat = (UploaderPosition) iter.next();
@@ -638,38 +665,39 @@ public class SiteBot extends FtpListener implements Observer {
             //								+ Bytes.formatBytes(stat.getBytes())
             //								+ "]");
             //					}
-            } else if (_raceleader.get(dir.getName()) != null 
-            		&& !_raceleader.get(dir.getName()).getName().equals( 
-            				leaduser != null ? leaduser.getName() : stat 
-            						.getUsername())) { 
-            	UploaderPosition oldstat = null; 
-            	Iterator iter = uploaders.iterator(); 
-            	while (iter.hasNext()) { 
-            		UploaderPosition tmpstat = (UploaderPosition) iter.next(); 
-            		if (tmpstat != null && tmpstat.getUsername().equals( 
-            				_raceleader.get(dir.getName()).getName())) { 
-            			oldstat = tmpstat; 
-            		} 
-            	} 
-            	if (oldstat != null && stat.getFiles() - oldstat.getFiles() > 2) { 
-            		env.add("overtakenuser", _raceleader.get(dir.getName()) 
-            				.getName()); 
-            		env.add("overtakengroup", _raceleader.get(dir.getName()) 
-            				.getGroup()); 
+            } else if (_raceleader.get(dir.getName()) != null
+            		&& !_raceleader.get(dir.getName()).getName().equals(
+            				leaduser != null ? leaduser.getName() : stat
+            						.getUsername())) {
+            	UploaderPosition oldstat = null;
+            	Iterator iter = uploaders.iterator();
+            	while (iter.hasNext()) {
+            		UploaderPosition tmpstat = (UploaderPosition) iter.next();
+            		if (tmpstat != null && tmpstat.getUsername().equals(
+            				_raceleader.get(dir.getName()).getName())) {
+            			oldstat = tmpstat;
+            		}
+            	}
+            	if (oldstat != null && stat.getFiles() - oldstat.getFiles() > 2) {
+            		env.add("overtakenuser", _raceleader.get(dir.getName())
+            				.getName());
+            		env.add("overtakengroup", _raceleader.get(dir.getName())
+            				.getGroup());
+            		env.add("filesaheadby", stat.getFiles() - oldstat.getFiles());
 
-            		_raceleader.put(dir.getName(), leaduser); 
-            		logger 
-            		.info("New Race Leader '" 
-            				+ _raceleader.get(dir.getName()).getName() 
-            				+ "' by " 
-            				+ (stat.getFiles() - oldstat.getFiles()) 
-            				+ " files."); 
-            		Ret ret = getPropertyFileSuffix("store.newleader", dir); 
-            		fillEnvSection(env, direvent, ret.getSection()); 
-            		say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), 
-            				env)); 
-            	} 
-            } 
+            		_raceleader.put(dir.getName(), leaduser);
+            		logger
+            		.info("New Race Leader '"
+            				+ _raceleader.get(dir.getName()).getName()
+            				+ "' by "
+            				+ (stat.getFiles() - oldstat.getFiles())
+            				+ " files.");
+            		Ret ret = getPropertyFileSuffix("store.newleader", dir);
+            		fillEnvSection(env, direvent, ret.getSection());
+            		say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(),
+            				env));
+            	}
+            }
         }
     }
 
@@ -679,7 +707,7 @@ public class SiteBot extends FtpListener implements Observer {
         ReplacerEnvironment env = new ReplacerEnvironment(GLOBAL_ENV);
         env.add("user",event.getUser());
         env.add("nick",event.getIrcNick());
-        
+
         if ("INVITE".equals(event.getCommand()) ||
         		"SITE INVITE".equals(event.getCommand())) {
 
@@ -713,12 +741,12 @@ public class SiteBot extends FtpListener implements Observer {
         		_identWhoisList.add(new WhoisEntry(nick,event.getUser()));
         	}
             logger.info("Looking up "+ nick + " to set IRCIdent");
-            _conn.sendCommand(new WhoisCommand(nick));        	
+            _conn.sendCommand(new WhoisCommand(nick));
         } else if ("BINVITE".equals(event.getCommand())) {
             ReplacerFormat format = ReplacerUtils.finalFormat(SiteBot.class,"invite.failed");
-    		sayGlobal(SimplePrintf.jprintf(format, env));       	
+    		sayGlobal(SimplePrintf.jprintf(format, env));
         }
-        
+
     }
 
     private void actionPerformedNuke(NukeEvent event) throws FormatterException {
@@ -778,6 +806,13 @@ public class SiteBot extends FtpListener implements Observer {
 						getGlobalContext().getConfig().getCreditCheckRatio(
 								event.getPath(), raceuser), event.getMultiplier());
                 raceenv.add("nukedamount", Bytes.formatBytes(nukedamount));
+
+                // Don't report people who lost no credits.
+                if (nukedamount <= 0) {
+                	position--;
+                	continue;
+                }
+
                 say(section, SimplePrintf.jprintf(raceformat, raceenv));
             }
 
@@ -794,7 +829,7 @@ public class SiteBot extends FtpListener implements Observer {
             }
         } else if (cmd.equals("UNNUKE")) {
             say(section, ReplacerUtils.jprintf("unnuke", env, SiteBot.class));
-            
+
             ReplacerFormat raceformat = ReplacerUtils.finalFormat(SiteBot.class,
             "unnuke.nukees");
 
@@ -831,6 +866,13 @@ public class SiteBot extends FtpListener implements Observer {
 						getGlobalContext().getConfig().getCreditCheckRatio(
 								event.getPath(), raceuser), event.getMultiplier());
                 raceenv.add("nukedamount", Bytes.formatBytes(nukedamount));
+
+                // Don't report people who will regain no credits.
+                if (nukedamount <= 0) {
+                	position--;
+                	continue;
+                }
+
                 say(section, SimplePrintf.jprintf(raceformat, raceenv));
             }
 
@@ -845,7 +887,7 @@ public class SiteBot extends FtpListener implements Observer {
 
                 say(section, SimplePrintf.jprintf(raceformat, raceenv));
             }
-            
+
         }
     }
 
@@ -885,7 +927,7 @@ public class SiteBot extends FtpListener implements Observer {
         logger.info("connecting to " + _server + ":" + _port);
         _conn.connect(_server, _port);
     }
-    
+
     public class ChannelConfig {
     	private AutoJoin _autoJoin = null;
     	private String _blowKey = null;
@@ -903,11 +945,11 @@ public class SiteBot extends FtpListener implements Observer {
     	public void setAutoJoin(AutoJoin aj) {
     		_autoJoin = aj;
     	}
-    	
+
     	public AutoJoin getAutoJoin() {
     		return _autoJoin;
     	}
-    	
+
     	public String getBlowfishKey(User user) throws ObjectNotFoundException {
     		if (checkPerms(user)) {
     			if (_blowKey == null) {
@@ -917,14 +959,14 @@ public class SiteBot extends FtpListener implements Observer {
     		}
     		throw new ObjectNotFoundException("No Permissions");
     	}
-    	
+
     	private Blowfish getBlowFish() {
     		if (_blowFish.get() == null) {
     			_blowFish = new WeakReference<Blowfish>(new Blowfish(_blowKey));
     		}
     		return _blowFish.get();
     	}
-    	
+
     	public MessageCommand decrypt(MessageCommand cmd)
 				throws UnsupportedEncodingException {
     		if (_blowKey == null) {
@@ -936,20 +978,20 @@ public class SiteBot extends FtpListener implements Observer {
     			throw new UnsupportedEncodingException();
     		}
 		}
-    	
+
     	public String encrypt(String message) {
     		if (_blowKey == null) {
     			return message;
     		}
     		return getBlowFish().Encrypt(message);
     	}
-    	
+
     	private boolean checkPerms(User user) {
     		Permission p = new Permission(FtpConfig
     				.makeUsers(new StringTokenizer(_permissions)));
     		return p.check(user);
     	}
-    	
+
     	public String getChannelKey(User user) throws ObjectNotFoundException {
     		if (checkPerms(user) && _chanKey != null) {
     			return _chanKey;
@@ -966,7 +1008,7 @@ public class SiteBot extends FtpListener implements Observer {
         disconnect();
 
         _conn = new IRCConnection();
-        
+
         String initialCommand = null;
         try {
         	initialCommand = PropertyHelper.getProperty(ircCfg, "irc.initial.command");
@@ -979,10 +1021,10 @@ public class SiteBot extends FtpListener implements Observer {
         } catch (NumberFormatException e1) {
             logger.warn("irc.sendDelay not set, defaulting to 300ms");
         }
-        
+
         _autoReconnect = new AutoReconnect(_conn);
         _autoRegister = addAutoRegister(ircCfg);
-        
+
         new AutoResponder(_conn);
         _conn.addCommandObserver(this);
 
@@ -1008,11 +1050,11 @@ public class SiteBot extends FtpListener implements Observer {
         }
 
         connect();
-        
+
         if (initialCommand != null) {
         	_conn.sendCommand(new RawCommand(initialCommand));
         }
-	
+
     }
 
     public void disconnect() {
@@ -1084,10 +1126,40 @@ public class SiteBot extends FtpListener implements Observer {
         if (direvent.getCommand().equals("PRE") == false) {
             try {
                 sfvfile = file.lookupSFVFile();
+                SFVStatus sfvstatus = sfvfile.getStatus();
                 totalsfv += 1;
                 totalfiles += sfvfile.size();
                 totalbytes += sfvfile.getTotalBytes();
                 totalxfertime += sfvfile.getTotalXfertime();
+                try {
+                	int totUploaded = sfvfile.size() - sfvstatus.getMissing();
+                	// Partial files will throw off average.
+                	long averageFileSize = sfvfile.getTotalBytesCompleted() / totUploaded;
+                	long expectedDirSize = averageFileSize * sfvfile.size();
+                	float percentComplete = (float) totUploaded / (float) sfvfile.size();
+                	long secondsLeft = (long) ((elapsedSeconds / percentComplete) - elapsedSeconds);
+
+                	/* To calc ETA:
+                	 *		avgRate = size/elapsed
+                	 *		percentComplete = avgRate/size
+                	 *		--	(stat.getFiles() * 100) / sfvfile.size())
+                	 *		ETA = elapsed/percentComplete
+                	 */
+                	String eta = (elapsedSeconds > 0) ? Time.formatTime(1000 * secondsLeft) : "n/a";
+                	logger.debug("avgSize=" + averageFileSize + ", expectedDirSize="
+                			+ expectedDirSize + ", totUploaded=" + totUploaded
+                			+ ", elapsedSeconds=" + elapsedSeconds
+                			+ ", secondsLeft=" + secondsLeft
+                			+ ", sfvfile.size()=" + sfvfile.size()
+                			+ ", percentComplete=" + Math.round(percentComplete * 100) + "%"
+                			+ ", eta=" + eta);
+                	env.add("eta", eta);
+                	env.add("expectedsize", expectedDirSize);
+                	env.add("filenum", Integer.toString(totUploaded));
+                	env.add("filesleft", Integer.toString(sfvstatus.getMissing()));
+                } catch (ArithmeticException e) {
+                	// logger.error(e);
+                }
             } catch (Exception e) {
             }
         } else {
@@ -1168,7 +1240,7 @@ public class SiteBot extends FtpListener implements Observer {
             env.add("slaves", "0");
         }
     }
-    
+
     public String getPrimaryChannel() {
         return _primaryChannelName;
     }
@@ -1182,8 +1254,13 @@ public class SiteBot extends FtpListener implements Observer {
         SectionInterface sectionObj = getGlobalContext()
                                           .getSectionManager().lookup(dir.getPath());
 
-        return new Ret(ResourceBundle.getBundle(SiteBot.class.getName())
-                                     .getString(prefix), sectionObj);
+        try {
+        	return new Ret(ResourceBundle.getBundle(SiteBot.class.getName())
+        			.getString(prefix), sectionObj);
+        } catch (MissingResourceException e) {
+        	logger.warn(e);
+        }
+    	return new Ret("", sectionObj);
     }
 
     public SlaveManager getSlaveManager() {
@@ -1239,7 +1316,7 @@ public class SiteBot extends FtpListener implements Observer {
 			String methodString = st.nextToken();
 			String scopeList = st.nextToken();
 			String permissions = st.nextToken("").trim();
-			
+
 			int index = methodString.lastIndexOf(".");
 			String className = methodString.substring(0, index);
 			methodString = methodString.substring(index + 1);
@@ -1383,7 +1460,7 @@ public class SiteBot extends FtpListener implements Observer {
         	}
         }
 		_raceleader = new LRUCache<String,User>(20);
-		
+
         //maximum announcements for race results
 		try {
             _maxUserAnnounce = Integer.parseInt(ircCfg.getProperty("irc.max.racers", "100"));
@@ -1407,7 +1484,7 @@ public class SiteBot extends FtpListener implements Observer {
         }
         say((sn != null) ? sn.getChannel() : _primaryChannelName, message);
     }
-    
+
     public void say(String message) {
     	say(_primaryChannelName,message);
     }
@@ -1435,7 +1512,7 @@ public class SiteBot extends FtpListener implements Observer {
 			}
 		}
     }
-    
+
     public synchronized void notice(String dest, String message) {
         if (message == null || message.equals("")) {
         	return;
@@ -1486,7 +1563,7 @@ public class SiteBot extends FtpListener implements Observer {
     public void unload() {
         disconnect();
     }
-    
+
     private class WhoisEntry {
     	private long _created = System.currentTimeMillis();
     	private String _nick = null;
@@ -1596,16 +1673,16 @@ public class SiteBot extends FtpListener implements Observer {
 			}
 		}
     }
-     
+
     /**
 	 * Returns the source of the message, (channel or nickname)
 	 */
 	private String getSource(MessageCommand msgc) {
 		return msgc.isPrivateToUs(_conn.getClientState()) ? msgc.getSource().getNick() : msgc.getDest();
 	}
-	
+
 	public class IRCPermission {
-    	
+
     	ArrayList<String> _scope = new ArrayList<String>();
     	String _permissions = null;
         public IRCPermission(String scope, String permissions) {
@@ -1614,8 +1691,8 @@ public class SiteBot extends FtpListener implements Observer {
         	}
         	_permissions = permissions;
         }
-        
-        
+
+
         /**
          * Accepts channel names, "public", or "private"
          */
@@ -1625,7 +1702,7 @@ public class SiteBot extends FtpListener implements Observer {
         	}
         	return scope.startsWith("#") && _scope.contains("public");
         }
-        
+
         public boolean checkPermission(FullNick fn) {
         	if (_permissions.equals("*")) {
         		return true;
@@ -1650,7 +1727,7 @@ public class SiteBot extends FtpListener implements Observer {
     	    throw new NoSuchUserException("No user found");
     	}
     }
-    
+
     public static class Ret {
         private String _format;
         private SectionInterface _section;
@@ -1700,7 +1777,7 @@ public class SiteBot extends FtpListener implements Observer {
 		throw new ObjectNotFoundException();
 	}
 	/**
-	 * 
+	 *
 	 * Returns the blowfish key for the primary channel
 	 */
 	public String getBlowfishKey(User user) throws ObjectNotFoundException {
