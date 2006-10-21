@@ -39,8 +39,10 @@ import org.drftpd.mirroring.archivetypes.IncompleteDirectoryException;
 import org.drftpd.mirroring.archivetypes.OfflineSlaveException;
 import org.drftpd.plugins.Archive;
 import org.drftpd.remotefile.FileStillTransferringException;
+import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.sections.SectionInterface;
+import org.drftpd.sections.conf.DatedSection;
 import org.drftpd.sections.def.SectionManager.Section;
 
 /**
@@ -121,7 +123,14 @@ public abstract class ArchiveType {
     public final LinkedRemoteFileInterface getOldestNonArchivedDir() {
         ArrayList<LinkedRemoteFileInterface> oldDirs = new ArrayList<LinkedRemoteFileInterface>();
 
-        for (Iterator iter = getSection().getFile().getFiles().iterator();
+        LinkedRemoteFileInterface baseFile;
+        if (getSection() instanceof DatedSection) {
+        	baseFile = getSection().getBaseFile();
+        } else {
+        	baseFile = getSection().getFile();
+        }
+        
+        for (Iterator iter = baseFile.getFiles().iterator();
                 iter.hasNext();) {
             LinkedRemoteFileInterface lrf = (LinkedRemoteFileInterface) iter.next();
             if (!lrf.isDirectory()) {
