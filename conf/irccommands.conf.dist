@@ -53,3 +53,10 @@
 !toprank net.drmods.plugins.irc.Rank.doTopRank public =siteop
 !find net.drmods.plugins.irc.Find.doFind public *
 !new net.drmods.plugins.irc.New.doNew public *
+
+##
+# DrFTPD process runtime
+!master-uptime org.drftpd.sitebot.Uptime.doMasterUptime public =siteop
+!slave-uptime org.drftpd.sitebot.Uptime.doSlaveUptime public =siteop
+!slaves-uptime org.drftpd.sitebot.Uptime.doSlavesUptime public =siteop
+##

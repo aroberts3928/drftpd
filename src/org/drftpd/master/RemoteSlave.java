@@ -133,6 +133,8 @@ public class RemoteSlave implements Runnable, Comparable<RemoteSlave>, Serializa
 
 	private transient HashMap<TransferIndex, RemoteTransfer> _transfers;
 
+	private long _uptime;
+
 	public RemoteSlave(String name) {
 		_name = name;
 		_keysAndValues = new Properties();
@@ -417,6 +419,8 @@ public class RemoteSlave implements Runnable, Comparable<RemoteSlave>, Serializa
 		commit();
 		processQueue();
 
+		_uptime = System.currentTimeMillis();
+
 		String maxPathIndex = issueMaxPathToSlave();
 		_maxPath = fetchMaxPathFromIndex(maxPathIndex);
 		logger.debug("maxpath was received");
@@ -439,7 +443,11 @@ public class RemoteSlave implements Runnable, Comparable<RemoteSlave>, Serializa
 		return _isAvailable;
 	}
 
-	public boolean isAvailablePing() {
+    public long getUptime() {
+		return System.currentTimeMillis() - _uptime;
+	} 
+
+    public boolean isAvailablePing() {
 		if (!isAvailable()) {
 			return false;
 		}
@@ -1022,6 +1030,7 @@ public class RemoteSlave implements Runnable, Comparable<RemoteSlave>, Serializa
 		_transfers = null;
 		_maxPath = 0;
 		_status = null;
+		_uptime = 0;
 
 		if (_isAvailable) {
 			getGlobalContext().dispatchFtpEvent(
