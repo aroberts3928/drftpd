@@ -119,7 +119,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             env.add("targetuser", myUser.getName());
 
             for (int i = 1; i < args.length; i++) {
-                String string = args[i];
+                String string = args[i].replace(",",""); // strip commas (for easy copy+paste) ;
                 env.add("mask", string);
 
                 try {
@@ -288,7 +288,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 
         try {
             while (st.hasMoreTokens()) {
-                String string = st.nextToken();
+                String string = st.nextToken().replace(",",""); // strip commas (for easy copy+paste) ;
                 env.add("mask", string);
                 new HostMask(string); // validate hostmask
 
@@ -633,50 +633,50 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         	if (commandArguments.length != 2) {
         		return Reply.RESPONSE_501_SYNTAX_ERROR;
         	}
-        	
-        	try { 
+
+        	try {
         		float minRatio = Float.parseFloat(commandArguments[0]);
         		float maxRatio = Float.parseFloat(commandArguments[1]);
-        		
+
                 env.add("minratio", "" + minRatio);
 				env.add("maxratio", "" + maxRatio);
 
 				logger.info("'" + conn.getUserNull().getName() +
                         "' changed gadmin min/max ratio for user '" + userToChange.getName() +
-                        "' group '" + userToChange.getGroup() + "' from '" + userToChange.getMinRatio() + "/" + userToChange.getMaxRatio() + 
+                        "' group '" + userToChange.getGroup() + "' from '" + userToChange.getMinRatio() + "/" + userToChange.getMaxRatio() +
                         "' to '" + minRatio +  "/" + maxRatio + "'");
-        	    
+
         	    if ( minRatio < 1 || maxRatio < minRatio)
         	    	return Reply.RESPONSE_501_SYNTAX_ERROR;
 
         	    userToChange.setMinRatio(minRatio);
         	    userToChange.setMaxRatio(maxRatio);
-        	    
+
                 response.addComment(conn.jprintf(UserManagement.class,
                         "changegadminratio.success", env));
-                
+
         	} catch (NumberFormatException ex) {
         		return Reply.RESPONSE_501_SYNTAX_ERROR;
         	}
         } else if ("max_sim".equals(command)) {
         // [# DN] [# UP]
-            
-        	try { 
+
+        	try {
         		int maxup;
         	    int maxdn;
-        	    
+
         	    if (commandArguments.length != 2) {
                     return Reply.RESPONSE_501_SYNTAX_ERROR;
                 }
-        	    
+
         	    maxdn = Integer.parseInt(commandArguments[0]);
         	    maxup = Integer.parseInt(commandArguments[1]);
-        	    
+
         	    logger.info("'" + conn.getUserNull().getName() +
                         "' changed max simultaneous download/upload slots for '" + userToChange.getName() +
-                        "' from '" + userToChange.getMaxSimDown() + "' '" + userToChange.getMaxSimUp() + 
+                        "' from '" + userToChange.getMaxSimDown() + "' '" + userToChange.getMaxSimUp() +
                         "' to '" + maxdn +  "' '" + maxup + "'");
-        	    
+
         	    userToChange.getKeyedMap().setObject(UserManagement.MAXSIMDN, maxdn);
         	    userToChange.getKeyedMap().setObject(UserManagement.MAXSIMUP, maxup);
         	    userToChange.setMaxSimUp(maxup);
@@ -685,10 +685,10 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 				env.add("maxup", "" + maxup);
                 response.addComment(conn.jprintf(UserManagement.class,
                         "changemaxsim.success", env));
-                
+
         	} catch (NumberFormatException ex) {
         		return Reply.RESPONSE_501_SYNTAX_ERROR;
-        	} 
+        	}
         } else if ("group".equals(command)) {
             if (commandArguments.length != 1) {
             	throw new ImproperUsageException();
@@ -976,7 +976,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         Reply response = new Reply(200);
 
         for (int i = 1; i < args.length; i++) {
-            String string = args[i];
+            String string = args[i].replace(",",""); // strip commas (for easy copy+paste) ;
 
             try {
                 myUser.removeIpMask(string);
@@ -1052,7 +1052,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 		}
 		//gadmin
 		String group = request.getArgument();
-		
+
 		if (conn.getUserNull().isGroupAdmin()
 				&& !conn.getUserNull().getGroup().equals(group)) {
 			return Reply.RESPONSE_530_ACCESS_DENIED;
@@ -1064,7 +1064,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 		ReplacerEnvironment env = new ReplacerEnvironment();
 		env.add("group", group);
 		env.add("sp", " ");
-		
+
 		//add header
 		String head = bundle.getString("ginfo.head");
 		try {
@@ -1084,8 +1084,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 		int allfdn = 0;
 		long allmbup = 0;
 		long allmbdn = 0;
-		
-		Collection users;		
+
+		Collection users;
 		try {
 			users = conn.getGlobalContext().getUserManager()
 					.getAllUsers();
@@ -1096,7 +1096,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 			User user = (User) iter.next();
 			if (!user.isMemberOf(group))
 				continue;
-				
+
 			char status = ' ';
 			if (user.isGroupAdmin()) {
 				status = '+';
@@ -1113,7 +1113,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 				env.add("mbup", Bytes.formatBytes(user.getUploadedBytes()));
 				env.add("fdn", "" + user.getDownloadedFiles());
 				env.add("mbdn", Bytes.formatBytes(user.getDownloadedBytes()));
-				env.add("ratio", "1:" + (int) user.getKeyedMap().getObjectFloat(UserManagement.RATIO));	
+				env.add("ratio", "1:" + (int) user.getKeyedMap().getObjectFloat(UserManagement.RATIO));
 				env.add("wkly", Bytes.formatBytes(user.getKeyedMap().getObjectLong(UserManagement.WKLY_ALLOTMENT)));
 				response.addComment(SimplePrintf.jprintf(body, env));
 			} catch (MissingResourceException e) {
@@ -1121,7 +1121,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 			} catch (FormatterException e1) {
 				response.addComment(e1.getMessage());
 			}
-			
+
 			//update totals
 			numUsers++;
 			if ((int) user.getKeyedMap().getObjectFloat(UserManagement.RATIO) == 0) {
@@ -1140,7 +1140,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 		env.add("allmbdn", Bytes.formatBytes(allmbdn));
 		env.add("numusers", "" + numUsers);
 		env.add("numleech", "" + numLeechUsers);
-		
+
 		String tail = bundle.getString("ginfo.tail");
 		try {
 			response.addComment(SimplePrintf.jprintf(tail, env));
@@ -1193,7 +1193,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         } catch (NumberFormatException ex) {
         	return new Reply(452, "The string " + amt + " cannot be interpreted");
         }
-        
+
         if (0 > credits) {
             return new Reply(452, credits + " is not a positive number.");
         }
@@ -1216,15 +1216,15 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             "OK, gave " + Bytes.formatBytes(credits) + " of your credits to " +
             myUser.getName());
     }
-    
+
     private Reply doSITE_GROUP(BaseFtpConnection conn) throws ImproperUsageException {
     	FtpRequest request = conn.getRequest();
-    	
+
     	boolean ip = false;
-    	float ratio = 0; 
+    	float ratio = 0;
     	int numLogin = 0, numLoginIP = 0, maxUp = 0, maxDn = 0, idle = 0;
     	String opt, group;
-    	
+
     	if (!conn.getUserNull().isAdmin()) {
             return Reply.RESPONSE_530_ACCESS_DENIED;
         }
@@ -1234,18 +1234,18 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         }
 
         StringTokenizer st = new StringTokenizer(request.getArgument());
-        
+
         if (!st.hasMoreTokens()) { return Reply.RESPONSE_501_SYNTAX_ERROR; }
         group = st.nextToken();
-        
+
         if (!st.hasMoreTokens()) { return Reply.RESPONSE_501_SYNTAX_ERROR; }
         opt = st.nextToken();
 
         if (!st.hasMoreTokens()) { return Reply.RESPONSE_501_SYNTAX_ERROR; }
-        
-        if (opt.equals("num_logins")) { 
+
+        if (opt.equals("num_logins")) {
         	numLogin = Integer.parseInt(st.nextToken());
-        	if (st.hasMoreTokens()) { 
+        	if (st.hasMoreTokens()) {
         		ip = true;
         		numLoginIP = Integer.parseInt(st.nextToken());
         	}
@@ -1264,11 +1264,11 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         }
 
         // getting data
-        
+
         Reply response = new Reply(200);
-        
+
         Collection users = null;
-        
+
         try {
         	users = conn.getGlobalContext().getUserManager().getAllUsersByGroup(group);
         } catch (UserFileException ex) {
@@ -1276,12 +1276,12 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         	return new Reply(200, "IO error: " + ex.getMessage());
         }
         response.addComment("Changing '" + group + "' members " + opt);
-        
+
         for (Iterator iter = users.iterator(); iter.hasNext();) {
             User userToChange = (User) iter.next();
-            
+
             if (userToChange.getGroup().equals(group)) {
-            	if (opt.equals("num_logins")) { 
+            	if (opt.equals("num_logins")) {
             		userToChange.getKeyedMap().setObject(UserManagement.MAXLOGINS, numLogin);
             		if (ip) { userToChange.getKeyedMap().setObject(UserManagement.MAXLOGINSIP, numLoginIP); }
             	} else if (opt.equals("max_sim")) {
@@ -1295,12 +1295,12 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             	response.addComment("Changed " + userToChange.getName() + "!");
             }
         }
-        
+
         response.addComment("Done!");
-        
+
     	return response;
     }
-    
+
     private Reply doSITE_GROUPS(BaseFtpConnection conn) {
         Collection groups;
 
@@ -1658,7 +1658,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         User myUser;
         long credits;
         String amt = null;
-        
+
         try {
             myUser = conn.getGlobalContext().getUserManager().getUserByName(st.nextToken());
 
@@ -1948,8 +1948,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
                             conn2.getLastActive()));
                     env.add("targetuser", user.getName());
                     env.add("ip", conn2.getClientAddress().getHostAddress());
-                    
-                    
+
+
                     synchronized (conn2.getDataConnectionHandler()) {
 						if (!conn2.isExecuting()) {
 							response.addComment(SimplePrintf.jprintf(
@@ -1968,7 +1968,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 									.getTransferFile().getName());
 							env.add("slave", conn2.getDataConnectionHandler()
 									.getTranferSlave().getName());
-							
+
 							if (conn2.getTransferDirection() == Transfer.TRANSFER_RECEIVING_UPLOAD) {
 								response.addComment(SimplePrintf.jprintf(
 										formatup, env));
@@ -2002,8 +2002,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         } catch (FormatterException e) {
             return new Reply(452, e.getMessage());
         }
-    }    
-    
+    }
+
     private Reply doSITE_BAN(BaseFtpConnection conn) throws ImproperUsageException {
         FtpRequest request = conn.getRequest();
 
@@ -2028,7 +2028,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         if (!st.hasMoreTokens()) {
             return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
-        
+
         long banTime;
         try {
             banTime = Long.parseLong(st.nextToken());
@@ -2036,7 +2036,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             logger.warn("", e);
             return new Reply(200, e.getMessage());
         }
-        
+
         String banMsg;
         if (st.hasMoreTokens()) {
             banMsg = "[" + conn.getUserNull().getName() + "]";
@@ -2045,8 +2045,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         } else {
             banMsg = "Banned by " + conn.getUserNull().getName() + " for " + banTime + "m";
         }
-        
-        myUser.getKeyedMap().setObject(UserManagement.BAN_TIME, 
+
+        myUser.getKeyedMap().setObject(UserManagement.BAN_TIME,
                 					new Date(System.currentTimeMillis() + (banTime*60000)));
         myUser.getKeyedMap().setObject(UserManagement.BAN_REASON, banMsg);
         try {
@@ -2055,10 +2055,10 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             logger.warn("", e);
             return new Reply(200, e.getMessage());
         }
-        
+
         return Reply.RESPONSE_200_COMMAND_OK;
     }
-    
+
     private Reply doSITE_UNBAN(BaseFtpConnection conn) throws ImproperUsageException {
         FtpRequest request = conn.getRequest();
 
@@ -2082,14 +2082,14 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 
         myUser.getKeyedMap().setObject(UserManagement.BAN_TIME, new Date());
         myUser.getKeyedMap().setObject(UserManagement.BAN_REASON, "");
-        
+
         try {
             myUser.commit();
         } catch (UserFileException e) {
             logger.warn("", e);
             return new Reply(200, e.getMessage());
         }
-        
+
         return Reply.RESPONSE_200_COMMAND_OK;
     }
 
@@ -2101,7 +2101,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             logger.log(Level.FATAL, "IO error reading all users", e);
             throw new ReplyException(e);
         }
-        
+
         Reply response = (Reply) Reply.RESPONSE_200_COMMAND_OK.clone();
         for (User user : myUsers) {
             long timeleft = user.getKeyedMap().getObjectDate(UserManagement.BAN_TIME).getTime() -
@@ -2112,10 +2112,10 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
                 response.addComment(BaseFtpConnection.jprintf(UserManagement.class, "bans", env, user));
             }
         }
-        
+
         return response;
     }
-    
+
     public Reply execute(BaseFtpConnection conn)
         throws ReplyException, ImproperUsageException {
         String cmd = conn.getRequest().getCommand();
@@ -2158,7 +2158,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         if ("SITE GIVE".equals(cmd)) {
             return doSITE_GIVE(conn);
         }
-        
+
         if ("SITE GROUP".equals(cmd)) {
             return doSITE_GROUP(conn);
         }
@@ -2214,7 +2214,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         if ("SITE WHO".equals(cmd)) {
             return doSITE_WHO(conn);
         }
- 
+
         if ("SITE SWHO".equals(cmd)) {
             return doSITE_SWHO(conn);
         }
