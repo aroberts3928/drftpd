@@ -323,7 +323,9 @@ public class Slave {
 
             return crc32.getValue();
         } finally {
-            in.close();
+        	if (in != null) {
+        		in.close();
+        	}
         }
     }
 

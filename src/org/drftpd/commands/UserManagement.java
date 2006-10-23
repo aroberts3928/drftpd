@@ -119,7 +119,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             env.add("targetuser", myUser.getName());
 
             for (int i = 1; i < args.length; i++) {
-                String string = args[i];
+                String string = args[i].replace(",",""); // strip commas (for easy copy+paste);
                 env.add("mask", string);
 
                 try {
@@ -288,7 +288,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 
         try {
             while (st.hasMoreTokens()) {
-                String string = st.nextToken();
+                String string = st.nextToken().replace(",",""); // strip commas (for easy copy+paste);
                 env.add("mask", string);
                 new HostMask(string); // validate hostmask
 
@@ -974,7 +974,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         Reply response = new Reply(200);
 
         for (int i = 1; i < args.length; i++) {
-            String string = args[i];
+            String string = args[i].replace(",",""); // strip commas (for easy copy+paste);
 
             try {
                 myUser.removeIpMask(string);
