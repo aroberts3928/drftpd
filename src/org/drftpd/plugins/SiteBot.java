@@ -1154,7 +1154,7 @@ public class SiteBot extends FtpListener implements Observer {
                 			+ ", percentComplete=" + Math.round(percentComplete * 100) + "%"
                 			+ ", eta=" + eta);
                 	env.add("eta", eta);
-                	env.add("expectedsize", expectedDirSize);
+                	env.add("expectedsize", Bytes.formatBytes(expectedDirSize));
                 	env.add("filenum", Integer.toString(totUploaded));
                 	env.add("filesleft", Integer.toString(sfvstatus.getMissing()));
                 } catch (ArithmeticException e) {
