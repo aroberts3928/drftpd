@@ -364,7 +364,7 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
         String reason;
 
         if (st.hasMoreTokens()) {
-            reason = st.nextToken("");
+            reason = st.nextToken("").trim();
         } else {
             reason = "";
         }
