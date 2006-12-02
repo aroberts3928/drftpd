@@ -88,8 +88,17 @@ unnuke * =siteop =nuke
 nukes * *
 chown * =siteop
 
-# This a Regexp filter
-# This filter ALWAYS use the complete path of a file or a direcory
+# commands for JobManager don't care about path, extra * is just to conform
+addjob * =siteop
+removejob * =siteop
+listjobs * =siteop
+startjobs * =siteop
+stopjobs * =siteop
+
+#######################################################
+# DrFTPD+ Regular Expression based command filtering.
+# These filter are ALWAYS checked against the complete path of a file or a direcory
+#
 # Eg.1:
 # Current Path = /TEST.DIR/ -> MKD TEST
 # The filter will see this as 'MKD /TEST.DIR/TEST/'
@@ -101,11 +110,43 @@ chown * =siteop
 # filter 	<MKD|STOR|RETR|RNTO|RNFR|WIPE>	regexp					perms
 # Read this topic for some regexp samples...
 #
-# http://www.drftpd.org/phpBB2/viewtopic.php?t=302
+# For more information, ideas, and user submitted example filters,
+# check out the RegexFilter wiki article on the drftpd website: 
+#
+#			http://www.drftpd.org/index.php/Plus/RegexFilter
+# 
+#######################################################
+##########
+## STOR ##
+##########
 
-# commands for JobManager don't care about path, extra * is just to conform
-addjob * =siteop
-removejob * =siteop
-listjobs * =siteop
-startjobs * =siteop
-stopjobs * =siteop
+#Filter autorenamed files like blah(2).nfo 
+filter STOR (\([0-9]+\)\.)[a-z0-9]{3}$ =siteop !*
+
+#Filter nfo's from being uploaded into certain directory names
+filter STOR /((?:(?:cd|dis[ck])[a-f0-9]+|sample|subs/).*\.nfo)$ =siteop !*
+
+#Filter sfv's in Covers/Sample dirs 
+filter STOR /((?:covers|sample)/.*\.sfv)$ !*
+
+#Only allow filenames with the defined allowed chars 
+filter STOR ([^/a-z0-9()._-]) !*
+
+#########
+## MKD ##
+#########
+
+#Filter dirs like /release/cd1/release 
+filter MKD /(([^/]+)/([^/]+)/([^/]+)/(\2|\3|\4))$ =siteop !* 
+filter MKD /(([^/]+)/([^/]+)/(\2|\3))$ =siteop !* 
+filter MKD /(([^/]+)/\2)$ =siteop !* 
+
+#Only allow dirnames with the defined allowed chars 
+filter MKD ([^/a-z0-9()._-]) !*
+
+##########
+## RNTO ##
+##########
+
+#Never allow renaming to [NUKED]- dirs
+filter RNTO (\[NUKED\]-) =siteop !*
