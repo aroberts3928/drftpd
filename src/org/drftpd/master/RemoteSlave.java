@@ -1182,7 +1182,7 @@ public class RemoteSlave implements Runnable, Comparable<RemoteSlave>, Serializa
 			throw new SlaveUnavailableException("Slave is not online");
 		}
 		synchronized (_transfers) {
-			return Collections.unmodifiableCollection(_transfers.values());
+			return Collections.unmodifiableCollection(new ArrayList<RemoteTransfer>(_transfers.values()));
 		}
 	}
 
