@@ -367,7 +367,6 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 	 */
 	public void delete() {
 		logger.debug("delete(" + getPath() + ")");
-		_link = null;
 
 		if (isDirectory()) {
 			// need to use a copy of getFiles() for recursive delete to avoid
@@ -389,22 +388,26 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 			setDeletedRecursive();
 			return;
 		}
-		// this.isFile() = true
-		for (RemoteSlave rslave : new ArrayList<RemoteSlave>(_slaves)) {
-			try {
-				for (RemoteTransfer rtransfer : new ArrayList<RemoteTransfer>(
-						rslave.getTransfers())) {
-					if (getPath().equalsIgnoreCase(rtransfer.getPathNull())) {
-						rtransfer
-								.abort("File has been deleted on the master");
+		if (_link == null) {
+			// this.isFile() = true
+			for (RemoteSlave rslave : new ArrayList<RemoteSlave>(_slaves)) {
+				try {
+					for (RemoteTransfer rtransfer : new ArrayList<RemoteTransfer>(
+							rslave.getTransfers())) {
+						if (getPath().equalsIgnoreCase(rtransfer.getPathNull())) {
+							rtransfer
+									.abort("File has been deleted on the master");
+						}
 					}
+				} catch (SlaveUnavailableException e) {
+					// nothing to do here, still want to delete it though
 				}
-			} catch (SlaveUnavailableException e) {
-				// nothing to do here, still want to delete it though
 			}
+			_ftpConfig.getGlobalContext().getSlaveManager().deleteOnAllSlaves(this);
+			_slaves.clear();
+		} else {
+			_link = null;
 		}
-		_ftpConfig.getGlobalContext().getSlaveManager().deleteOnAllSlaves(this);
-		_slaves.clear();
 
 		try {
 			if (getParentFile().getMap().remove(getName()) == null) {
