@@ -87,7 +87,10 @@ public class ConstantMirroring extends ArchiveType {
                 		}
                 	}
                 }
-                if (!getRSlaves().containsAll(slaves)) {
+                if (getRSlaves() != null && !getRSlaves().containsAll(slaves)) {
+                	// if getRSlaves() is null, it means ConstantMirroring is configured with
+                	// each slave as a destination slave
+                	// this condition need not be tested
                 	return false;
                 }
 
