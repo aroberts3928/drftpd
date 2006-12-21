@@ -1188,45 +1188,54 @@ public class SiteBot extends FtpListener implements Observer {
 	private void reloadIRCCommands() throws IOException {
 		_methodMap = new HashMap<String, Object[]>();
 		HashMap<String, IRCCommand> ircCommands = new HashMap<String, IRCCommand>();
-		LineNumberReader lineReader = new LineNumberReader(new FileReader(
-				"conf/irccommands.conf"));
-		String line = null;
-		while ((line = lineReader.readLine()) != null) {
-			if (line.startsWith("#") || line.trim().equals("")) {
-				continue;
-			}
-			StringTokenizer st = new StringTokenizer(line);
-			if (st.countTokens() < 4) {
-				logger.error("Line is invalid -- not enough parameters \"" + line + "\"");
-				continue;
-			}
-			String trigger = st.nextToken();
-			String methodString = st.nextToken();
-			String scopeList = st.nextToken();
-			String permissions = st.nextToken("").trim();
-			
-			int index = methodString.lastIndexOf(".");
-			String className = methodString.substring(0, index);
-			methodString = methodString.substring(index + 1);
-			Method m = null;
-			try {
-				IRCCommand ircCommand = ircCommands.get(className);
-				if (ircCommand == null) {
-					ircCommand = (IRCCommand) Class
-							.forName(className)
-							.getConstructor(new Class[] { GlobalContext.class })
-							.newInstance(new Object[] { getGlobalContext() });
-					ircCommands.put(className, ircCommand);
+		LineNumberReader lineReader = null;
+		try {
+			lineReader = new LineNumberReader(new FileReader(
+			"conf/irccommands.conf"));
+			String line = null;
+			while ((line = lineReader.readLine()) != null) {
+				if (line.startsWith("#") || line.trim().equals("")) {
+					continue;
 				}
-				m = ircCommand.getClass().getMethod(methodString,
-						new Class[] { String.class, MessageCommand.class});
-				_methodMap.put(trigger, new Object[] { m, ircCommand,
-						new IRCPermission(scopeList, permissions) });
-			} catch (Exception e) {
-				logger.error(
-						"Invalid class/method listed in irccommands.conf - "
-								+ line, e);
-				throw new RuntimeException(e);
+				StringTokenizer st = new StringTokenizer(line);
+				if (st.countTokens() < 4) {
+					logger.error("Line is invalid -- not enough parameters \""
+							+ line + "\"");
+					continue;
+				}
+				String trigger = st.nextToken();
+				String methodString = st.nextToken();
+				String scopeList = st.nextToken();
+				String permissions = st.nextToken("").trim();
+
+				int index = methodString.lastIndexOf(".");
+				String className = methodString.substring(0, index);
+				methodString = methodString.substring(index + 1);
+				Method m = null;
+				try {
+					IRCCommand ircCommand = ircCommands.get(className);
+					if (ircCommand == null) {
+						ircCommand = (IRCCommand) Class.forName(className)
+						.getConstructor(
+								new Class[] { GlobalContext.class })
+								.newInstance(
+										new Object[] { getGlobalContext() });
+						ircCommands.put(className, ircCommand);
+					}
+					m = ircCommand.getClass().getMethod(methodString,
+							new Class[] { String.class, MessageCommand.class });
+					_methodMap.put(trigger, new Object[] { m, ircCommand,
+							new IRCPermission(scopeList, permissions) });
+				} catch (Exception e) {
+					logger.error(
+							"Invalid class/method listed in irccommands.conf - "
+							+ line, e);
+					throw new RuntimeException(e);
+				}
+			}
+		} finally {
+			if (lineReader != null) {
+				lineReader.close();
 			}
 		}
 	}
