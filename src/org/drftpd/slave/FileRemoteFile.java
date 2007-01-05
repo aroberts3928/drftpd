@@ -328,13 +328,6 @@ public class FileRemoteFile extends AbstractLightRemoteFile {
         return length;
     }
 
-    /**
-     * Returns an array of FileRemoteFile:s representing the contents of the
-     * directory this FileRemoteFile represents.
-     */
-    public LightRemoteFileInterface[] listFiles() {
-        return (LightRemoteFileInterface[]) getFiles().toArray(new FileRemoteFile[0]);
-    }
     public static class InvalidDirectoryException extends IOException {
         /**
          * Constructor for InvalidDirectoryException.
@@ -376,8 +369,9 @@ class Checksummer extends Thread {
         synchronized (this) {
             _checkSum = new CRC32();
 
+            CheckedInputStream cis = null;
             try {
-                CheckedInputStream cis = new CheckedInputStream(new FileInputStream(
+                cis = new CheckedInputStream(new FileInputStream(
                             _f), _checkSum);
                 byte[] b = new byte[1024];
 
@@ -386,6 +380,14 @@ class Checksummer extends Thread {
             } catch (IOException e) {
                 logger.warn("", e);
                 _e = e;
+            }
+            finally {
+            	if(cis != null) {
+            		try {
+						cis.close();
+					} catch (IOException e) {
+					}
+            	}
             }
 
             notifyAll();

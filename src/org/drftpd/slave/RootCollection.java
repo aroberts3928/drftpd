@@ -200,6 +200,7 @@ public class RootCollection {
         Collections.sort(mounts,
             new Comparator() {
                 public boolean equals(Object obj) {
+                	if(obj == null) return false;
                     return obj.getClass() == getClass();
                 }
 

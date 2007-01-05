@@ -27,7 +27,7 @@ import org.drftpd.remotefile.CaseInsensitiveHashtable;
  * @author mog
  * @version $Id$
  */
-public class LightSFVFile extends AbstractSFVFile implements Serializable {
+public class LightSFVFile extends AbstractSFVFile {
     /**
      * Constructor for SFVFile.
      */

@@ -90,38 +90,47 @@ public class SectionManager implements SectionManagerInterface {
 
     public void reload() {
         Properties p = new Properties();
-
+        FileInputStream stream = null;
         try {
-            p.load(new FileInputStream("conf/sections.conf"));
-        } catch (IOException e) {
-            throw new FatalException(e);
-        }
+        	stream = new FileInputStream("conf/sections.conf");
+			p.load(stream);
 
-        Hashtable<String,SectionInterface> sections = new Hashtable<String,SectionInterface>();
+			Hashtable<String, SectionInterface> sections = new Hashtable<String, SectionInterface>();
 
-        for (int i = 1;; i++) {
-            String name = p.getProperty(i + ".name");
-            if (name == null)
-                break;
+			for (int i = 1;; i++) {
+				String name = p.getProperty(i + ".name");
+				if (name == null)
+					break;
 
-            String type = p.getProperty(i + ".type", "plain");
+				String type = p.getProperty(i + ".type", "plain");
 
-            try {
-                Class clazz = Class.forName("org.drftpd.sections.conf." +
-                        type.substring(0, 1).toUpperCase() + type.substring(1) +
-                        "Section");
-                SectionInterface section = (SectionInterface) clazz.getDeclaredConstructor(CONSTRUCTOR_SIG)
-                                                                   .newInstance(new Object[] {
-                            this, new Integer(i), p
-                        });
-                sections.put(name, section);
-            } catch (Exception e1) {
-                throw new FatalException("Unknown section type: " + i +
-                    ".type = " + type, e1);
-            }
-        }
+				try {
+					Class clazz = Class.forName("org.drftpd.sections.conf."
+							+ type.substring(0, 1).toUpperCase()
+							+ type.substring(1) + "Section");
+					SectionInterface section = (SectionInterface) clazz
+							.getDeclaredConstructor(CONSTRUCTOR_SIG)
+							.newInstance(
+									new Object[] { this, new Integer(i), p });
+					sections.put(name, section);
+				} catch (Exception e1) {
+					throw new FatalException("Unknown section type: " + i
+							+ ".type = " + type, e1);
+				}
+			}
 
-        _sections = sections;
+			_sections = sections;
+		} catch (IOException e) {
+			throw new FatalException(e);
+		}
+		finally {
+			if(stream != null) {
+				try {
+					stream.close();
+				} catch (IOException e) {
+				}
+			}
+		}
     }
 
     public SectionInterface lookup(LinkedRemoteFileInterface file) {

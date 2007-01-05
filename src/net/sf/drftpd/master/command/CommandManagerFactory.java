@@ -96,12 +96,10 @@ public class CommandManagerFactory {
         Hashtable cmds = new Hashtable();
         Hashtable hnds = new Hashtable();
         Properties props = new Properties();
-
+        FileInputStream stream = null;
         try {
-            props.load(new FileInputStream("conf/commandhandlers.conf"));
-        } catch (IOException e) {
-            throw new FatalException("Error loading commandhandlers.conf", e);
-        }
+        	stream = new FileInputStream("conf/commandhandlers.conf"); 
+            props.load(stream);
 
         //		URLClassLoader classLoader;
         //		try {
@@ -146,6 +144,17 @@ public class CommandManagerFactory {
 
         _cmds = cmds;
         _hnds = hnds;
+        } catch (IOException e) {
+            throw new FatalException("Error loading commandhandlers.conf", e);
+        }
+        finally {
+        	if(stream != null) {
+        		try {
+					stream.close();
+				} catch (IOException e) {
+				}
+        	}
+        }
     }
 
     public CommandManager initialize(BaseFtpConnection conn) {
