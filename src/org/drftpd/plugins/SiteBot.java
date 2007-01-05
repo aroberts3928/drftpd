@@ -1335,7 +1335,7 @@ public class SiteBot extends FtpListener implements Observer {
 					ChannelConfig oldCC = oldChannelMap.get(currentChannel);
 					if (oldCC == null) {
 						logger.debug("This is a bug! report me! -- channel="
-								+ currentChannel + " oldCC=" + oldCC,
+								+ currentChannel + " oldCC=null",
 								new Throwable());
 						continue;
 					}
@@ -1349,7 +1349,7 @@ public class SiteBot extends FtpListener implements Observer {
 		for (String channelName : _channelMap.keySet()) {
         	ChannelConfig cc = _channelMap.get(channelName);
     		if (cc == null) {
-    			logger.debug("This is a bug! report me! -- channel=" + channelName + " cc=" + cc, new Throwable());
+    			logger.debug("This is a bug! report me! -- channel=" + channelName + " cc=null", new Throwable());
     			continue;
     		}
         	if (cc.getAutoJoin() == null) { // new channel!
@@ -1420,7 +1420,7 @@ public class SiteBot extends FtpListener implements Observer {
 			if (isChan) {
 				ChannelConfig cc = _channelMap.get(dest);
 				if (cc == null) {
-	    			logger.debug("This is a bug! report me! -- channel=" + dest + " cc=" + cc, new Throwable());
+	    			logger.debug("This is a bug! report me! -- channel=" + dest + " cc=null", new Throwable());
 	    			continue;
 				}
 				line = cc.encrypt(line);

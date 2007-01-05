@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 /**
  * @author zubov
- * @version $Id: TransferIndex.java,v 1.3 2004/11/03 16:46:46 mog Exp $
+ * @version $Id$
  */
 public final class TransferIndex implements Serializable {
     static int transfers = 0;
@@ -37,6 +37,7 @@ public final class TransferIndex implements Serializable {
     }
 
     public boolean equals(Object obj) {
+    	if(obj == null) return false;
         return _index == ((TransferIndex) obj)._index;
     }
 

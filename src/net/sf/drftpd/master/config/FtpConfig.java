@@ -103,8 +103,16 @@ public class FtpConfig extends Observable implements ConfigInterface {
     
     public FtpConfig(String cfgFileName, GlobalContext gctx) throws IOException {
         Properties cfg = new Properties();
-        cfg.load(new FileInputStream(cfgFileName));
-        loadConfig(cfg, gctx);
+        FileInputStream stream = null;
+        try {
+			stream = new FileInputStream(cfgFileName);
+			cfg.load(stream);
+			loadConfig(cfg, gctx);
+		} finally {
+			if (stream != null) {
+				stream.close();
+			}
+		}
     }
 
     private static ArrayList makeRatioPermission(ArrayList<RatioPathPermission> arr,

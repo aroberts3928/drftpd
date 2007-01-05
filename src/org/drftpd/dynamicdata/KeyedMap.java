@@ -136,7 +136,7 @@ public class KeyedMap<K, V> extends Hashtable {
 
 	public void setObject(Key key, Object obj) {
         if (obj == null) {
-            throw new NullPointerException(key + " - " + obj);
+            throw new NullPointerException(key + " - is null");
         }
 
         if (!key.getType().isInstance(obj)) {
