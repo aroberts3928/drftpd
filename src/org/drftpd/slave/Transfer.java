@@ -231,9 +231,6 @@ public class Transfer {
 				_out = new CheckedOutputStream(_out, _checksum);
 			}
 			accept();
-			if (_slave.getBufferSize() > 0) {
-				_sock.setReceiveBufferSize(_slave.getBufferSize());
-			}
 
 			_in = _sock.getInputStream();
 			synchronized(this) {
@@ -322,7 +319,7 @@ public class Transfer {
     }
 
     private void accept() throws IOException {
-        _sock = _conn.connect();
+        _sock = _conn.connect(_slave.getBufferSize());
         
         _conn = null;
     }

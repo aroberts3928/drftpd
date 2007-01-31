@@ -797,7 +797,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         if (isPort()) {
             try {
 				ActiveConnection ac = new ActiveConnection(_encryptedDataChannel ? _ctx : null, _portAddress, _SSLHandshakeClientMode);
-                dataSocket = ac.connect();
+                dataSocket = ac.connect(0);
             } catch (IOException ex) {
                 logger.warn("Error opening data socket", ex);
                 dataSocket = null;
@@ -805,7 +805,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
             }
         } else if (isPasv()) {
             try {
-                dataSocket = _passiveConnection.connect();
+                dataSocket = _passiveConnection.connect(0);
             } finally {
 				if (_passiveConnection != null) {
 					_passiveConnection.abort();

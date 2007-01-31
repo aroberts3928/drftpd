@@ -61,7 +61,7 @@ public class PassiveConnection extends Connection {
     }
     
  
-	public Socket connect() throws IOException {
+	public Socket connect(int bufferSize) throws IOException {
 		Socket sock = null;
 		try {
 			sock = _serverSocket.accept();

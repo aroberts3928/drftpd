@@ -297,7 +297,7 @@ public class FtpConfig extends Observable implements ConfigInterface {
         loadConfig2(new FileReader(newConf));
         if (_portRange == null) {
             //default portrange if none specified
-            _portRange = new PortRange();
+            _portRange = new PortRange(0);
         }
         _gctx = gctx;
         loadConfig1(cfg);
@@ -347,7 +347,7 @@ public class FtpConfig extends Observable implements ConfigInterface {
                     	_pasv_addr = st.nextToken();
                     } else if (cmd.equals("pasv_ports")) {
                         String[] temp = st.nextToken().split("-");
-                        _portRange = new PortRange(Integer.parseInt(temp[0]),Integer.parseInt(temp[1]));
+                        _portRange = new PortRange(Integer.parseInt(temp[0]),Integer.parseInt(temp[1]),0);
                     } else if (cmd.equals("dir_names")) {
                         _useDirNames = true;
                         _capFirstDir = st.nextToken().equals("true");
