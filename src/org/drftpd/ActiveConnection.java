@@ -39,6 +39,7 @@ public class ActiveConnection extends Connection {
     private SSLContext _ctx;
     private InetSocketAddress _addr;
     private Socket _sock;
+    private int _bufferSize;
     private boolean _useSSLClientHandshake;
     
     public ActiveConnection(SSLContext ctx, InetSocketAddress addr,
@@ -48,13 +49,17 @@ public class ActiveConnection extends Connection {
         _useSSLClientHandshake = useSSLClientHandshake;
 	}
 
-    public Socket connect() throws IOException {
+    public Socket connect(int bufferSize) throws IOException {
+        _bufferSize = bufferSize;
         logger.debug("Connecting to " + _addr.getAddress().getHostAddress() + ":" +
             _addr.getPort());
 
         if (_ctx != null) {
             SSLSocket sslsock;
             sslsock = (SSLSocket) _ctx.getSocketFactory().createSocket();
+            if (_bufferSize > 0) {
+                sslsock.setReceiveBufferSize(_bufferSize);
+            }
             sslsock.connect(_addr, TIMEOUT);
             setSockOpts(sslsock);
             sslsock.setUseClientMode(_useSSLClientHandshake);
@@ -62,6 +67,9 @@ public class ActiveConnection extends Connection {
             _sock = sslsock;
         } else {
             _sock = SocketFactory.getDefault().createSocket();
+            if (_bufferSize > 0) {
+                _sock.setReceiveBufferSize(_bufferSize);
+            }
             _sock.connect(_addr, TIMEOUT);
             setSockOpts(_sock);
         }

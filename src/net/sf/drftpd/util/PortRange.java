@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
 import java.util.Random;
@@ -36,29 +37,37 @@ public class PortRange {
     private static final Logger logger = Logger.getLogger(PortRange.class);
     private int _minPort;
     private int _maxPort;
+    private int _bufferSize;
     Random rand = new Random();
 
     /**
      * Creates a default port range for port 49152 to 65535.
      */
-    public PortRange() {
+    public PortRange(int bufferSize) {
         _minPort = 0;
         _maxPort = 0;
+        _bufferSize = bufferSize;
     }
 
-    public PortRange(int minPort, int maxPort) {
+    public PortRange(int minPort, int maxPort, int bufferSize) {
         if (0 >= minPort || minPort > maxPort || maxPort > 65535) {
             throw new RuntimeException("0 < minPort <= maxPort <= 65535");
         }
 
         _maxPort = maxPort;
         _minPort = minPort;
+        _bufferSize = bufferSize;
     }
 
     public ServerSocket getPort(ServerSocketFactory ssf) {
 		if (_minPort == 0) {
 			try {
-				return ssf.createServerSocket(0, 1);
+				ServerSocket _serverSocket = ssf.createServerSocket();
+ 				if (_bufferSize > 0) {
+        	_serverSocket.setReceiveBufferSize(_bufferSize);
+        }
+ 				_serverSocket.bind(new InetSocketAddress(0),1);
+ 				return _serverSocket;
 			} catch (IOException e) {
 				logger.error("Unable to bind anonymous port", e);
 				throw new RuntimeException(e);
@@ -70,7 +79,12 @@ public class PortRange {
 		boolean retry = true;
 		while (true) {
 			try {
-				return ssf.createServerSocket(pos, 1);
+				ServerSocket _serverSocket = ssf.createServerSocket();
+        if (_bufferSize > 0) {
+        	_serverSocket.setReceiveBufferSize(_bufferSize);
+        }
+        _serverSocket.bind(new InetSocketAddress(pos),1);
+        return _serverSocket;
 			} catch (IOException e) {
 			}
 			pos++;
