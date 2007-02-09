@@ -1187,7 +1187,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     // no sfv found in dir 
                 	if (SfvFirstEnforcedPath) { 
                 		// check if .sfv, and if so should it be allowed. 
-                		String badsubdir = zsCfg.checkSfvDenyUL(targetDir); 
+                		String badsubdir = zsCfg.checkSfvDenyUL(targetDir, conn.getUserNull()); 
                 		if (checkName.endsWith(".sfv") 
                 				&& badsubdir != "") { 
                 			return new Reply(533, 

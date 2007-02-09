@@ -127,9 +127,7 @@ public class ZipscriptConfig {
 		_SfvFirstUsers = cfg.getProperty("sfvfirst.users") == null ? "*" : cfg
 				.getProperty("sfvfirst.users");
 		_SfvDenySubdirEnabled = cfg.getProperty("sfvdeny.subdir.enabled") == null ? false 
-				: cfg.getProperty("sfvdeny.subdir.enabled").trim().equalsIgnoreCase("true"); 
-		_SfvDenySubdirExempt = cfg.getProperty("sfvdeny.subdir.exempt") == null ? "".split("") 
-				: cfg.getProperty("sfvdeny.subdir.exempt").trim().split("\\s+"); 
+				: cfg.getProperty("sfvdeny.subdir.enabled").trim().equalsIgnoreCase("true");
 		_SfvDenyMKDEnabled = cfg.getProperty("sfvdeny.mkd.enabled") == null     ? false 
 				: cfg.getProperty("sfvdeny.mkd.enabled").trim().equalsIgnoreCase("true"); 
 		_SfvDenyMKDExempt = cfg.getProperty("sfvdeny.mkd.exempt") == null ? "".split("") 
@@ -137,9 +135,11 @@ public class ZipscriptConfig {
 
 		// Locals
 		String SfvFirstPathIgnore = cfg.getProperty("sfvfirst.pathignore") == null ? "*"
-				: cfg.getProperty("sfvfirst.pathignore");
+				: cfg.getProperty("sfvfirst.pathignore").trim();
 		String SfvFirstPathCheck = cfg.getProperty("sfvfirst.pathcheck") == null ? "*"
-				: cfg.getProperty("sfvfirst.pathcheck");
+				: cfg.getProperty("sfvfirst.pathcheck").trim();
+		String SfvDenySubdirExempt = cfg.getProperty("sfvdeny.subdir.exempt") == null ? ""
+				: cfg.getProperty("sfvdeny.subdir.exempt").trim();
 
 		// SFV First PathPermissions
 		if (_SfvFirstRequired) {
@@ -162,6 +162,14 @@ public class ZipscriptConfig {
 									.compile(st.nextToken()), FtpConfig
 									.makeUsers(new StringTokenizer("*", " "))));
 				}
+                st = new StringTokenizer(SfvDenySubdirExempt, " ");
+				while (st.hasMoreTokens()) {
+					_gctx.getConfig().addPathPermission(
+							"sfvdeny.subdir.exempt",
+							new GlobPathPermission(new GlobCompiler()
+									.compile("*/" + st.nextToken() + "/"), FtpConfig
+									.makeUsers(new StringTokenizer("*", " "))));
+				} 
 			} catch (MalformedPatternException e) {
 				logger.warn("Exception when reading " + zsConf, e);
 			}
@@ -239,24 +247,19 @@ public class ZipscriptConfig {
 	 * (zipscript.conf: <code>sfvfirst.required</code>) is not true.
 	 * 
 	 * @param dir	directory in which a .sfv file upload attempt is being made.
+	 * @param user	user that is trying to send a .sfv file
 	 * @return 		<code>name of subdir</code> if upload should be denied;
 	 *         		<code>empty string</code> otherwise
 	 * @since 		2.0.4+
 	 * @author 		tdsoul
 	 */
-	public String checkSfvDenyUL(LinkedRemoteFileInterface dir) {
+	public String checkSfvDenyUL(LinkedRemoteFileInterface dir, User user) {
 		if (_SfvFirstRequired && _SfvDenySubdirEnabled && dir.isDirectory()
 				&& dir.getDirectories().size() > 0) {
 			for (LinkedRemoteFileInterface subdir : dir.getDirectories()) {
-				boolean nomatch = true;
-				for (String exempt : _SfvDenySubdirExempt) {
-					if (subdir.getName().equalsIgnoreCase(exempt)) {
-						nomatch = false;
-						break;
-					}
-				}
-				// If this subdir is not exempt, deny.
-				if (nomatch) {
+				if (!subdir.isDirectory()) continue;
+				if (!_gctx.getConfig().checkPathPermission(
+						"sfvdeny.subdir.exempt", user, subdir)) {
 					logger.warn("SFV upload denied because subdirectory '" + subdir.getName() + "' exists.  Add it to sfvdeny.subdir.exempt in zipscript.conf if you wish to allow.");
 					return subdir.getName();
 				}
