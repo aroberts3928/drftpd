@@ -9,6 +9,9 @@ irc.ssl=false
 # Can be used for psybnc
 irc.initial.command=PASS drftpd
 
+# SiteOp Channel
+irc.channel.siteop=#drftpd-test
+
 # channels to autojoin on successful connection
 # to irc.server
 irc.channel.1=#drftpd-test

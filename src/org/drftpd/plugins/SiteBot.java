@@ -152,6 +152,7 @@ public class SiteBot extends FtpListener implements Observer {
     private LRUCache<String,User> _raceleader;
 
 	private String _primaryChannelName;
+	private String _SiteopChannel;
 
     public SiteBot() throws IOException {
         new File("logs").mkdirs();
@@ -293,6 +294,8 @@ public class SiteBot extends FtpListener implements Observer {
             sayDirectorySection(direvent, "pre");
         } else if ("STOR".equals(direvent.getCommand())) {
             actionPerformedDirectorySTOR((TransferEvent) direvent);
+        } else if ("DELE".equals(direvent.getCommand())) {
+        	sayDirectorySection(direvent, "dele");
         }
     }
 
@@ -910,9 +913,9 @@ public class SiteBot extends FtpListener implements Observer {
 
             fillEnvSlaveStatus(env, status, getSlaveManager());
 
-            sayGlobal(ReplacerUtils.jprintf("addslave", env, SiteBot.class));
+            say(_SiteopChannel, ReplacerUtils.jprintf("addslave", env, SiteBot.class));
         } else if (event.getCommand().equals("DELSLAVE")) {
-            sayGlobal(ReplacerUtils.jprintf("delslave", env, SiteBot.class));
+            say(_SiteopChannel, ReplacerUtils.jprintf("delslave", env, SiteBot.class));
         }
     }
 
@@ -1392,6 +1395,8 @@ public class SiteBot extends FtpListener implements Observer {
 						chanKey, permissions));
 			}
 
+			_SiteopChannel = ircCfg.getProperty("irc.channel.siteop", _primaryChannelName);
+
 			_sections = new Hashtable<String, SectionSettings>();
 			for (int i = 1;; i++) {
 				String name = ircCfg.getProperty("irc.section." + i);
@@ -1550,7 +1555,11 @@ public class SiteBot extends FtpListener implements Observer {
         ReplacerEnvironment env = new ReplacerEnvironment(GLOBAL_ENV);
         fillEnvSection(env, direvent, ret.getSection());
 
-        say(ret.getSection(), SimplePrintf.jprintf(format, env));
+        if (string.equals("dele")) {
+        	say(_SiteopChannel, SimplePrintf.jprintf(format, env));
+        } else {
+        	say(ret.getSection(), SimplePrintf.jprintf(format, env));
+        }
     }
 
     public void sayGlobal(String string) {
