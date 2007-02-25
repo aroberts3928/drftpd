@@ -46,3 +46,7 @@ imdb.exclude=cd1;cd2;cd3;cd4;cd5;disk1;disk2;disk3;disk4;disk5;sample;covers;cov
 # specify path permissions to use for !find
 find.perms.1=/groups/* !*
 find.perms.2=/pre/* !*
+
+# SITE FIND -action nuke
+find.nuke.prefix=[NUKED]-
+find.nuke.reason=REASON- 

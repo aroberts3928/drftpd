@@ -95,6 +95,12 @@ listjobs * =siteop
 startjobs * =siteop
 stopjobs * =siteop
 
+# tmods - site find nuke, who can be nuked when mass-nuking?
+# don't ever nuke a release a siteop has files in.
+cnuke /* !=siteop *
+# nuke anything, uploaded by anyone
+#cnuke /* *
+
 #######################################################
 # DrFTPD+ Regular Expression based command filtering.
 # These filter are ALWAYS checked against the complete path of a file or a direcory

@@ -16,7 +16,9 @@
  */
 package org.drftpd.commands;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +41,7 @@ import net.sf.drftpd.master.FtpRequest;
 import net.sf.drftpd.master.command.CommandManager;
 import net.sf.drftpd.master.command.CommandManagerFactory;
 import net.sf.drftpd.mirroring.Job;
+import net.tmods.extra.CNuke;
 
 import org.drftpd.Bytes;
 import org.drftpd.GlobalContext;
@@ -277,12 +281,53 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 		 */
 		public String exec(BaseFtpConnection conn,
 				LinkedRemoteFileInterface file) {
+			/*
+			 * tommie's FindNuke mod removes nukelog entries on wipe.  We don't want that.
+			if (file.isDirectory() && file.getName().startsWith("[NUKED]-")) {
+				StringBuffer modPath = new StringBuffer(file.getPath());
+				int i = modPath.indexOf("[NUKED]-");
+				modPath.delete(i, i + 8);
+				try {
+					Nuke.getNukeLog().remove(modPath.toString());
+				} catch (ObjectNotFoundException e) {
+				}
+			}
+			*/
 			file.delete();
 
 			return "Wiped " + file.getPath();
 		}
 	}
 
+		
+	private static class ActionNuke implements Action {
+		private String nuke_reason;
+		private int nuke_x;
+		private CNuke cn;
+		
+		public ActionNuke(CNuke _cn, String args) {
+			StringTokenizer st = new StringTokenizer(args);
+			if (st.countTokens() >= 2) {
+				nuke_x = Integer.parseInt(st.nextToken());
+				String _reason = "";
+				while (st.hasMoreTokens()) {
+					_reason = _reason + st.nextToken() + " ";
+				}
+				nuke_reason = _reason;
+			} else {
+				nuke_x = 1;
+				nuke_reason = "ActionNuke";
+			}
+			cn = _cn;
+		}
+		
+		public String exec(BaseFtpConnection conn,
+				LinkedRemoteFileInterface file) {
+			cn.doNuke(file.getPath(), nuke_reason, nuke_x, conn.getUserNull().getName());
+			return "Nuked: " + file.getPath();
+		}
+	}
+	
 	private static interface Option {
 		public boolean isTrueFor(LinkedRemoteFileInterface file);
 	}
@@ -319,6 +364,43 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 			} catch (Exception e) {
 				return false;
 			}
+		}
+	}
+
+	
+	private static class OptionEmpty implements Option {
+		public OptionEmpty() {
+		}
+
+		public boolean isTrueFor(LinkedRemoteFileInterface file) {
+			try {
+				if (file.getFiles().size() == 0) return true;
+			} catch (Exception e) {
+				return false;
+			}
+			return false;
+		}
+	}
+	
+	private static class OptionMissing implements Option {
+		private String arg;
+		
+		public OptionMissing(String _arg) {
+			arg = _arg;
+		}
+
+		public boolean isTrueFor(LinkedRemoteFileInterface file) {
+			try {
+				if (!file.isDirectory()) return false;
+				for (LinkedRemoteFileInterface f : file.getFiles2()) {
+					if (f.isFile() && f.getName().matches(arg)) {
+						return false;
+					}
+				}
+			} catch (Exception e) {
+				return false;
+			}
+			return true;
 		}
 	}
 
@@ -363,6 +445,18 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 			Matcher m = pattern.matcher(file.getName());
 
 			return m.matches();
+		}
+	}
+
+	private static class OptionRName implements Option {
+		String pattern;
+
+		public OptionRName(String str) {
+			pattern = str;
+		}
+
+		public boolean isTrueFor(LinkedRemoteFileInterface file) {
+			return file.getName().matches(pattern);
 		}
 	}
 
@@ -591,6 +685,12 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 				}
 
 				options.add(new OptionName(iter.next()));
+			} else if (arg.toLowerCase().equals("-rname")) {
+				if (!iter.hasNext()) {
+					throw new ImproperUsageException();
+				}
+
+				options.add(new OptionRName(iter.next()));
 			} else if (arg.toLowerCase().equals("-slave")) {
 				if (!iter.hasNext()) {
 					throw new ImproperUsageException();
@@ -662,6 +762,15 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 				throw new ImproperUsageException();
 			} else if (arg.toLowerCase().equals("-nouser")) {
 				options.add(new OptionUser("nobody"));
+			} else if (arg.toLowerCase().equals("-empty")) {
+				forceDirsOnly = true;
+				options.add(new OptionEmpty());
+			} else if (arg.toLowerCase().equals("-missing")) {
+				String cmd = "";
+				if (!iter.peek().startsWith("-")) {
+					cmd = iter.next();
+				}
+				options.add(new OptionMissing(cmd));
 			} else if (arg.toLowerCase().equals("-incomplete")) {
 				forceDirsOnly = true;
 				String peek = null;
@@ -742,6 +851,20 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 							destSlaves.add(rslave);
 					}
 					actions.add(new ActionDeleteFromSlaves(destSlaves));
+				} else if (action.equals("nuke")) {
+					forceDirsOnly = true;
+					String cmd = "";
+					while (iter.hasNext()) {
+						if (iter.peek().startsWith("-")) break;
+						cmd = cmd + iter.next() + " ";
+					}
+					Action findAction = getActionWithArgs("nuke", cmd);
+					if (findAction instanceof ActionNuke) {
+						if (!conn.getUserNull().isNuker()) {
+							return Reply.RESPONSE_530_ACCESS_DENIED;
+						}
+					}
+					actions.add(findAction);
 				} else {
 					Action findAction = getAction(action.toLowerCase());
 
@@ -811,9 +934,11 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 	private Action getActionWithArgs(String actionName, String args) {
 		if (actionName.equals("printf")) {
 			return new ActionPrintf(args);
+		} else if (actionName.equals("nuke")) {
+			return new ActionNuke(cn, args);
+		} else {
+			return null;			
 		}
-
-		return null;
 	}
 
  	public String[] getFeatReplies() {
@@ -831,8 +956,23 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 
 	public void load(CommandManagerFactory initializer) {
 		_gctx = initializer.getConnectionManager().getGlobalContext();
+		
+		Properties props = new Properties();
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream("conf/drmods.conf");
+			props.load(fis);
+			fis.close();
+		} catch (IOException e) { return; }
+		
+		String _nukePrefix = props.getProperty("find.nuke.prefix", "[NUKED]-");
+		String _nukeReasonPrefix = props.getProperty("find.nuke.reason.prefix", "REASON-");
+		
+		cn = new CNuke(_gctx, _nukePrefix, _nukeReasonPrefix);
 	}
 
 	public void unload() {
 	}
+	
+	private CNuke cn;
 }
