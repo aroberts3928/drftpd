@@ -35,6 +35,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.sf.drftpd.NoAvailableSlaveException;
 import net.sf.drftpd.ObjectNotFoundException;
 import net.sf.drftpd.master.BaseFtpConnection;
 import net.sf.drftpd.master.FtpRequest;
@@ -48,6 +49,9 @@ import org.drftpd.GlobalContext;
 import org.drftpd.SFVFile;
 import org.drftpd.SFVFile.SFVStatus;
 import org.drftpd.master.RemoteSlave;
+import org.drftpd.plugins.DIZFile;
+import org.drftpd.plugins.DIZPlugin;
+import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.remotefile.MLSTSerialize;
 import org.drftpd.usermanager.NoSuchUserException;
@@ -355,18 +359,44 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 		}
 
 		public boolean isTrueFor(LinkedRemoteFileInterface file) {
-			try {
-				SFVFile sfv = file.lookupSFVFile();
-				SFVStatus status = sfv.getStatus();
-				if (_minPercent == 0)
-					return !status.isFinished();
-				return status.getPresent() * 100 / sfv.size() < _minPercent;
-			} catch (Exception e) {
-				return false;
+			if (DIZPlugin.zipFilesOnline(file) > 0) {
+				try {
+					DIZFile diz = new DIZFile(DIZPlugin.getZipFile(file));
+					if (diz.getDiz() != null && diz.getTotal() > 0) {
+
+						if (_minPercent == 0) { return !(DIZPlugin.zipFilesPresent(file) == diz.getTotal()); }
+
+						int totalPercent = DIZPlugin.zipFilesPresent(file) * 100 / diz.getTotal();
+						if (totalPercent == 100) {
+							return false;
+						} else {
+							return totalPercent < _minPercent;
+						}
+					}
+				} catch (FileNotFoundException e) {
+				} catch (NoAvailableSlaveException e) {
+				}
+			} else {
+				try {
+					SFVFile sfv = file.lookupSFVFile();
+					SFVStatus status = sfv.getStatus();
+
+					if (_minPercent == 0) { return !status.isFinished(); }
+
+					int totalPercent = status.getPresent() * 100 / sfv.size();
+					if (totalPercent == 100) {
+						return false;
+					} else {
+						return totalPercent < _minPercent;					
+					}
+				} catch (IOException e) {
+				} catch (NoAvailableSlaveException e) {
+				} catch (FileStillTransferringException e) {
+				}
 			}
+			return false;
 		}
 	}
-
 	
 	private static class OptionEmpty implements Option {
 		public OptionEmpty() {
