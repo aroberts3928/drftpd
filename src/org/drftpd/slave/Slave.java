@@ -359,7 +359,11 @@ public class Slave {
 				File dir = new File(file.getParentFile());
 				logger.info("DELETE: " + path);
 				file.delete();
-				while (dir.list().length == 0) {
+
+				String [] dirList = dir.list();
+
+				while ((dirList != null) &&
+				       (dirList.length == 0)) {
 					if (dir.getPath().length() <= root.getPath().length()) {
 						break;
 					}
@@ -373,6 +377,8 @@ public class Slave {
 						break;
 					}
 					dir = new File(tmpFile);
+
+					dirList = dir.list();
 				}
 			}
 		}
