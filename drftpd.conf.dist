@@ -35,3 +35,8 @@ sectionmanager=org.drftpd.sections.def.SectionManager
 
 #hide ips in logs?
 hideips=false
+
+# encrypt user passwords? [optional, default is md5]
+# valid options: crypt, md5, none
+# none (or really anything else) = no encryption
+#passcrypt=md5

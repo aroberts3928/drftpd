@@ -25,6 +25,8 @@ import java.util.List;
 import net.sf.drftpd.DuplicateElementException;
 import net.sf.drftpd.event.UserEvent;
 import net.sf.drftpd.util.CalendarUtils;
+import net.sf.drftpd.util.Crypt;
+import net.sf.drftpd.util.MD5Crypt;
 
 import org.apache.log4j.Logger;
 import org.drftpd.Bytes;
@@ -1002,5 +1004,57 @@ public abstract class AbstractUser extends User {
 	public void setMaxSimDown(int maxSimDown) {
 		getKeyedMap().setObject(UserManagement.MAXSIMDN, maxSimDown);
 	}
+
+    public boolean checkPassword(String password) {
+        String _passcrypt = getAbstractUserManager().getGlobalContext().getConfig().getPasswordCrypt();
+        String _password = this.getPassword();
+        boolean result = false;
+        password = password.trim();
+        if(_password.startsWith("$1$")) {
+            //MD5 password (clear passwords beginning with "$!$" will confuse drftpd)
+            if (MD5Crypt.crypt(_password, password).equals(_password)) {
+                result = true;
+                //If password should be stored in a different format, convert it now.
+                if (!_passcrypt.equals("md5")) {
+                    logger.debug("Converting from md5 to " + _passcrypt + " password.");
+                    this.setPasswordEnc(password);
+                }
+            }
+        } else if(_password.startsWith("+")) {
+            //Crypted password (clear passwords beginning with "+" will confuse drftpd)
+            if (Crypt.crypt(_password.substring(1), password).equals(_password.substring(1))) {
+                result = true;
+                if (!_passcrypt.equals("crypt")) {
+                    logger.debug("Converting from crypt to " + _passcrypt + " password.");
+                    this.setPasswordEnc(password);
+                }
+            }
+        } else {
+            //Clear password
+            if (password.equals(_password)) {
+                result = true;
+                if (!_passcrypt.equals("") && !_passcrypt.equals("none") && !_passcrypt.equals("clear")) {
+                    logger.debug("Converting from clear to " + _passcrypt + " password.");
+                    this.setPasswordEnc(password);
+                }
+            }
+        }
+        return result;
+    }
+
+    public void setPasswordEnc(String password) {
+        String _passcrypt = getAbstractUserManager().getGlobalContext().getConfig().getPasswordCrypt();
+        String tmpPass;
+        if (_passcrypt.equals("md5")) {
+            // do md5 stuff here
+            tmpPass = MD5Crypt.crypt(password);
+        } else if (_passcrypt.equals("crypt")) {
+            // do crypt stuff here
+            tmpPass = "+" + Crypt.crypt(password);
+        } else {
+            tmpPass = password;
+        }
+        this.setPassword(tmpPass);
+    }
 
 }

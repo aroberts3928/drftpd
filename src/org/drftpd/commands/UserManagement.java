@@ -913,7 +913,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         try {
             User myUser = conn.getGlobalContext().getUserManager()
                               .getUserByName(args[0]);
-            myUser.setPassword(args[1]);
+            myUser.setPasswordEnc(args[1]);
             myUser.commit();
             logger.info("'" + conn.getUserNull().getName() +
                 "' changed password for '" + myUser.getName() + "'");
@@ -1441,8 +1441,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         }
 
         logger.info("'" + conn.getUserNull().getName() +
-            "' changed his password");
-        conn.getUserNull().setPassword(request.getArgument());
+            "' changed their password");
+        conn.getUserNull().setPasswordEnc(request.getArgument());
 
         return Reply.RESPONSE_200_COMMAND_OK;
     }

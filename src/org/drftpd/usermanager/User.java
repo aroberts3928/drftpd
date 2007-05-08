@@ -90,6 +90,8 @@ public abstract class User implements Entity {
      */
     public abstract int getIdleTime();
 
+    public abstract String getPassword();
+
     //    /**
     //     * Returns the nukedBytes.
     //     *
@@ -286,6 +288,8 @@ public abstract class User implements Entity {
     public abstract void setIdleTime(int idleTime);
 
     public abstract void setPassword(String password);
+
+    public abstract void setPasswordEnc(String pass);
 
     //    public abstract void setTimesNuked(int nuked);
     public abstract void setUploadedBytes(long bytes);

@@ -90,6 +90,7 @@ public class FtpConfig extends Observable implements ConfigInterface {
     private boolean _useDirNames = false;
     private boolean _useFileNames = false;
     private String newConf = "conf/perms.conf";
+    private String _passwordCrypt;
     protected PortRange _portRange;
 	private Permission _shutdown;
 	protected GlobalContext _gctx;
@@ -321,6 +322,12 @@ public class FtpConfig extends Observable implements ConfigInterface {
         }
 
         _bouncerIps = bouncerIps;
+
+        // check for (optional) passcrypt config 
+        String passcrypt = cfg.getProperty("passcrypt", "md5").trim().toLowerCase();
+        if (passcrypt.equals("crypt")) { _passwordCrypt = "crypt"; }
+        else if (passcrypt.equals("md5")) { _passwordCrypt = "md5"; }
+        else { _passwordCrypt = "clear"; }
     }
 
     protected void loadConfig2(Reader in2) throws IOException {
@@ -557,5 +564,9 @@ public class FtpConfig extends Observable implements ConfigInterface {
 
     public PortRange getPortRange() {
         return _portRange;
+    }
+
+    public String getPasswordCrypt() {
+        return _passwordCrypt;
     }
 }

@@ -57,10 +57,6 @@ public class BeanUser extends AbstractUser implements Serializable {
 		return _um;
 	}
 
-	public boolean checkPassword(String password) {
-		return password.equals(_password);
-	}
-
 	public void commit() throws UserFileException {
 		if(_purged) return;
 		XMLEncoder out = null;

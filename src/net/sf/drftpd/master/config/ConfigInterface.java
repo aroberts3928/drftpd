@@ -79,6 +79,8 @@ public interface ConfigInterface {
 
 	public abstract void addObserver(Observer observer);
 
+    public abstract String getPasswordCrypt();
+
 	public abstract String getPasvAddress() throws NullPointerException;
 	
 	public abstract String checkRegexPermission(String key, User fromUser,

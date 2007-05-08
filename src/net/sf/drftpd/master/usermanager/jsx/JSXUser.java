@@ -139,4 +139,8 @@ public class JSXUser extends AbstractUser implements PlainTextPasswordUser,
     public UserManager getUserManager() {
         return _usermanager;
     }
+
+    public void setPasswordEnc(String pass) {
+        this.setPassword(pass);
+    }
 }

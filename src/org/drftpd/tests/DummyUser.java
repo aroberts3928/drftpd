@@ -92,4 +92,8 @@ public class DummyUser extends AbstractUser {
     public AbstractUserManager getAbstractUserManager() {
         return _userManager;
     }
+
+    public String getPassword() {
+        return null;
+    }
 }

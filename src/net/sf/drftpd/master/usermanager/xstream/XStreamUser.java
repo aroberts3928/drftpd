@@ -135,4 +135,8 @@ public class XStreamUser extends AbstractUser implements PlainTextPasswordUser,
     void setUserManager(XStreamUserManager manager) {
         _usermanager = manager;
     }
+
+    public void setPasswordEnc(String pass) {
+        this.setPassword(pass);
+    }
 }

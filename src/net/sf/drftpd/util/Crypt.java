@@ -17,6 +17,8 @@
  */
 package net.sf.drftpd.util;
 
+import java.nio.CharBuffer;
+
 
 /****************************************************************************
  * jcrypt.java
@@ -27,9 +29,10 @@ package net.sf.drftpd.util;
  *
  ****************************************************************************/
 /**
- * @version $Id: Crypt.java,v 1.5 2004/08/03 20:14:03 zubov Exp $
+ * @version $Id$
  */
 public class Crypt {
+	private static final String SALTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890./";
     private static final int ITERATIONS = 16;
     private static final int[] con_salt = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -524,15 +527,66 @@ public class Crypt {
         return (out);
     }
 
+	/**
+	 * <p>This method generates a OpenBSD/FreeBSD/Linux compatible
+	 * crypted password from a plaintext password and a salt.</p>
+	 *
+	 * <p>The resulting string will be in the form '&lt;salt&gt;&lt;crypted pass&gt;</p>
+	 *
+	 * @param password Plaintext password
+	 *
+	 * @return An OpenBSD/FreeBSD/Linux-compatible crypted password field.
+	 */
+    public static final String crypt(String original) {
+		StringBuffer salt = new StringBuffer();
+		java.util.Random randgen = new java.util.Random();
+
+		while (salt.length() < 2)
+		{
+			int index = (int) (randgen.nextFloat() * SALTCHARS.length());
+			salt.append(SALTCHARS.substring(index, index+1));
+		}
+		
+		return crypt(salt.toString(), original);
+    }
+
+	/**
+	 * <p>This method generates a OpenBSD/FreeBSD/Linux compatible
+	 * crypted password from a plaintext password and a salt.</p>
+	 *
+	 * <p>The resulting string will be in the form '&lt;salt&gt;&lt;crypted pass&gt;</p>
+	 *
+	 * @param salt A short string to used to crypt the password.  It is explicitly 
+	 *             permitted to pass a pre-existing crypted password as the salt.  
+	 *             crypt() will only use the first two valid salt characters of the 
+	 *             string.
+	 * @param password Plaintext password
+	 *
+	 * @return An OpenBSD/FreeBSD/Linux-compatible crypted password field.
+	 */
     public static final String crypt(String salt, String original) {
-        while (salt.length() < 2)
-            salt += "A";
+		java.util.Random randgen = new java.util.Random();
 
         StringBuffer buffer = new StringBuffer("             ");
+        CharBuffer cb = CharBuffer.allocate(2);
 
-        char charZero = salt.charAt(0);
-        char charOne = salt.charAt(1);
+        int n=0, loop=1;
+        while (n < 2) {
+        	while (salt.length() < 2) {
+        		int index = (int) (randgen.nextFloat() * SALTCHARS.length());
+        		salt += SALTCHARS.substring(index, index+1);
+        	}
 
+        	if (SALTCHARS.contains(salt.substring(n,n+1))) {
+        		cb.put(salt.charAt(n));
+        		n++;
+        	} else {
+        		salt = salt.substring(n+1);
+        	}
+        }
+
+    	char charZero = cb.get(0);
+    	char charOne = cb.get(1);
         buffer.setCharAt(0, charZero);
         buffer.setCharAt(1, charOne);
 
