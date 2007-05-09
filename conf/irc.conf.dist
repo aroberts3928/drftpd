@@ -9,8 +9,20 @@ irc.ssl=false
 # Can be used for psybnc
 irc.initial.command=PASS drftpd
 
-# SiteOp Channel
-irc.channel.siteop=#drftpd-test
+# Event Channels - leave commented for normal 
+#     behavior (i.e. invite's go to chans user was invited to)
+# You can force event messages to go to one or more channels.
+# list of events that can be redirected are:
+#
+# dele, wipe, slave, invite, mkdir, request,
+# reqfilled, rmdir, pre, shutdown
+#
+# Samples:
+#irc.event.dele.channel.1=#drftpd-test
+#irc.event.dele.channel.2=#drftpd-test2
+#irc.event.wipe.channel.1=#drftpd-test
+#irc.event.slave.channel.1=#drftpd-test
+#irc.event.invite.channel.1=#drftpd-test
 
 # channels to autojoin on successful connection
 # to irc.server

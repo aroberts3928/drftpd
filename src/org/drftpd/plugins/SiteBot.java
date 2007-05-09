@@ -152,7 +152,7 @@ public class SiteBot extends FtpListener implements Observer {
     private LRUCache<String,User> _raceleader;
 
 	private String _primaryChannelName;
-	private String _SiteopChannel;
+	private HashMap<String,String[]> _eventChannelMap = new HashMap<String,String[]>();
 
     public SiteBot() throws IOException {
         new File("logs").mkdirs();
@@ -255,7 +255,7 @@ public class SiteBot extends FtpListener implements Observer {
 				ReplacerEnvironment env = new ReplacerEnvironment(GLOBAL_ENV);
 				env.add("message", mevent.getMessage());
 
-				sayGlobal(ReplacerUtils.jprintf("shutdown", env, SiteBot.class));
+				sayEvent("shutdown", ReplacerUtils.jprintf("shutdown", env, SiteBot.class));
 			} else if (event instanceof InviteEvent) {
 				actionPerformedInvite((InviteEvent) event);
 			} else if (_enableAnnounce) {
@@ -726,7 +726,7 @@ public class SiteBot extends FtpListener implements Observer {
             		if (cc != null) {
             			if (cc.checkPerms(event.getUser())) {
             				_conn.sendCommand(new InviteCommand(nick, chan.getName()));
-            	    		say(chan.getName(),SimplePrintf.jprintf(format, env));
+            	    		sayEvent("invite", SimplePrintf.jprintf(format, env), chan.getName());
             	    		try {
             	    			notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
             	    		} catch (ObjectNotFoundException execption) {
@@ -913,9 +913,9 @@ public class SiteBot extends FtpListener implements Observer {
 
             fillEnvSlaveStatus(env, status, getSlaveManager());
 
-            say(_SiteopChannel, ReplacerUtils.jprintf("addslave", env, SiteBot.class));
+            sayEvent("slave", ReplacerUtils.jprintf("addslave", env, SiteBot.class));
         } else if (event.getCommand().equals("DELSLAVE")) {
-            say(_SiteopChannel, ReplacerUtils.jprintf("delslave", env, SiteBot.class));
+            sayEvent("slave", ReplacerUtils.jprintf("delslave", env, SiteBot.class));
         }
     }
 
@@ -1395,7 +1395,25 @@ public class SiteBot extends FtpListener implements Observer {
 						chanKey, permissions));
 			}
 
-			_SiteopChannel = ircCfg.getProperty("irc.channel.siteop", _primaryChannelName);
+            // Map events that can be redirected to non standard channels.
+            String[] events = { 
+                    "dele", "wipe", "slave", 
+                    "invite", "mkdir", "request",
+                    "reqfilled", "rmdir", "pre",
+                    "shutdown"
+                };
+            HashMap<String,String[]> newEventChannelMap = new HashMap<String,String[]>();
+            for (String event : events) {
+                ArrayList<String> eChans = new ArrayList<String>();
+                for (int i = 1;; i++) {
+                    String channel = ircCfg.getProperty("irc.event." + event + ".channel." + i);
+                    if (channel == null) break;
+                    eChans.add(channel);
+                }
+                if (!eChans.isEmpty())
+                    newEventChannelMap.put(event, (String[]) eChans.toArray());
+            }
+            _eventChannelMap = newEventChannelMap;
 
 			_sections = new Hashtable<String, SectionSettings>();
 			for (int i = 1;; i++) {
@@ -1527,6 +1545,54 @@ public class SiteBot extends FtpListener implements Observer {
 		}
     }
 
+    /**
+     * Say message to irc channels listed in per event override. If no
+     * override found, message the section output channel.
+     * 
+     * @param event
+     * @param msg
+     * @param section
+     */
+    private void sayEvent(String event, String msg, SectionInterface section) {
+        if (_eventChannelMap.containsKey(event.toLowerCase())) {
+            for (String chan : _eventChannelMap.get(event.toLowerCase())) {
+                say(chan, msg);
+            }
+        } else {
+            say(section, msg);
+        }
+    }
+
+    /**
+     * Say message to irc channels listed in per event override.
+     * If no override found, fallback on sayGlobal
+     * 
+     * @param event
+     * @param msg
+     */
+    private void sayEvent(String event, String msg) {
+        sayEvent(event, msg, "global");
+    }
+
+    /**
+     * Say message to irc channels listed in per event override.
+     * If no override found, fallback on sayGlobal
+     * 
+     * @param event
+     * @param msg
+     * @param channel fallback channel, or "global"
+     */
+    private void sayEvent(String event, String msg, String channel) {
+        if (_eventChannelMap.containsKey(event.toLowerCase())) {
+            for (String chan : _eventChannelMap.get(event.toLowerCase())) {
+                say(chan, msg);
+            }
+        } else {
+            if (channel.equals("global")) sayGlobal(msg);
+            else say(channel, msg);
+        }
+    }
+
     public synchronized void notice(String dest, String message) {
         if (message == null || message.equals("")) {
         	return;
@@ -1555,11 +1621,7 @@ public class SiteBot extends FtpListener implements Observer {
         ReplacerEnvironment env = new ReplacerEnvironment(GLOBAL_ENV);
         fillEnvSection(env, direvent, ret.getSection());
 
-        if (string.equals("dele")) {
-        	say(_SiteopChannel, SimplePrintf.jprintf(format, env));
-        } else {
-        	say(ret.getSection(), SimplePrintf.jprintf(format, env));
-        }
+       	sayEvent(string, SimplePrintf.jprintf(format, env), ret.getSection());
     }
 
     public void sayGlobal(String string) {
