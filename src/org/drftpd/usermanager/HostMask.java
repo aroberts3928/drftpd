@@ -23,6 +23,7 @@ import org.apache.oro.text.GlobCompiler;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.drftpd.thirdparty.plus.config.PlusConfig;
 
 import java.net.InetAddress;
 
@@ -54,7 +55,7 @@ public class HostMask {
         	_hostMask = "*";
         }
     }
-    
+
 	public boolean equals(Object obj) {
 		if(obj == null) return false;
 		HostMask h = (HostMask) obj;
@@ -104,5 +105,28 @@ public class HostMask {
 
     public String toString() {
         return _identMask + "@" + _hostMask;
+    }
+
+    public boolean isAllowed() {
+    	if (!PlusConfig.getPlusConfig().SECUREMASK) {
+    		return true;
+    	}
+
+    	String patterns[] = {
+    			// Covers: (*|ident)@(x.x.x.*|x.x.x.x)
+    			"^(?:\\*|[-a-zA-Z0-9]+)@(?:\\d{1,3}\\.){3}(?:\\d{1,3}|\\*)$",
+    			// Covers: ident@(x.x.*|x.x.*.*)
+    			"^[-a-zA-Z0-9]+@(?:\\d{1,3}\\.){2}(?:\\.?\\*){1,2}$",
+    			// Covers: ident@*.someisp.com|*.someisp.com.uk)
+    			"^[-a-zA-Z0-9]+@\\*(?:\\.[-a-zA-Z0-9]{4,})+(?:\\.[a-zA-Z]{2,3}|\\.[a-zA-Z]{2,3}\\.[a-zA-Z]{2})$"
+    		};
+    	for (int i = 0; i < patterns.length; i++) {
+    		String pat = patterns[i];
+    		if (toString().matches(pat)) {
+    			logger.info("IP '" + toString() + "' matches ~" + pat + "~");
+    			return true;
+    		}
+    	}
+		return false;
     }
 }

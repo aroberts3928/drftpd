@@ -55,8 +55,26 @@
 !new net.drmods.plugins.irc.New.doNew public *
 
 ##
-# DrFTPD process runtime
-!master-uptime org.drftpd.sitebot.Uptime.doMasterUptime public =siteop
-!slave-uptime org.drftpd.sitebot.Uptime.doSlaveUptime public =siteop
-!slaves-uptime org.drftpd.sitebot.Uptime.doSlavesUptime public =siteop
+# IRC User Management
+!addip org.drftpd.sitebot.IRCUserManagement.doADDIP public =siteop
+!delip org.drftpd.sitebot.IRCUserManagement.doDELIP public =siteop
+!adduser org.drftpd.sitebot.IRCUserManagement.doADDUSER public =siteop
+!gadduser org.drftpd.sitebot.IRCUserManagement.doADDUSER public =siteop
+!readd org.drftpd.sitebot.IRCUserManagement.doREADD public =siteop
+!deluser org.drftpd.sitebot.IRCUserManagement.doDELUSER public =siteop
+!purge org.drftpd.sitebot.IRCUserManagement.doPURGE public =siteop
+!delpurge org.drftpd.sitebot.IRCUserManagement.doPURGE public =siteop
+!change org.drftpd.sitebot.IRCUserManagement.doCHANGE public =siteop
+!chgrp org.drftpd.sitebot.IRCUserManagement.doCHGRP public =siteop
+!ban org.drftpd.sitebot.IRCUserManagement.doBAN public =siteop
+!unban org.drftpd.sitebot.IRCUserManagement.doUNBAN public =siteop
+!reload org.drftpd.sitebot.IRCUserManagement.doRELOAD public =siteop
+!give org.drftpd.sitebot.IRCUserManagement.doGIVETAKE public =siteop
+!take org.drftpd.sitebot.IRCUserManagement.doGIVETAKE public =siteop
+!kickuser org.drftpd.sitebot.IRCUserManagement.doKICKUSER public =siteop
+!lookup org.drftpd.sitebot.IRCUserManagement.doLOOKUP public =siteop
+!nick org.drftpd.sitebot.IRCUserManagement.doNICK public =siteop
+!finduser org.drftpd.sitebot.IRCUserManagement.doFINDUSER public =siteop
+!user org.drftpd.sitebot.IRCUserManagement.doUSER public =siteop
+!lastseen org.drftpd.sitebot.IRCUserManagement.doLASTSEEN public =siteop
 ##
