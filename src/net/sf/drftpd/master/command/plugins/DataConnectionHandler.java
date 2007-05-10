@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -94,6 +95,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
     private boolean _SSLHandshakeClientMode = false;
     protected boolean _isPasv = false;
     protected boolean _isPort = false;
+    private short xdupe = 0;
 
     /**
      * Holds the address that getDataSocket() should connect to in PORT mode.
@@ -442,6 +444,10 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                                                        .lookupNonExistingFile(ghostRequest.getArgument());
 
             if (nef.exists()) {
+                //TODO X-DUPE:
+                if (xdupe!=0)
+                    return doXDUPE(conn);
+                else
                 return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN_FILE_EXISTS;
             }
 
@@ -645,36 +651,85 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         return Reply.RESPONSE_200_COMMAND_OK;
     }
 
-    private Reply doSITE_XDUPE(BaseFtpConnection conn) {
-        return Reply.RESPONSE_502_COMMAND_NOT_IMPLEMENTED;
+    private Reply doXDUPE(BaseFtpConnection conn) {
+        LinkedRemoteFileInterface dir = conn.getCurrentDirectory();
+        Reply response = (Reply) Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN_FILE_EXISTS.clone();
 
-        //		resetState();
+        List files;
+        if (dir.isFile()) {
+            return response;
+        } else {
+            files = new ArrayList(dir.getMap().values());
+        }
+        Collections.sort(files);
+
+        String mode1or4 = "";
+
+        for (Iterator iter = files.iterator(); iter.hasNext();) {
+            LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
+
+            if (file.isDirectory())
+                continue;
+
+            switch (xdupe) {
+                case 1 :
+                    if (file.getName().length() > 66)
+                        response.addComment("X-DUPE: "
+                                + file.getName().substring(0, 65));
+                    else if (file.getName().length() + mode1or4.length() > 66) {
+                        response.addComment("X-DUPE: " + mode1or4);
+                        mode1or4 = file.getName();
+                    } else
+                        mode1or4 = (mode1or4.length() > 0 ? mode1or4 + " " : "") + file.getName();
+                    continue;
+                case 2 :
+                    response.addComment("X-DUPE: " + (file.getName().length() > 66 
+                                    ? file.getName().substring(0, 65) 
+                                            : file.getName()));
+                    continue;
+                case 3 :
+                    response.addComment("X-DUPE: " + file.getName());
+                    continue;
+                case 4 :
+                    if (mode1or4.length() + file.getName().length() <= 1010)
+                        mode1or4 = (mode1or4.length() > 0 ? mode1or4 + " " : "") + file.getName();
+                    continue;
+            }
+        }
+        if (mode1or4.length() > 0)
+            response.addComment("X-DUPE: " + mode1or4);
+
+        return response;
+    }
+
+    private Reply doSITE_XDUPE(BaseFtpConnection conn) {
+        FtpRequest request = conn.getRequest();
+
+        // return Reply.RESPONSE_502_COMMAND_NOT_IMPLEMENTED;
+        // resetState();
         //
-        //		if (!request.hasArgument()) {
-        //			if (this.xdupe == 0) {
-        //				out.println("200 Extended dupe mode is disabled.");
-        //			} else {
-        //				out.println(
-        //					"200 Extended dupe mode " + this.xdupe + " is enabled.");
-        //			}
-        //			return;
-        //		}
-        //
-        //		short myXdupe;
-        //		try {
-        //			myXdupe = Short.parseShort(request.getArgument());
-        //		} catch (NumberFormatException ex) {
-        //			out.print(FtpResponse.RESPONSE_501_SYNTAX_ERROR);
-        //			return;
-        //		}
-        //
-        //		if (myXdupe > 0 || myXdupe < 4) {
-        //			out.print(
-        //				FtpResponse.RESPONSE_504_COMMAND_NOT_IMPLEMENTED_FOR_PARM);
-        //			return;
-        //		}
-        //		this.xdupe = myXdupe;
-        //		out.println("200 Activated extended dupe mode " + myXdupe + ".");
+        if (!request.hasArgument()) {
+            if (this.xdupe == 0) {
+                return new Reply(200, "Extended dupe mode is disabled.");
+            } else {
+                return new Reply(200, "Extended dupe mode " + this.xdupe
+                        + " is enabled.");
+            }
+        } else {
+            short myXdupe;
+            try {
+                myXdupe = Short.parseShort(request.getArgument());
+            } catch (NumberFormatException ex) {
+                return Reply.RESPONSE_501_SYNTAX_ERROR;
+            }
+
+            if (myXdupe < 0 || myXdupe > 4) {
+                return Reply.RESPONSE_504_COMMAND_NOT_IMPLEMENTED_FOR_PARM;
+            }
+
+            this.xdupe = myXdupe;
+            return new Reply(200, "Activated extended dupe mode " + myXdupe + ".");
+        }
     }
 
     /**
