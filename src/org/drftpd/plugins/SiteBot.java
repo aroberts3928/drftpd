@@ -152,7 +152,7 @@ public class SiteBot extends FtpListener implements Observer {
     private LRUCache<String,User> _raceleader;
 
 	private String _primaryChannelName;
-	private HashMap<String,String[]> _eventChannelMap = new HashMap<String,String[]>();
+	private HashMap<String,ArrayList<String>> _eventChannelMap = new HashMap<String,ArrayList<String>>();
 
     public SiteBot() throws IOException {
         new File("logs").mkdirs();
@@ -1402,7 +1402,7 @@ public class SiteBot extends FtpListener implements Observer {
                     "reqfilled", "rmdir", "pre",
                     "shutdown"
                 };
-            HashMap<String,String[]> newEventChannelMap = new HashMap<String,String[]>();
+            HashMap<String,ArrayList<String>> newEventChannelMap = new HashMap<String,ArrayList<String>>();
             for (String event : events) {
                 ArrayList<String> eChans = new ArrayList<String>();
                 for (int i = 1;; i++) {
@@ -1411,7 +1411,7 @@ public class SiteBot extends FtpListener implements Observer {
                     eChans.add(channel);
                 }
                 if (!eChans.isEmpty())
-                    newEventChannelMap.put(event, (String[]) eChans.toArray());
+                    newEventChannelMap.put(event, eChans);
             }
             _eventChannelMap = newEventChannelMap;
 
