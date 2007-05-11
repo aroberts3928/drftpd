@@ -706,6 +706,7 @@ public class SiteBot extends FtpListener implements Observer {
 
     private void actionPerformedInvite(InviteEvent event) throws FormatterException {
         String nick = event.getIrcNick();
+        ArrayList<String> channels = new ArrayList<String>();
 
         ReplacerEnvironment env = new ReplacerEnvironment(GLOBAL_ENV);
         env.add("user",event.getUser());
@@ -726,7 +727,7 @@ public class SiteBot extends FtpListener implements Observer {
             		if (cc != null) {
             			if (cc.checkPerms(event.getUser())) {
             				_conn.sendCommand(new InviteCommand(nick, chan.getName()));
-            	    		sayEvent("invite", SimplePrintf.jprintf(format, env), chan.getName());
+                            channels.add(chan.getName());
             	    		try {
             	    			notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
             	    		} catch (ObjectNotFoundException execption) {
@@ -740,16 +741,20 @@ public class SiteBot extends FtpListener implements Observer {
             		}
             	}
             }
+
+            String eventname = "invite";
+            sayEvent(eventname, SimplePrintf.jprintf(format, env), channels);
+
         	synchronized (_identWhoisList) {
         		_identWhoisList.add(new WhoisEntry(nick,event.getUser()));
         	}
+
             logger.info("Looking up "+ nick + " to set IRCIdent");
             _conn.sendCommand(new WhoisCommand(nick));
         } else if ("BINVITE".equals(event.getCommand())) {
             ReplacerFormat format = ReplacerUtils.finalFormat(SiteBot.class,"invite.failed");
     		sayGlobal(SimplePrintf.jprintf(format, env));
         }
-
     }
 
     private void actionPerformedNuke(NukeEvent event) throws FormatterException {
@@ -1575,21 +1580,44 @@ public class SiteBot extends FtpListener implements Observer {
     }
 
     /**
-     * Say message to irc channels listed in per event override.
-     * If no override found, fallback on sayGlobal
+     * Say message to irc channels listed in per event override. If no override
+     * found, fallback to say(channel,msg)
      * 
      * @param event
      * @param msg
-     * @param channel fallback channel, or "global"
+     * @param channel fallback channel, or "global" or "all"
      */
     private void sayEvent(String event, String msg, String channel) {
+        ArrayList<String> channels = new ArrayList<String>();
+        channels.add(channel);
+        sayEvent(event, msg, channels);
+    }
+
+    /**
+     * Say message to irc channels listed in per event override. If no override
+     * found, fallback to say(channel,msg)
+     * 
+     * @param event
+     * @param msg
+     * @param channels
+     *            list of channels to fallback on, if any element is "global" or
+     *            "all", to use sayGlobal instead
+     */
+    private void sayEvent(String event, String msg, ArrayList<String> channels) {
         if (_eventChannelMap.containsKey(event.toLowerCase())) {
             for (String chan : _eventChannelMap.get(event.toLowerCase())) {
                 say(chan, msg);
             }
         } else {
-            if (channel.equals("global")) sayGlobal(msg);
-            else say(channel, msg);
+            if (channels != null) {
+                if (channels.contains("global") || channels.contains("all"))
+                    sayGlobal(msg);
+                else {
+                    for (String chan : channels) {
+                        say(chan, msg);
+                    }
+                }
+            }
         }
     }
 
