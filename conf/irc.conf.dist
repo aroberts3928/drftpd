@@ -15,14 +15,15 @@ irc.initial.command=PASS drftpd
 # list of events that can be redirected are:
 #
 # dele, wipe, slave, invite, mkdir, request,
-# reqfilled, rmdir, pre, shutdown
+# reqfilled, rmdir, pre, shutdown, log
 #
-# Samples:
+# Common Examples:
 #irc.event.dele.channel.1=#drftpd-test
 #irc.event.dele.channel.2=#drftpd-test2
 #irc.event.wipe.channel.1=#drftpd-test
 #irc.event.slave.channel.1=#drftpd-test
 #irc.event.invite.channel.1=#drftpd-test
+#irc.event.log.channel.1=#drftpd-test
 
 # channels to autojoin on successful connection
 # to irc.server
@@ -67,6 +68,7 @@ irc.sendDelay=300
 
 # Plugins ...
 martyr.plugins.1=org.drftpd.sitebot.OnConnect
+#martyr.plugins.2=org.drftpd.sitebot.SysopTailService
 
 # How much to log on the SiteBot?
 # (Needs to be separate from log4j configs because martyr(the irc 

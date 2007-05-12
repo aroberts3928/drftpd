@@ -1405,7 +1405,7 @@ public class SiteBot extends FtpListener implements Observer {
                     "dele", "wipe", "slave", 
                     "invite", "mkdir", "request",
                     "reqfilled", "rmdir", "pre",
-                    "shutdown"
+                    "shutdown", "log"
                 };
             HashMap<String,ArrayList<String>> newEventChannelMap = new HashMap<String,ArrayList<String>>();
             for (String event : events) {
@@ -1413,7 +1413,7 @@ public class SiteBot extends FtpListener implements Observer {
                 for (int i = 1;; i++) {
                     String channel = ircCfg.getProperty("irc.event." + event + ".channel." + i);
                     if (channel == null) break;
-                    eChans.add(channel);
+                    eChans.add(channel.trim().toLowerCase());
                 }
                 if (!eChans.isEmpty())
                     newEventChannelMap.put(event, eChans);
@@ -1428,19 +1428,18 @@ public class SiteBot extends FtpListener implements Observer {
 					break;
 				}
 
-				String chan = ircCfg.getProperty("irc.section." + i
-						+ ".channel");
+				String chan = ircCfg.getProperty("irc.section." + i + ".channel");
 
 				if (chan == null) {
 					chan = _primaryChannelName;
 				}
-
 				_sections.put(name, new SectionSettings(ircCfg, i, chan));
 			}
 
 			if (_conn == null) {
 				connect(ircCfg);
 			}
+
 			if ((!_conn.getClientState().getServer().equals(_server))
 					|| (_conn.getClientState().getPort() != _port)) {
 				logger.info("Reconnecting due to server change");
@@ -1558,7 +1557,7 @@ public class SiteBot extends FtpListener implements Observer {
      * @param msg
      * @param section
      */
-    private void sayEvent(String event, String msg, SectionInterface section) {
+    public void sayEvent(String event, String msg, SectionInterface section) {
         if (_eventChannelMap.containsKey(event.toLowerCase())) {
             for (String chan : _eventChannelMap.get(event.toLowerCase())) {
                 say(chan, msg);
@@ -1575,7 +1574,7 @@ public class SiteBot extends FtpListener implements Observer {
      * @param event
      * @param msg
      */
-    private void sayEvent(String event, String msg) {
+    public void sayEvent(String event, String msg) {
         sayEvent(event, msg, "global");
     }
 
@@ -1587,7 +1586,7 @@ public class SiteBot extends FtpListener implements Observer {
      * @param msg
      * @param channel fallback channel, or "global" or "all"
      */
-    private void sayEvent(String event, String msg, String channel) {
+    public void sayEvent(String event, String msg, String channel) {
         ArrayList<String> channels = new ArrayList<String>();
         channels.add(channel);
         sayEvent(event, msg, channels);
@@ -1603,7 +1602,7 @@ public class SiteBot extends FtpListener implements Observer {
      *            list of channels to fallback on, if any element is "global" or
      *            "all", to use sayGlobal instead
      */
-    private void sayEvent(String event, String msg, ArrayList<String> channels) {
+    public void sayEvent(String event, String msg, ArrayList<String> channels) {
         if (_eventChannelMap.containsKey(event.toLowerCase())) {
             for (String chan : _eventChannelMap.get(event.toLowerCase())) {
                 say(chan, msg);
@@ -1891,6 +1890,10 @@ public class SiteBot extends FtpListener implements Observer {
 	public String getBlowfishKey(User user) throws ObjectNotFoundException {
 		return getBlowfishKey(_primaryChannelName, user);
 	}
+
+    public HashMap<String, ArrayList<String>> getEventChannelMap() {
+        return new HashMap<String, ArrayList<String>>(_eventChannelMap);
+    }
 }
 
 
