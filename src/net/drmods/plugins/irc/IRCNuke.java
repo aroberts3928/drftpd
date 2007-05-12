@@ -132,6 +132,9 @@ public class IRCNuke extends IRCCommand {
 			out.add(ReplacerUtils.jprintf("nuke.error", env, IRCNuke.class));
 			return out;
 		}
+        
+        getGlobalContext().getSlaveManager().cancelTransfersInDirectory(nukeDir);
+        
 		String nukeDirPath = nukeDir.getPath();
 		env.add("nukedir", nukeDirPath);
 		
