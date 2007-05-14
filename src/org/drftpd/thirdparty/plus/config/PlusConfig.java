@@ -49,13 +49,10 @@ public class PlusConfig extends FtpListener {
 	private static PlusConfig _plus;
 
 	private Properties _cfg;
-	private String _groups;
 
 	public boolean SECUREMASK = false;
 	public String SECUREEXEMPT = "";
 	public boolean DEFAULTUSER = false;
-	public String HIDDENGROUPNAME = "";
-	public String MASKEDGROUP = "";
 
 	private Hashtable<String, ArrayList<Permission>> _perms = new Hashtable<String, ArrayList<Permission>>();
 
@@ -142,21 +139,6 @@ public class PlusConfig extends FtpListener {
 			SECUREEXEMPT = secureexempt;
 			DEFAULTUSER = Boolean.parseBoolean(defaultuser);
 
-			// will hide all groups from some users
-			listGroupShow = _cfg.getProperty("list.group.show") == null ? "*" : _cfg
-					.getProperty("list.group.show");
-			addPermission("listgroupshow", new Permission(FtpConfig.makeUsers(new StringTokenizer(listGroupShow, " "))));
-
-			HIDDENGROUPNAME = _cfg.getProperty("list.group.hidden.name") == null ? "hidden" : _cfg
-					.getProperty("list.group.hidden.name");
-
-			// will mask some grp names
-			listMaskedGroups = _cfg.getProperty("list.masked.groups") == null ? "" :
-				_cfg.getProperty("list.masked.groups").trim();
-			_groups = listMaskedGroups;
-			MASKEDGROUP = _cfg.getProperty("masked.group") == null ? "iND" :
-				_cfg.getProperty("masked.group");
-
 		} catch (FileNotFoundException e1) {
 			throw new FileNotFoundException(e1.getMessage());
 		} catch (IOException e2) {
@@ -196,8 +178,6 @@ public class PlusConfig extends FtpListener {
 		SECUREMASK = false;
 		SECUREEXEMPT = "";
 		DEFAULTUSER = false;
-		HIDDENGROUPNAME = "";
-		MASKEDGROUP = "";
 	}
 
 	/**
@@ -237,35 +217,4 @@ public class PlusConfig extends FtpListener {
         }
         perms.add(permission);
 	}
-
-    /**
-     * This method will check if the given string is equal to a group that
-     * needs to be masked, if it is, the group will be masked,
-     * if not, it will remain the same thing.
-     * @param user
-     * @return the 'correct' group.
-     */
-    public String getGroup(String grpname) {
-    	if (checkGroup(grpname)) {
-        	return MASKEDGROUP;
-    	}
-		return grpname;
-    }
-
-    /**
-     * Iterate through the StringTokenizer trying to find
-     * a match for the given string.
-     * @param grpname
-     * @return true if the string matches any string inside the
-     * StringTokenizer, or false if it doesnt match.
-     */
-    public boolean checkGroup(String grpname) {
-    	for (StringTokenizer st = new StringTokenizer(_groups, " "); st.hasMoreTokens();) {
-    		String str = st.nextToken();
-    		if (str.equals(grpname)) {
-    			return true;
-    		}
-    	}
-    	return false;
-    }
 }

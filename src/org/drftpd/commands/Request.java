@@ -22,6 +22,7 @@ import net.sf.drftpd.event.DirectoryFtpEvent;
 import net.sf.drftpd.master.BaseFtpConnection;
 import net.sf.drftpd.master.command.CommandManager;
 import net.sf.drftpd.master.command.CommandManagerFactory;
+import net.sf.drftpd.util.ReplacerUtils;
 
 import org.apache.log4j.Logger;
 
@@ -29,10 +30,15 @@ import org.drftpd.dynamicdata.Key;
 import org.drftpd.remotefile.LinkedRemoteFile;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.usermanager.NoSuchUserException;
+import org.tanesha.replacer.ReplacerEnvironment;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.util.Iterator;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 
 /**
@@ -40,13 +46,19 @@ import java.util.Iterator;
  * @version $Id$
  */
 public class Request implements CommandHandler, CommandHandlerFactory {
-    public static final Key REQUESTSFILLED = new Key(Request.class,
-            "requestsFilled", Integer.class);
-    public static final Key REQUESTS = new Key(Request.class, "requests",
-            Integer.class);
-    private static final String FILLEDPREFIX = "FILLED-for.";
+	
+    public static final Key REQUESTSFILLED = new Key(Request.class, "requestsFilled", Integer.class);
+    public static final Key REQUESTS = new Key(Request.class, "requests", Integer.class);
+    public static final Key WEEKREQS = new Key(Request.class, "weekreq",Integer.class);
+
+    public static final String FILLEDPREFIX = "FILLED-for.";
+    public static final String REQPREFIX = "REQUEST-by.";
+
     private static final Logger logger = Logger.getLogger(Request.class);
-    private static final String REQPREFIX = "REQUEST-by.";
+
+    private String _requestPath;
+    private int _maxWeekReqs = 0;
+    private String _weekExempt;
 
     private Reply doSITE_REQFILLED(BaseFtpConnection conn) {
         if (!conn.getRequest().hasArgument()) {
@@ -110,6 +122,24 @@ public class Request implements CommandHandler, CommandHandlerFactory {
             return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
 
+        if (_maxWeekReqs != 0) {
+	        boolean exempt = false;
+	        StringTokenizer st = new StringTokenizer(_weekExempt);
+	        while (st.hasMoreTokens()) {
+	            if (conn.getUserNull().isMemberOf(st.nextToken())) {
+	                exempt = true;
+	                break;
+	            }
+	        }
+	
+	        if (!exempt) {
+	            int reqsMade = conn.getUserNull().getKeyedMap().getObjectInt(org.drftpd.commands.Request.WEEKREQS);
+	            if (reqsMade >= _maxWeekReqs) {
+	                return new Reply(550, "Access Denied. Maximum weekly request limit reached.");
+	            }
+	        }  
+        }
+
         String createdDirName = REQPREFIX + conn.getUserNull().getName() +
             "-" + conn.getRequest().getArgument().trim();
 
@@ -124,6 +154,7 @@ public class Request implements CommandHandler, CommandHandlerFactory {
                     conn.getUserNull(), "REQUEST", createdDir));
 
             conn.getUserNull().getKeyedMap().incrementObjectLong(REQUESTS);
+            conn.getUserNull().getKeyedMap().incrementObjectInt(WEEKREQS, 1);
 
             //conn.getUser().addRequests();
             return new Reply(257, "\"" + createdDir.getPath() +
@@ -132,6 +163,60 @@ public class Request implements CommandHandler, CommandHandlerFactory {
             return new Reply(550,
                 "directory " + createdDirName + " already exists");
         }
+    }
+
+    private Reply doSITE_REQUESTS(BaseFtpConnection conn) {
+        LinkedRemoteFileInterface requestDir;
+
+        // use path permissions in order to keep support for multiple site request dirs.
+        // site operator must configure the new 'requests' permission accordingly
+        try {
+            if (!conn.getGlobalContext().getConfig().checkPathPermission("requests",
+                    conn.getUserNull(), conn.getCurrentDirectory())) {
+                // if no permission to do requests in current dir, try the configured !request dir instead
+                if (!conn.getGlobalContext().getConfig().checkPathPermission("requests",
+                        conn.getUserNull(), conn.getGlobalContext().getRoot().lookupFile(_requestPath))) {
+                    return Reply.RESPONSE_530_ACCESS_DENIED;
+                } else {
+                    // access granted here for !request dir
+                    requestDir = conn.getGlobalContext().getRoot().lookupFile(_requestPath);
+                }
+            } else {
+                // access granted for current dir
+                requestDir = conn.getCurrentDirectory();
+            }
+        } catch (FileNotFoundException e) {
+            return Reply.RESPONSE_530_ACCESS_DENIED;
+        }
+
+        ReplacerEnvironment env = BaseFtpConnection.getReplacerEnvironment(null, conn.getUserNull());
+        Reply response = new Reply(200, "Command Successful.");
+
+        response.addComment(ReplacerUtils.jprintf("requests.header", env, Request.class));
+        int i=1;
+        for (Iterator iter = requestDir.getDirectories().iterator(); iter.hasNext();) {
+            LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
+            if (file.isDirectory()) {
+                //  if (file.getName().startsWith("REQUEST")) {
+                StringTokenizer st = new StringTokenizer(file.getName(), "-");
+                if (st.nextToken().equals("REQUEST")) {
+                    String byuser = st.nextToken();
+                    String request = st.nextToken();
+                    while (st.hasMoreTokens()) {
+                        request = request+"-"+st.nextToken();
+                    }
+                    byuser = byuser.replace('.',' ');
+                    String num = Integer.toString(i);
+                    env.add("reqnum",num);
+                    env.add("requser",byuser.replaceAll("by |for.*",""));
+                    env.add("reqrequest",request);
+                    i=i+1;
+                    response.addComment(ReplacerUtils.jprintf("requests.list", env, Request.class));    
+                }
+            }
+        }
+        response.addComment(ReplacerUtils.jprintf("requests.footer", env, Request.class));
+        return response;
     }
 
     public Reply execute(BaseFtpConnection conn)
@@ -144,6 +229,10 @@ public class Request implements CommandHandler, CommandHandlerFactory {
 
         if ("SITE REQFILLED".equals(cmd)) {
             return doSITE_REQFILLED(conn);
+        }
+
+        if ("SITE REQUESTS".equals(cmd)) {
+            return doSITE_REQUESTS(conn);
         }
 
         throw UnhandledCommandException.create(Request.class, conn.getRequest());
@@ -159,6 +248,25 @@ public class Request implements CommandHandler, CommandHandlerFactory {
     }
 
     public void load(CommandManagerFactory initializer) {
+        Properties cfg = new Properties();
+        FileInputStream file = null;
+        try {
+            file = new FileInputStream("conf/drmods.conf");
+            cfg.load(file);
+            _requestPath = cfg.getProperty("request.dirpath", "/requests/");
+            String maxWeekReqs = cfg.getProperty("request.weekmax", "0");
+            _weekExempt = cfg.getProperty("request.weekexempt", "siteop");
+            file.close();
+            _maxWeekReqs = Integer.parseInt(maxWeekReqs);
+        } catch (Exception e) {
+            logger.error("Error reading conf/drmods.conf",e);
+            throw new RuntimeException(e.getMessage());
+        } finally {
+            try {
+                file.close();
+            } catch (Exception e) {
+            }
+        }
     }
 
     public void unload() {

@@ -737,6 +737,10 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 		return _sfvFile;
 	}
 
+	public void setSFVFile(SFVFile sfvFile) {
+		_sfvFile = sfvFile;
+	}
+
 	public synchronized ID3Tag getID3v1Tag() throws NoAvailableSlaveException,
 			FileNotFoundException, IOException {
 		if (mp3tag == null) {
@@ -1074,7 +1078,6 @@ public class LinkedRemoteFile implements Serializable, Comparable,
 		for (Iterator iter = getFiles().iterator(); iter.hasNext();) {
 			LinkedRemoteFileInterface myFile = (LinkedRemoteFileInterface) iter
 					.next();
-
 			if (myFile.getName().toLowerCase().endsWith(".sfv") && myFile.isFile()) {
 				return myFile.getSFVFile();
 			}

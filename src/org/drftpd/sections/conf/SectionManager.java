@@ -110,12 +110,10 @@ public class SectionManager implements SectionManagerInterface {
 							+ type.substring(1) + "Section");
 					SectionInterface section = (SectionInterface) clazz
 							.getDeclaredConstructor(CONSTRUCTOR_SIG)
-							.newInstance(
-									new Object[] { this, new Integer(i), p });
+							.newInstance(new Object[] { this, new Integer(i), p });
 					sections.put(name, section);
 				} catch (Exception e1) {
-					throw new FatalException("Unknown section type: " + i
-							+ ".type = " + type, e1);
+					throw new FatalException("Unknown section type: " + i + ".type = " + type, e1);
 				}
 			}
 

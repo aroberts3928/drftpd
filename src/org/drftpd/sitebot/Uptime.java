@@ -61,8 +61,7 @@ public class Uptime extends IRCCommand {
 		String slaveName = args;
 
 		try {
-			RemoteSlave rslave = getGlobalContext().getSlaveManager()
-					.getRemoteSlave(slaveName);
+            RemoteSlave rslave = getGlobalContext().getSlaveManager().getRemoteSlave(slaveName);
 			out.add(makeOutput(rslave));
 		} catch (ObjectNotFoundException e2) {
 			env.add("slave", slaveName);
@@ -73,8 +72,7 @@ public class Uptime extends IRCCommand {
 
 	public ArrayList<String> doSlavesUptime(String args, MessageCommand msgc) {
 		ArrayList<String> out = new ArrayList<String>();
-		List<RemoteSlave> rslaves = getGlobalContext().getSlaveManager()
-				.getSlaves();
+	    List<RemoteSlave> rslaves = getGlobalContext().getSlaveManager().getSlaves();
 		RemoteSlave rslave = null;
 
 		for (Iterator iter = rslaves.iterator(); iter.hasNext();) {

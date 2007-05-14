@@ -22,6 +22,10 @@ rank.exempt=siteop nuke
 # net.drmods.plugins.irc.Request
 # specify the path to your requests folder
 request.dirpath=/requests/
+# specify the maximum amount of requests a user can make a week (0=disabled)
+request.weekmax=1
+# specify what groups are exempt from the above setting
+request.weekexempt=siteop
 
 # net.drmods.plugins.irc.New
 # specify the default number of dirs to show

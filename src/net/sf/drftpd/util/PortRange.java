@@ -64,8 +64,8 @@ public class PortRange {
 			try {
 				ServerSocket _serverSocket = ssf.createServerSocket();
  				if (_bufferSize > 0) {
-        	_serverSocket.setReceiveBufferSize(_bufferSize);
-        }
+ 					_serverSocket.setReceiveBufferSize(_bufferSize);
+ 				}
  				_serverSocket.bind(new InetSocketAddress(0),1);
  				return _serverSocket;
 			} catch (IOException e) {

@@ -93,8 +93,7 @@ public class OnConnect extends GenericAutoService {
     }
 
     private void onConnect(WelcomeCommand command) {
-        getConnection().sendCommand(new RawCommand("MODE " + command.getNick() +
-                " :+i"));
+        getConnection().sendCommand(new RawCommand("MODE " + command.getNick() + " :+i"));
     }
 
     public String getCommands() {

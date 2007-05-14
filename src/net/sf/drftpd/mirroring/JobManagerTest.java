@@ -30,6 +30,7 @@ import junit.framework.TestCase;
 import net.sf.drftpd.NoAvailableSlaveException;
 import net.sf.drftpd.master.SlaveFileException;
 
+import org.drftpd.SFVFile;
 import org.drftpd.master.ConnectionManager;
 import org.drftpd.master.RemoteSlave;
 import org.drftpd.remotefile.AbstractLinkedRemoteFile;
@@ -207,6 +208,11 @@ public class JobManagerTest extends TestCase {
 
 		public boolean isValid() {
 			return true;
+		}
+
+		public void setSFVFile(SFVFile sfvFile) {
+			// TODO Auto-generated method stub
+			
 		}
     }
 }

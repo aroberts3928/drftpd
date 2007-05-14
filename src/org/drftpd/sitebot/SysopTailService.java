@@ -121,22 +121,22 @@ public class SysopTailService extends GenericAutoService implements Runnable {
 				}
 			}
 		} catch (Exception e) {
-			sayLog("Fatal error reading log file, log tailing has stopped.");
+                    sayLog("Fatal error reading log file, log tailing has stopped.");
 		}
 
 		// don't leak fd
 		try {
-			if (raf != null)
-				raf.close();
-		} catch (Throwable t) {
-            logger.debug(t);
-		} finally {
-			raf = null;
+                    if (raf != null)
+                        raf.close();
+                } catch (Throwable t) {
+                    logger.debug(t);
+                } finally {
+                    raf = null;
 
-			// restart immediately, if stopped in error.
-			if (_running) this.tailStart();
-		}
-	}
+                    // restart immediately, if stopped in error.
+                    if (_running) this.tailStart();
+                }
+        }
 
     public void sayLog(String line) {
         sayLog(line, true);

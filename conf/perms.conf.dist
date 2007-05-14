@@ -12,7 +12,13 @@ max_users	100	0
 # upload * =siteop
 # download * -user1
 # makedir /usercanmakedir/* -user1 -user2 =group1
-
+# To expand on the help, rules run left to right, top to bottom
+# eg. user 'LoginA' is in group 'GroupB'
+#upload * -LoginA !=GroupB <=- even tho LoginA is a member of GroupB , he can still upload,
+#				- but everyone else in GroupB cannot. 
+#upload * !=GroupB -LoginA <=- even tho it 'says' LoginA can upload, he can't because rule hits !=GroupB
+#				- and sees that LoginA is a part of that group and denies him the upload
+#Also, !* is implied at the end of each rule				
 upload			*	*
 download		*	*
 
@@ -30,6 +36,7 @@ privpath /pre/*	=siteop
 
 #allows request in /request/ to group request
 request         /request/       =request
+requests        /request/       *
 
 hideinwho /pre/*	*
 
@@ -95,7 +102,7 @@ listjobs * =siteop
 startjobs * =siteop
 stopjobs * =siteop
 
-# tmods - site find nuke, who can be nuked when mass-nuking?
+# tmods - site find nuke: Users who can be nuked when mass-nuking?
 # don't ever nuke a release a siteop has files in.
 cnuke /* !=siteop *
 # nuke anything, uploaded by anyone

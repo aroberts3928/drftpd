@@ -46,14 +46,15 @@ public class NukeLog {
     }
 
     public NukeEvent get(String path) throws ObjectNotFoundException {
-        for (Iterator iter = nukes.iterator(); iter.hasNext();) {
-            NukeEvent nuke = (NukeEvent) iter.next();
+		synchronized(nukes) {
+			for (Iterator iter = nukes.iterator(); iter.hasNext();) {
+				NukeEvent nuke = (NukeEvent) iter.next();
 
-            if (nuke.getPath().equals(path)) {
-                return nuke;
-            }
-        }
-
+				if (nuke.getPath().equals(path)) {
+					return nuke;
+				}
+			}
+		}
         throw new ObjectNotFoundException("No nukelog for: " + path);
     }
 
@@ -83,12 +84,6 @@ public class NukeLog {
     public synchronized void add(NukeEvent nuke) {
         nukes.add(nuke);
 
-        //		try {
-        //			ObjOut out = new ObjOut(new FileWriter("nukelog.xml"));
-        //			out.writeObject(this);
-        //		} catch (IOException e) {
-        //			logger.warn("", e);
-        //		}
         XMLOutputter outputter = new XMLOutputter("    ", true);
 
         try {

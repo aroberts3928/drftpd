@@ -25,6 +25,7 @@ import net.sf.drftpd.event.Event;
 import net.sf.drftpd.master.SlaveFileException;
 
 import org.drftpd.GlobalContext;
+import org.drftpd.SFVFile;
 
 import org.drftpd.remotefile.AbstractLinkedRemoteFile;
 import org.drftpd.remotefile.CaseInsensitiveHashtable;
@@ -147,6 +148,11 @@ public class RemoteSlaveTest extends TestCase {
 		public boolean isValid() {
 			return true;
 		}
+
+        public void setSFVFile(SFVFile sfvFile) {
+            // TODO Auto-generated method stub
+            
+        }
     }
 
     public class GC extends GlobalContext {

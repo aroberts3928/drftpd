@@ -133,11 +133,11 @@ public class SectionManager implements SectionManagerInterface {
 		}
 
 		//TODO Make a configurable site-wide minimum speed limit for siteops using this section manager. (plus.conf)
-		public Long getMinSpeedDn() {
+		public Long getMinSpeedUp() {
 			return _minSpeedUp;
 		}
 
-		public Long getMinSpeedUp() {
+		public Long getMinSpeedDn() {
 			return _minSpeedDn;
 		}
     }

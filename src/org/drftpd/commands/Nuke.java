@@ -20,7 +20,6 @@ package org.drftpd.commands;
 import net.sf.drftpd.FileExistsException;
 import net.sf.drftpd.Nukee;
 import net.sf.drftpd.ObjectNotFoundException;
-import net.sf.drftpd.SlaveUnavailableException;
 import net.sf.drftpd.event.NukeEvent;
 import net.sf.drftpd.master.BaseFtpConnection;
 import net.sf.drftpd.master.command.CommandManager;
@@ -33,8 +32,6 @@ import org.apache.log4j.Logger;
 import org.drftpd.Bytes;
 import org.drftpd.dynamicdata.Key;
 
-import org.drftpd.master.RemoteSlave;
-import org.drftpd.master.RemoteTransfer;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.usermanager.AbstractUser;
 import org.drftpd.usermanager.NoSuchUserException;
@@ -157,7 +154,7 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
 
         try {
             nukeDirName = st.nextToken();
-            nukeDir = conn.getCurrentDirectory().getFile(nukeDirName);
+            nukeDir = conn.getCurrentDirectory().lookupFile(nukeDirName);
         } catch (FileNotFoundException e) {
             Reply response = new Reply(550, e.getMessage());
 
@@ -186,13 +183,9 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
         }
         conn.getGlobalContext().getSlaveManager().cancelTransfersInDirectory(nukeDir);
 
-        String reason;
-
-        if (st.hasMoreTokens()) {
-            reason = st.nextToken("").trim();
-        } else {
-            reason = "";
-        }
+        // get and format reason
+        String reason = "";
+        if (st.hasMoreTokens()) reason = clean_reason(st.nextToken(""));
 
         //get nukees with string as key
         Hashtable<String,Long> nukees = new Hashtable<String,Long>();
@@ -343,40 +336,30 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
         if (!st.hasMoreTokens()) {
             return Reply.RESPONSE_501_SYNTAX_ERROR;
         }
+        
+        String prefix = "[NUKED]-";
+        String reason = "";
 
+        // get dir to unnuke
         String toName = st.nextToken();
-        String toPath;
 
-        {
-            StringBuffer toPath2 = new StringBuffer(conn.getCurrentDirectory()
-                                                        .getPath());
+        // get and format reason
+        if (st.hasMoreTokens()) reason = clean_reason(st.nextToken(""));
 
-            if (toPath2.length() != 1) {
-                toPath2.append("/"); // isn't /
-            }
+        // get absolute path after unnuke.
+        String toPath = conn.getCurrentDirectory().lookupPath(toName);
 
-            toPath2.append(toName);
-            toPath = toPath2.toString();
-        }
+        // convert that into a parentdir / dirname pair.
+        String parentDir = toPath.substring(0, toPath.lastIndexOf("/"));
+        String toDir = toPath.substring(toPath.lastIndexOf("/")+1);
 
-        String toDir = conn.getCurrentDirectory().getPath();
-        String nukeName = "[NUKED]-" + toName;
-
-        String reason;
-
-        if (st.hasMoreTokens()) {
-            reason = st.nextToken("").trim();
-        } else {
-            reason = "";
-        }
-
+        // get reference to nuked dir.
         LinkedRemoteFileInterface nukeDir;
 
         try {
-            nukeDir = conn.getCurrentDirectory().getFile(nukeName);
+            nukeDir = conn.getGlobalContext().getRoot().lookupFile(parentDir + "/" + prefix + toDir);
         } catch (FileNotFoundException e2) {
-            return new Reply(200,
-                nukeName + " doesn't exist: " + e2.getMessage());
+            return new Reply(200, toName + " doesn't exist: " + e2.getMessage());
         }
         
         conn.getGlobalContext().getSlaveManager().cancelTransfersInDirectory(nukeDir);
@@ -448,7 +431,7 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
         }
 
         try {
-            nukeDir.renameTo(toDir, toName);
+            nukeDir.renameTo(parentDir, toDir);
         } catch (FileExistsException e1) {
             response.addComment(
                 "Error renaming nuke, target dir already exists");
@@ -476,6 +459,12 @@ public class Nuke implements CommandHandler, CommandHandlerFactory {
         conn.getGlobalContext().dispatchFtpEvent(nuke);
 
         return response;
+    }
+
+    public static String clean_reason(String reason) {
+        return reason.trim().replaceAll("[^a-zA-Z0-9()._-]+", ".")     // replace funky chars with .
+        .replaceAll("^[^a-zA-Z0-9]+", "")       // make sure resulting string
+        .replaceAll("[^a-zA-Z0-9]+$", "");      // does not start/end with .
     }
 
     public Reply execute(BaseFtpConnection conn)

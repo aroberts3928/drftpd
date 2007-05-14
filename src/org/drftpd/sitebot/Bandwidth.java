@@ -56,7 +56,7 @@ public class Bandwidth extends IRCCommand {
 		SlaveStatus status = getGlobalContext().getSlaveManager().getAllStatus();
 		SiteBot.fillEnvSlaveStatus(env, status, getGlobalContext().getSlaveManager());
 
-		// Ad a couple more variables.
+		// Add a couple more variables.
 		ArrayList<BaseFtpConnection> conns = new ArrayList<BaseFtpConnection>(getGlobalContext().getConnectionManager()
 				.getConnections());
 		int idle = conns.size() - status.getTransfersReceiving() - status.getTransfersSending();

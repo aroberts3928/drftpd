@@ -15,21 +15,34 @@
  * along with DrFTPD; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package org.drftpd.permissions;
 
-import java.util.Collection;
+package org.drftpd.slave.diskselection;
+
+import java.util.ArrayList;
+import java.util.Properties;
+
+import org.drftpd.PropertyHelper;
 
 /**
+ * This filter works this way (may look foolish)<pre>
+ * x.filter=priority
+ * x.assign=1+10 2+5</pre>
+ * This means that slave.root.1 will have more chances
+ * to receive a file then slave.root.2
  * @author fr0w
- * @version $Id: RegexPermission.java 1263 2004-09-10 18:00:00Z fr0w $
  */
 
-public abstract class RegexPermission extends Permission {
-    public RegexPermission(Collection<String> users) {
-        super(users);
-    }
+public class PriorityFilter extends DiskFilter {
 
-    public abstract boolean checkPath(String path);
+	private ArrayList _assignList;  
+	
+	public PriorityFilter(Properties p, Integer i) {
+		super(p, i);
+		_assignList = AssignRoot.parseAssign(PropertyHelper.getProperty(p, i + ".assign"));
+	}
 
-    public abstract String getLastMatch();
+	public void process(ScoreChart sc, String path) {
+		AssignRoot.addScoresToChart(_assignList, sc);
+	}
+
 }

@@ -25,6 +25,7 @@ import net.sf.drftpd.ObjectNotFoundException;
 import net.sf.drftpd.master.SlaveFileException;
 
 import org.drftpd.GlobalContext;
+import org.drftpd.SFVFile;
 
 import org.drftpd.master.RemoteSlave;
 import org.drftpd.master.RemoteTransfer;
@@ -153,6 +154,11 @@ public class MatchdirFilterTest extends TestCase {
         public void remerge(CaseInsensitiveHashtable lightRemoteFiles,
             RemoteSlave rslave) throws IOException {
         }
+
+		public void setSFVFile(SFVFile sfvFile) {
+			// TODO Auto-generated method stub
+			
+		}
     }
 
     public class FC extends FilterChain {

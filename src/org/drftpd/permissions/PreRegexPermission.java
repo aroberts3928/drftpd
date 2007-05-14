@@ -38,8 +38,8 @@ public class PreRegexPermission extends RegexPermission {
 
     public boolean checkPath(String path) {
         Matcher m;
-
         _lastmatch = null;
+
 		m = _pat.matcher(path);
 
 		if (m.find()) {

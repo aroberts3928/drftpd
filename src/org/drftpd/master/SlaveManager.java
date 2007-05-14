@@ -571,6 +571,9 @@ public class SlaveManager implements Runnable {
 		List<RemoteSlave> slaves = null;
 		if (file.isFile()) {
 			slaves = file.getSlaves();
+		} else if (file.isLink()){
+			// symlinks doesnt need to be deleted on slaves.
+			return;
 		} else {
 			slaves = new ArrayList<RemoteSlave>(_rslaves);
 		}

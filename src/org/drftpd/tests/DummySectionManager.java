@@ -76,11 +76,11 @@ public class DummySectionManager implements SectionManagerInterface {
 				return getPath();
 			}
 
-			public Long getMinSpeedDn() {
+			public Long getMinSpeedUp() {
 				return 0L;
 			}
 
-			public Long getMinSpeedUp() {
+			public Long getMinSpeedDn() {
 				return 0L;
 			}
         };

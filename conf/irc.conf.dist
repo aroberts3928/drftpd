@@ -15,7 +15,7 @@ irc.initial.command=PASS drftpd
 # list of events that can be redirected are:
 #
 # dele, wipe, slave, invite, mkdir, request,
-# reqfilled, rmdir, pre, shutdown, log
+# reqfilled. reqdel, rmdir, pre, shutdown, log
 #
 # Common Examples:
 #irc.event.dele.channel.1=#drftpd-test

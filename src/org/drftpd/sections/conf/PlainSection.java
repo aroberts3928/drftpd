@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-
 import org.drftpd.Bytes;
 import org.drftpd.PropertyHelper;
 import org.drftpd.remotefile.FileUtils;
@@ -106,11 +105,11 @@ public class PlainSection implements SectionInterface {
 		return getPath();
 	}
 
-	public Long getMinSpeedDn() {
+	public Long getMinSpeedUp() {
 		return _minSpeedUp;
 	}
 
-	public Long getMinSpeedUp() {
+	public Long getMinSpeedDn() {
 		return _minSpeedDn;
 	}
 }

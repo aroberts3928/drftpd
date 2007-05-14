@@ -49,7 +49,6 @@ import org.drftpd.slaveselection.SlaveSelectionManagerInterface;
 import org.drftpd.usermanager.AbstractUserManager;
 import org.drftpd.usermanager.UserManager;
 
-
 /**
  * @author mog
  * @version $Id$

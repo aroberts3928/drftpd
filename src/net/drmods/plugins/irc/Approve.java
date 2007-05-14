@@ -47,7 +47,7 @@ import f00f.net.irc.martyr.util.FullNick;
  */
 public class Approve extends IRCCommand {
 	private static final Logger logger = Logger.getLogger(Approve.class);
-	private String _dirName;
+	private static String _dirName;
 	
 	public Approve(GlobalContext gctx) {
 		super(gctx);
@@ -108,6 +108,12 @@ public class Approve extends IRCCommand {
         
 		if (dir!= null){
 			env.add("sdirpath",dir.getPath());
+
+			if (isApproved(dir)) {
+				out.add(ReplacerUtils.jprintf("approve.exists", env, Approve.class));
+				return out;
+			}
+			
 			String approveDirName;
             try {
                 approveDirName = SimplePrintf.jprintf(_dirName, env);
@@ -156,5 +162,18 @@ public class Approve extends IRCCommand {
 			}
 		}
 		return null;
+	}
+	
+	private static boolean isApproved(LinkedRemoteFileInterface dir) {
+		for (Iterator iter = dir.getDirectories().iterator(); iter.hasNext();) {
+			LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
+			String fullpath = file.getPath().toLowerCase();
+			String path = fullpath.substring(fullpath.lastIndexOf("/")+1);
+			if ((file.isDirectory()) &&
+					(path.startsWith(_dirName.toLowerCase().substring(0, _dirName.lastIndexOf("."))))) {
+				return true;				
+			}
+		}
+		return false;
 	}
 }

@@ -16,23 +16,19 @@
  */
 package org.drftpd.mirroring.archivetypes;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
 import net.sf.drftpd.NoAvailableSlaveException;
-import net.sf.drftpd.mirroring.Job;
 
 import org.apache.log4j.Logger;
-import org.drftpd.PropertyHelper;
 import org.drftpd.master.RemoteSlave;
 import org.drftpd.mirroring.ArchiveType;
 import org.drftpd.plugins.Archive;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.sections.SectionInterface;
-
 
 /**
  * @author zubov
@@ -51,6 +47,16 @@ public class MoveReleaseOffSlavesToMostFreeSlaves extends ArchiveType {
             throw new NullPointerException(
                 "Cannot continue, 0 slaves found to move off MoveReleaseOffSlavesToMostFreeSlaves for for section " +
                 getSection().getName());
+        }
+
+        if (_slaveList == null ||_slaveList.isEmpty()) {
+        	logger.debug("Destination slaves chain is empty, adding all slaves to it but the source ones.");
+        	for (RemoteSlave rs : _parent.getGlobalContext().getSlaveManager().getSlaves()) {
+        		if (!_offOfSlaves.contains(rs)) {
+        			_slaveList.add(rs);
+        		}
+        	}
+        	logger.debug("Chain: " + _slaveList.toString());
         }
 
         if (_numOfSlaves < 1) {

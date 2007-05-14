@@ -262,11 +262,11 @@ public class DatedSection implements SectionInterface {
 		return _basePath;
 	}
 
-	public Long getMinSpeedDn() {
+	public Long getMinSpeedUp() {
 		return _minSpeedUp;
 	}
 
-	public Long getMinSpeedUp() {
+	public Long getMinSpeedDn() {
 		return _minSpeedDn;
 	}
 }

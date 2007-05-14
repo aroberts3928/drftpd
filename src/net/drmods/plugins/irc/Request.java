@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Collection;
 
 import net.sf.drftpd.FileExistsException;
+import net.sf.drftpd.event.DirectoryFtpEvent;
 import net.sf.drftpd.util.ReplacerUtils;
 
 import org.apache.log4j.Logger;
@@ -35,6 +37,7 @@ import org.drftpd.plugins.SiteBot;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.sitebot.IRCCommand;
 import org.drftpd.usermanager.User;
+import org.drftpd.usermanager.UserFileException;
 import org.tanesha.replacer.ReplacerEnvironment;
 
 import f00f.net.irc.martyr.commands.MessageCommand;
@@ -50,6 +53,8 @@ public class Request extends IRCCommand {
     public static final Key WEEKREQS = new Key(Request.class, "weekreq", Integer.class);
 
     private String _requestPath;
+    private int _maxWeekReqs;
+    private String _weekExempt;
     
 	public Request(GlobalContext gctx) {
 		super(gctx);
@@ -62,10 +67,11 @@ public class Request extends IRCCommand {
         try {
             file = new FileInputStream(confFile);
             cfg.load(file);
-            _requestPath = cfg.getProperty("request.dirpath");
-            if (_requestPath == null) {
-                throw new RuntimeException("Unspecified value 'request.dirpath' in " + confFile);        
-            }      
+            _requestPath = cfg.getProperty("request.dirpath", "/requests/");
+            String maxWeekReqs = cfg.getProperty("request.weekmax", "0");
+            _weekExempt = cfg.getProperty("request.weekexempt","siteop");
+            file.close();
+            _maxWeekReqs = Integer.parseInt(maxWeekReqs);
         } catch (FileNotFoundException e) {
             logger.error("Error reading " + confFile,e);
             throw new RuntimeException(e.getMessage());
@@ -178,7 +184,13 @@ public class Request extends IRCCommand {
                         try {
                             file.renameTo(file.getParentFile().getPath(),fdirname);
                             fdir = true;
-                            out.add(ReplacerUtils.jprintf("reqfilled.success", env, Request.class));
+                            getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(
+                                    user, "REQFILLED", file));
+                            try {
+                                user.commit();
+                            } catch (UserFileException e) {
+                                logger.error("Error saving userfile", e);
+                            }
                             break;
                         } catch (IOException e) {
                             logger.warn("", e);
@@ -220,6 +232,25 @@ public class Request extends IRCCommand {
         env.add("rdirname",dirName);
         String requser = user.getName();
         
+        if (_maxWeekReqs != 0) {
+	        boolean exempt = false;
+	        StringTokenizer st = new StringTokenizer(_weekExempt);
+	        while (st.hasMoreTokens()) {
+	            if (user.isMemberOf(st.nextToken())) {
+	                exempt = true;
+	                break;
+	            }
+	        }
+	
+	        if (!exempt) {
+	            int reqsMade = user.getKeyedMap().getObjectInt(org.drftpd.commands.Request.WEEKREQS);
+	            if (reqsMade >= _maxWeekReqs) {
+	                env.add("reqsmade", ""+reqsMade);
+	                out.add(ReplacerUtils.jprintf("request.max", env, Request.class));
+	                return out;
+	            }
+	        }  
+        }
         
         try {
             LinkedRemoteFileInterface dir = getGlobalContext().getRoot().lookupFile(_requestPath);
@@ -227,7 +258,15 @@ public class Request extends IRCCommand {
             LinkedRemoteFileInterface reqdir = dir.getFile("REQUEST-by." + requser + "-" + dirName);
             reqdir.setOwner(requser);
             user.getKeyedMap().setObject(Request.REQUESTS, user.getKeyedMap().getObjectInt(Request.REQUESTS)+1);;
-            out.add(ReplacerUtils.jprintf("request.success", env, Request.class));
+            getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(
+                    user, "REQUEST", reqdir));
+            user.getKeyedMap().incrementObjectInt(org.drftpd.commands.Request.WEEKREQS, 1);
+            try {
+                user.commit();
+            } catch (UserFileException e) {
+                logger.error("Error saving userfile", e);
+            }
+
         } catch (FileNotFoundException e) {
             env.add("rdirname",_requestPath);
             out.add(ReplacerUtils.jprintf("request.error", env, Request.class));
@@ -263,7 +302,14 @@ public class Request extends IRCCommand {
         boolean deldir = false;
         try {
             LinkedRemoteFileInterface dir = getGlobalContext().getRoot().lookupFile(_requestPath);
-            for (Iterator iter = dir.getDirectories().iterator(); iter.hasNext();) {
+            Collection<LinkedRemoteFileInterface> dirs = dir.getDirectories();
+            
+            if (dirs.isEmpty()) { 
+            	out.add(ReplacerUtils.jprintf("reqdel.error", env, Request.class));
+            	return out;
+            }
+            
+            for (Iterator iter = dirs.iterator(); iter.hasNext();) {
                 LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
                 if (file.isDirectory()) {
                     if (file.getName().endsWith(dirName)) {
@@ -271,7 +317,8 @@ public class Request extends IRCCommand {
                         if (file.getUsername().equals(user.getName()) || user.isAdmin()) {
                             file.delete();
                             deldir = true;
-                            out.add(ReplacerUtils.jprintf("reqdel.success", env, Request.class));
+                            getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(   
+                            		user, "REQDEL", file));   
                             break;
                         } else {
                             out.add(ReplacerUtils.jprintf("reqdel.notowner", env, Request.class));
@@ -283,7 +330,6 @@ public class Request extends IRCCommand {
             
             if (nodir && !deldir) 
                 out.add(ReplacerUtils.jprintf("reqdel.error", env, Request.class));
-
         } catch (FileNotFoundException e) {
             out.add(ReplacerUtils.jprintf("reqdel.error", env, Request.class));
             return out;

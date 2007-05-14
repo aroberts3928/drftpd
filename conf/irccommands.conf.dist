@@ -76,5 +76,10 @@
 !nick org.drftpd.sitebot.IRCUserManagement.doNICK public =siteop
 !finduser org.drftpd.sitebot.IRCUserManagement.doFINDUSER public =siteop
 !user org.drftpd.sitebot.IRCUserManagement.doUSER public =siteop
+!u org.drftpd.sitebot.IRCUserManagement.doUSER public =siteop
 !lastseen org.drftpd.sitebot.IRCUserManagement.doLASTSEEN public =siteop
 ##
+
+!master-uptime org.drftpd.sitebot.Uptime.doMasterUptime public =siteop
+!slave-uptime org.drftpd.sitebot.Uptime.doSlaveUptime public =siteop
+!slaves-uptime org.drftpd.sitebot.Uptime.doSlavesUptime public =siteop

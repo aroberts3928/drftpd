@@ -15,21 +15,31 @@
  * along with DrFTPD; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package org.drftpd.permissions;
 
-import java.util.Collection;
+package org.drftpd.slave.diskselection;
+
+import java.util.Properties;
+import java.util.Random;
+
+import org.drftpd.slave.Root;
 
 /**
+ * This filter simply pick a random root and
+ * adds 1 point to the current ScoreChart making
+ * files spread throught all roots.
  * @author fr0w
- * @version $Id: RegexPermission.java 1263 2004-09-10 18:00:00Z fr0w $
  */
+public class RandomspreadFilter extends DiskFilter {
+	
+	public RandomspreadFilter(Properties p, Integer i) {
+		super(p, i);
+	}
 
-public abstract class RegexPermission extends Permission {
-    public RegexPermission(Collection<String> users) {
-        super(users);
-    }
+	private Random _rand = new Random();
 
-    public abstract boolean checkPath(String path);
-
-    public abstract String getLastMatch();
+	public void process(ScoreChart sc, String path) {
+		int i = _rand.nextInt(getRootList().size());
+		Root root = (Root) getRootList().get(i);
+		sc.addScore(root, 1);		
+	}
 }

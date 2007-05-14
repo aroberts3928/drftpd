@@ -113,6 +113,8 @@ public interface LinkedRemoteFileInterface extends RemoteFileInterface {
     public abstract SFVFile getSFVFile()
         throws IOException, FileNotFoundException, NoAvailableSlaveException, FileStillTransferringException;
 
+    public abstract void setSFVFile(SFVFile sfvFile);
+
     public abstract long getXferspeed();
 
     /**

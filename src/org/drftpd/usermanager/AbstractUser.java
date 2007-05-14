@@ -35,7 +35,7 @@ import org.drftpd.commands.UserManagement;
 import org.drftpd.dynamicdata.Key;
 import org.drftpd.dynamicdata.KeyedMap;
 import org.drftpd.plugins.Trial;
-
+import org.drftpd.commands.Request;
 
 /**
  * Implements basic functionality for the User interface.
@@ -578,6 +578,7 @@ public abstract class AbstractUser extends User {
         if (getKeyedMap().getObjectLong(UserManagement.WKLY_ALLOTMENT) > 0) {
             setCredits(getKeyedMap().getObjectLong(UserManagement.WKLY_ALLOTMENT));
         }
+        getKeyedMap().setObject(Request.WEEKREQS, 0);
     }
 
     public void setCredits(long credits) {

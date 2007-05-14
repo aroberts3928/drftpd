@@ -80,7 +80,6 @@ import se.mog.io.PermissionDeniedException;
 
 import com.Ostermiller.util.StringTokenizer;
 
-
 /**
  * @author mog
  * @author zubov
@@ -434,6 +433,7 @@ public class Slave {
 		ZipInputStream zipInput = null;
 		byte[] buf = new byte[20 * 1024];
 		int numRd;
+
 		try {
 
 			zipInput = new ZipInputStream(new BufferedInputStream(

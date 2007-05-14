@@ -31,7 +31,7 @@ sfvfirst.required=true
 sfvfirst.allownoext=true
 
 #allow these file extensions even if not in an sfv file
-allowedexts=nfo txt jpg diz mpg avi zip m3u
+allowedexts=nfo txt jpg diz mpg avi zip m3u vob
 
 #check paths for sfv first enforcement
 sfvfirst.pathcheck=*
@@ -55,5 +55,5 @@ sfvdeny.subdir.exempt=Sample Cover Covers Approved.by-*
 #deny MKD when .sfv exists? [true/false]
 sfvdeny.mkd.enabled=true
 
-#List of subdirectories which can be made when .sfv exists (regex allowed)
-sfvdeny.mkd.exempt=Sample Covers? Subs
+#list of subdirectories which can be made when .sfv exists (regex)
+sfvdeny.mkd.exempt=Sample Covers? Subs \[*

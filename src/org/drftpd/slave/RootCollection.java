@@ -18,6 +18,7 @@
 package org.drftpd.slave;
 
 import org.apache.log4j.Logger;
+import org.drftpd.slave.diskselection.DiskSelection;
 
 
 import se.mog.io.File;
@@ -43,12 +44,13 @@ import java.util.List;
  */
 public class RootCollection {
     private static final Logger logger = Logger.getLogger(RootCollection.class);
-    private Collection _roots;
+    private Collection _roots = null;
 
     public RootCollection(Collection roots) throws IOException {
         /** sanity checks **/
         validateRoots(roots);
         _roots = new ArrayList(roots);
+        DiskSelection.init(this);
     }
 
     public Root getARoot() {
@@ -78,31 +80,16 @@ public class RootCollection {
      * @throws PermissionDeniedException If creation of dir failed in the slave root selected by getARootFileDir().
      */
     public File getARootFileDir(String dir) throws PermissionDeniedException {
-        Iterator iter = _roots.iterator();
-        Root bestRoot = (Root) iter.next();
+        Root bestRoot = DiskSelection.getDiskSelection().getBestRoot(dir);
 
-        while (iter.hasNext()) {
-            Root root = (Root) iter.next();
-
-            if (bestRoot.isFull()) {
-                bestRoot = root;
-
-                continue;
+    	// to avoid this error SlaveSelectionManager MUST work
+    	// synchronized with DiskSelection.
+    	if (bestRoot == null) {
+    		throw new PermissionDeniedException("No suitable root was found.");
             }
-
-            if (root.lastModified() > bestRoot.lastModified()) {
-                if (root.isFull() && !bestRoot.isFull()) {
-                    continue;
-                }
-
-                bestRoot = root;
-            }
-        }
-
         bestRoot.touch();
 
         File file = bestRoot.getFile(dir);
-
         file.mkdirs2();
 
         return file;
@@ -296,5 +283,9 @@ public class RootCollection {
         }
 
         return -1;
+    }
+    
+    public ArrayList getRootList() {
+    	return (ArrayList) _roots;
     }
 }

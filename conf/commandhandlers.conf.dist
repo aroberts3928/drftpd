@@ -106,6 +106,7 @@ MLST=org.drftpd.commands.MLST
 MLSD=org.drftpd.commands.MLST
 
 SITE\ REQUEST=org.drftpd.commands.Request
+SITE\ REQUESTS=org.drftpd.commands.Request
 SITE\ REQFILLED=org.drftpd.commands.Request
 
 SITE\ ALUP=org.drftpd.commands.TransferStatistics

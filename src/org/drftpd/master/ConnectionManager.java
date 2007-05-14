@@ -127,7 +127,7 @@ public class ConnectionManager {
             ConnectionManager mgr = new ConnectionManager(cfg, slaveCfg,
                     cfgFileName);
 
-            /** listen for connections **/
+            /* listen for connections */
             String bindip = null;
             ServerSocket server = null;
             boolean useIP;

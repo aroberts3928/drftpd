@@ -22,6 +22,7 @@ import junit.framework.TestCase;
 import net.sf.drftpd.NoAvailableSlaveException;
 import net.sf.drftpd.ObjectNotFoundException;
 
+import org.drftpd.SFVFile;
 import org.drftpd.master.RemoteSlave;
 import org.drftpd.master.RemoteTransfer;
 import org.drftpd.master.SlaveManager;
@@ -98,6 +99,11 @@ public class MaxbandwidthFilterTest extends TestCase {
 
         public void remerge(CaseInsensitiveHashtable lightRemoteFiles,
             RemoteSlave rslave) throws IOException {
+        }
+
+        public void setSFVFile(SFVFile sfvFile) {
+            // TODO Auto-generated method stub
+            
         }
     }
 

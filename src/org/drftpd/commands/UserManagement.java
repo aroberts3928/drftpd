@@ -124,6 +124,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
                 String string = args[i].replace(",",""); // strip commas (for easy copy+paste);
                 env.add("mask", string);
 
+                if ((new HostMask(string)).isAllowed()) {
                 try {
                     myUser.addIPMask(string);
                     response.addComment(conn.jprintf(UserManagement.class,
@@ -134,6 +135,13 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
                 } catch (DuplicateElementException e) {
                     response.addComment(conn.jprintf(UserManagement.class,
                             "addip.dupe", env));
+                }
+                } else {
+                	response.addComment(conn.jprintf(UserManagement.class,
+                			"addip.invalid", env));
+            		logger.info("'" + conn.getUserNull().getName() +
+            				"' was denied the add of ip '" + string + "' to '" +
+            				myUser.getName() + "'");
                 }
             }
 
@@ -232,6 +240,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
         StringTokenizer st = new StringTokenizer(request.getArgument());
         User newUser;
         Reply response = (Reply) Reply.RESPONSE_200_COMMAND_OK.clone();
+    	Reply badipmasks = (Reply) Reply.RESPONSE_501_SYNTAX_ERROR.clone();
         ReplacerEnvironment env = new ReplacerEnvironment();
 
         try {
@@ -298,8 +307,8 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             while (st.hasMoreTokens()) {
                 String string = st.nextToken().replace(",",""); // strip commas (for easy copy+paste);
                 env.add("mask", string);
-                new HostMask(string); // validate hostmask
 
+                if ((new HostMask(string)).isAllowed()) {
                 try {
                     newUser.addIPMask(string);
                     response.addComment(conn.jprintf(UserManagement.class,
@@ -311,9 +320,25 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
                     response.addComment(conn.jprintf(UserManagement.class,
                             "addip.dupe", env));
                 }
+                } else {
+                	response.addComment(conn.jprintf(UserManagement.class,
+                			"addip.invalid", env));
+                	badipmasks.addComment(conn.jprintf(UserManagement.class,
+                			"addip.invalid", env));
+            		logger.info("'" + conn.getUserNull().getName() +
+            				"' was denied the add of ip '" + string + "' to '" +
+            				newUser.getName() + "'");
+                }
             }
 
             newUser.commit();
+
+        	if (newUser.getHostMaskCollection().size() < 1) {
+            	newUser.purge();
+            	badipmasks.addComment(conn.jprintf(UserManagement.class,
+            			"adduser.noipmask", env));
+                return badipmasks;
+            }
         } catch (UserFileException ex) {
             logger.warn("", ex);
 
@@ -454,12 +479,13 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 				users = conn.getGlobalContext().getUserManager().getAllUsersByGroup(group);
 			} else if (username.equals("*")) {
 				users = conn.getGlobalContext().getUserManager().getAllUsers();
-			} else
+			} else {
 				users.add(conn.getGlobalContext().getUserManager()
 						.getUserByNameUnchecked(username));
+			}
 		} catch (NoSuchUserException e) {
-			return new Reply(550, "User " + username + " not found: "
-					+ e.getMessage());
+    		return new Reply(550,
+    				"User " + username + " not found: " + e.getMessage());
 		} catch (UserFileException e) {
 			logger.log(Level.ERROR, "Error loading user", e);
 
@@ -508,8 +534,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 				if (conn.getUserNull().isGroupAdmin()
 						&& !conn.getUserNull().isAdmin()) {
 					// //// Group Admin Ratio //////
-					if (!conn.getUserNull().getGroup().equals(
-							userToChange.getGroup())) {
+					if (!conn.getUserNull().getGroup().equals(userToChange.getGroup())) {
 						return Reply.RESPONSE_530_ACCESS_DENIED;
 					}
 
@@ -528,12 +553,10 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 							}
 						} catch (UserFileException e1) {
 							return new Reply(452,
-									"IO error reading userfiles: "
-											+ e1.getMessage());
+									"IO error reading userfiles: " + e1.getMessage());
 						}
 
-						if (usedleechslots >= conn.getUserNull().getKeyedMap()
-								.getObjectInt(UserManagement.LEECHSLOTS)) {
+						if (usedleechslots >= conn.getUserNull().getKeyedMap().getObjectInt(UserManagement.LEECHSLOTS)) {
 							return new Reply(452, conn.jprintf(
 									UserManagement.class,
 									"changeratio.nomoreslots"));
@@ -553,13 +576,11 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 							+ userToChange.getName()
 							+ "' from '"
 							+ userToChange.getKeyedMap().getObjectFloat(
-									UserManagement.RATIO) + "' to '" + ratio
+								UserManagement.RATIO) + "' to '" + ratio
 							+ "'");
-					userToChange.getKeyedMap().setObject(UserManagement.RATIO,
-							new Float(ratio));
-					env.add("newratio", Float
-							.toString(userToChange.getKeyedMap()
-									.getObjectFloat(UserManagement.RATIO)));
+					userToChange.getKeyedMap().setObject(UserManagement.RATIO, new Float(ratio));
+					env.add("newratio", Float.toString(userToChange.getKeyedMap()
+								.getObjectFloat(UserManagement.RATIO)));
 					response.addComment(conn.jprintf(UserManagement.class,
 							"changeratio.success", env));
 				} else {
@@ -591,8 +612,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 						+ "' from '" + userToChange.getCredits() + " to '"
 						+ credits + "'");
 				userToChange.setCredits(credits);
-				env.add("newcredits", Bytes.formatBytes(userToChange
-						.getCredits()));
+				env.add("newcredits", Bytes.formatBytes(userToChange.getCredits()));
 				response.addComment(conn.jprintf(UserManagement.class,
 						"changecredits.success", env));
 			} else if ("comment".equals(command)) {
@@ -641,8 +661,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 					if (commandArguments.length == 2) {
 						numLoginsIP = Integer.parseInt(commandArguments[1]);
 					} else {
-						numLoginsIP = userToChange.getKeyedMap().getObjectInt(
-								UserManagement.MAXLOGINSIP);
+						numLoginsIP = userToChange.getKeyedMap().getObjectInt(UserManagement.MAXLOGINSIP);
 					}
 
 					logger.info("'"
@@ -770,8 +789,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 					if (commandArguments.length >= 2) {
 						groupLeechSlots = Integer.parseInt(commandArguments[1]);
 					} else {
-						groupLeechSlots = userToChange.getKeyedMap()
-								.getObjectInt(UserManagement.LEECHSLOTS);
+						groupLeechSlots = userToChange.getKeyedMap().getObjectInt(UserManagement.LEECHSLOTS);
 					}
 
 					logger.info("'"
@@ -966,7 +984,6 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 	 * <b>&#64;</b> Denotes any email-like
 	 * password, ex. site chpass arch &#64;<br />
 	 * This will allow arch to login with a&#64;b.com but not ab.com
-	 *
 	 * @throws ImproperUsageException
 	 */
     private Reply doSITE_CHPASS(BaseFtpConnection conn) throws ImproperUsageException {

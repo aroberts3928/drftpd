@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.ResourceBundle;
-import java.util.StringTokenizer;
 
 import net.sf.drftpd.FileExistsException;
 import net.sf.drftpd.NoAvailableSlaveException;
@@ -65,6 +64,8 @@ import org.tanesha.replacer.FormatterException;
 import org.tanesha.replacer.ReplacerEnvironment;
 import org.tanesha.replacer.ReplacerFormat;
 import org.tanesha.replacer.SimplePrintf;
+
+import com.Ostermiller.util.StringTokenizer;
 
 
 /**
@@ -543,12 +544,13 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
 					"Access denied - Directory '" + ret.getPath() + "' not permitted when .sfv exists in '" + ret.getFile().getPath() + "' (ZipScript+)");
 		}
 
-		// ok, create it
+	// Consult command filter
         String DeniedReason = conn.getGlobalContext().getConfig().checkRegexPermission("MKD", conn.getUserNull(), toPath, "directory");
         if (DeniedReason != null) {
         	return new Reply(530, "Access denied (" + DeniedReason + ")");
         }
 
+        // ok, create it
         try {
             LinkedRemoteFile createdDir = dir.createDirectory(conn.getUserNull()
                                                                   .getName(),

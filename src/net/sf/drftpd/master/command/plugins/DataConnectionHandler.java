@@ -1182,6 +1182,9 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                     // target exists, this could be overwrite or resume
                     //TODO overwrite & resume files.
                 	// reset(); already done in finally block
+                	if (xdupe!=0)
+                		return doXDUPE(conn);
+                	else
                     return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN_FILE_EXISTS;
 
                     //_transferFile = targetDir;
@@ -1428,6 +1431,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 
             SectionInterface section = conn.getGlobalContext().getSectionManager().lookup(_transferFile.getPath());
             long speedUp = 0, speedDn = 0, avg = 0;
+
             boolean check, first = true, slowTransfer = false;
             String slowReason = "Slow transfer."; // initialize with something, just in case.
 
@@ -1490,7 +1494,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                             break;
                         }
 
-						// Min speed per section
+			// Min speed per section
                         if (check) {
                         	_lastCheck = (_lastCheck == 0 ? System.currentTimeMillis() : _lastCheck);
                         	_delay = System.currentTimeMillis() - _lastCheck;
@@ -1635,15 +1639,16 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 								.getCreditLossRatio(_transferFile,
 										conn.getUserNull());
 
+						// updating group stats.
+						boolean nostats = conn.getGlobalContext().getConfig().checkPathPermission(
+								"nostatsdn", conn.getUserNull(), conn.getCurrentDirectory());
+
 						if (ratio != 0) {
 							conn.getUserNull().updateCredits(
 									(long) (-status.getTransfered() * ratio));
 						}
 
-						if (!conn.getGlobalContext().getConfig()
-								.checkPathPermission("nostatsdn",
-										conn.getUserNull(),
-										conn.getCurrentDirectory())) {
+						if (!nostats) {
 							conn.getUserNull().updateDownloadedBytes(
 									status.getTransfered());
 							conn.getUserNull().updateDownloadedTime(
@@ -1651,16 +1656,16 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 							conn.getUserNull().updateDownloadedFiles(1);
 						}
 					} else {
+						// updating group stats.
+						boolean nostats = conn.getGlobalContext().getConfig().checkPathPermission(
+								"nostatsup", conn.getUserNull(), conn.getCurrentDirectory());
 
 						conn.getUserNull().updateCredits(
 								(long) (status.getTransfered() * conn
 										.getGlobalContext().getConfig()
 										.getCreditCheckRatio(_transferFile,
 												conn.getUserNull())));
-						if (!conn.getGlobalContext().getConfig()
-								.checkPathPermission("nostatsup",
-										conn.getUserNull(),
-										conn.getCurrentDirectory())) {
+						if (!nostats) {
 							conn.getUserNull().updateUploadedBytes(
 									status.getTransfered());
 							conn.getUserNull().updateUploadedTime(
@@ -1768,16 +1773,36 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
             }
         } else if (isStor) {
             if (!targetFileName.toLowerCase().endsWith(".sfv")) {
+            	//TODO optionally grab checksum from the file on the hard disk on the slave to verify it was written and cen be read back in tact.
                 try {
                     long sfvChecksum;
 					try {
 						sfvChecksum  = targetDir.lookupSFVFile().getChecksum(targetFileName);
+                    /* If no exceptions are thrown means that the sfv is avaible and has a entry
+                     * for that file.
+                     * With this certain, we can assume that files that have CRC32 = 0 either is a
+                     * 0byte file (bug!) or checksummed transfers are disabled(size is different
+                     * from 0bytes though).                 
+                     */
+
 	                    if (checksum == sfvChecksum) {
+                    	// Good! transfer checksum matches sfv checksum
 	                        response.addComment("checksum match: SLAVE/SFV:" +
 	                            Long.toHexString(checksum));
 	                    } else if (checksum == 0) {
+                    	// Here we have 2 conditions:
+	                    	if (_transferFile.length() == 0) {
+	                    		// The file has checksum = 0 and the size = 0 
+	                    		// then it should be deleted.
+	                    		response.addComment("0Byte File, Deleting...");
+	                    		_transferFile.delete();
+	                    		return false;
+	                    	} else {
+	                    		// The file has checksum = 0, although the size is != 0,
+	                    		// meaning that we are not using checked transfers.
 	                        response.addComment(
 	                            "checksum match: SLAVE/SFV: DISABLED");
+	                    	}
 	                    } else {
 	                        response.addComment("checksum mismatch: SLAVE: " +
 	                            Long.toHexString(checksum) + " SFV: " +
@@ -1785,41 +1810,26 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 	                        response.addComment(" deleting file");
 	                        response.setMessage("Checksum mismatch, deleting file");
 	                        _transferFile.delete();
-
-	                        //				getUser().updateCredits(
-	                        //					- ((long) getUser().getRatio() * transferedBytes));
-	                        //				getUser().updateUploadedBytes(-transferedBytes);
-	                        // response.addComment(conn.status());
 	                        return false; // don't modify credits
-
-	                        //				String badtargetFilename = targetFilename + ".bad";
-	                        //
-	                        //				try {
-	                        //					LinkedRemoteFile badtargetFile =
-	                        //						targetDir.getFile(badtargetFilename);
-	                        //					badtargetFile.delete();
-	                        //					response.addComment(
-	                        //						"zipscript - removing "
-	                        //							+ badtargetFilename
-	                        //							+ " to be replaced with new file");
-	                        //				} catch (FileNotFoundException e2) {
-	                        //					//good, continue...
-	                        //					response.addComment(
-	                        //						"zipscript - checksum mismatch, renaming to "
-	                        //							+ badtargetFilename);
-	                        //				}
-	                        //				targetFile.renameTo(targetDir.getPath() +
-	                        // badtargetFilename);
 	                    }
 					} catch (FileStillTransferringException e) {
+						// Should we really be doing this?
+						// Maybe we need a configuration option to allow siteop to control if this condition causes a file to fail zipscript checking.
+						logger.info("SFVERROR: checksum (" + Checksum.formatChecksum(checksum) + " ) can not be verified, SFVFile is still being uploaded.  Accepting file (" + _transferFile.toString() + ") anyway.");
 						response.addComment("No sfv to compare to (SFVTransferring), file allowed");
 					}
                 } catch (NoAvailableSlaveException e) {
+                	// Again seems kinda wierd, more control is needed.
+					logger.info("SFVERROR: checksum (" + Checksum.formatChecksum(checksum) + " ) can not be verified, slave(s) with SFVFile offline.  Accepting file (" + _transferFile.toString() + ") anyway.");
                     response.addComment(
                         "zipscript - SFV unavailable, slave(s) with .sfv file is offline");
                 } catch (NoSFVEntryException e) {
+                	// This definately seems wrong, why on earth would anyone have zipscript on and allow this?
+					logger.info("SFVERROR: checksum (" + Checksum.formatChecksum(checksum) + " ) can not be verified, no entry in SFVFile matching uploaded file.  Accepting file (" + _transferFile.toString() + ") anyway.");
                     response.addComment("zipscript - no entry in sfv for file");
                 } catch (IOException e) {
+                	// Again, if we can not verify the file, why allow it?  More control is needed.
+					logger.info("SFVERROR: checksum (" + Checksum.formatChecksum(checksum) + " ) can not be verified, encountered an I/O error trying to access SFVFile (details: " + e.getMessage() + ").  Accepting file (" + _transferFile.toString() + ") anyway.");
                     response.addComment(
                         "zipscript - SFV unavailable, IO error: " +
                         e.getMessage());
