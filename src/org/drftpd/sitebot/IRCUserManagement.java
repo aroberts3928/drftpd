@@ -1143,7 +1143,7 @@ public class IRCUserManagement extends IRCCommand {
 			return out;
 		}
 
-		if (args.equals("") || args == null) {
+		if (args != null && args.equals("")) {
 			out.add(ReplacerUtils.jprintf("finduser.syntax", env, IRCUserManagement.class));
 			return out;
 		}
