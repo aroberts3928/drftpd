@@ -49,7 +49,8 @@ public class MoveReleaseOffSlavesToMostFreeSlaves extends ArchiveType {
                 getSection().getName());
         }
 
-        if (_slaveList == null ||_slaveList.isEmpty()) {
+        if (_slaveList == null) _slaveList = new HashSet<RemoteSlave>();
+        if (_slaveList.isEmpty()) {
         	logger.debug("Destination slaves chain is empty, adding all slaves to it but the source ones.");
         	for (RemoteSlave rs : _parent.getGlobalContext().getSlaveManager().getSlaves()) {
         		if (!_offOfSlaves.contains(rs)) {
