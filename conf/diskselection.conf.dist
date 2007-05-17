@@ -4,7 +4,7 @@
 # 		https://opensvn.csie.org/traccgi/drftpd/trac.cgi/ticket/85;
 
 1.filter=minfreespace
-1.minfreespace=5GB
+1.minfreespace=100MB
 1.assign=all
 1.multiplier=1
 
