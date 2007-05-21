@@ -1,7 +1,7 @@
 # This Chain of filters help you to keep your roots organized.
 # WARN: This filters MUST work in a synchronized way with SlaveSelection.
 #		Better explanation in:
-# 		https://opensvn.csie.org/traccgi/drftpd/trac.cgi/ticket/85;
+# 		http://trac.drftpd.org/ticket/85
 
 1.filter=minfreespace
 1.minfreespace=100MB
