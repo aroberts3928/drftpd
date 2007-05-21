@@ -89,9 +89,9 @@ public class Slave {
     public static final boolean isWin32 = System.getProperty("os.name")
                                                 .startsWith("Windows");
     private static final Logger logger = Logger.getLogger(Slave.class);
-	private static final int socketTimeout = 10000; // 10 seconds, for Socket
-	protected static final int actualTimeout = 60000; // one minute, evaluated on a SocketTimeout
-    public static final String VERSION = "DrFTPD+ 2.0-SVN";
+    private static final int socketTimeout = 10000; // 10 seconds, for Socket
+    protected static final int actualTimeout = 60000; // one minute, evaluated on a SocketTimeout
+    public static final String VERSION = "DrFTPD+ 2.0-SVN $Revision$";
     private int _bufferSize;
     private SSLContext _ctx;
     private boolean _downloadChecksums;
@@ -103,8 +103,8 @@ public class Slave {
     private boolean _uploadChecksums;
     private PortRange _portRange;
     private Set _renameQueue = null;
-	private int _timeout;
-	private boolean _sslMaster;
+    private int _timeout;
+    private boolean _sslMaster;
     
     protected Slave() {
     	
