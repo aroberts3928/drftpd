@@ -161,7 +161,16 @@
       </fileset>
     </copy>
     <echo>Additional important compile targets are: compile-jsx, compile-xstream</echo>
-    <echo>WARNING: This version of DrFTPD+ is unstable test code, and you should probably NOT use it in a production environment.</echo>
+    <echo />
+    <echo>NOTICE: This +STABLE+ branch of DrFTPD+ is a development branch from which major releases are made.</echo>
+    <echo />
+    <echo>Changes go into this branch at a different pace, and with the general assumption that they have first</echo>
+    <echo>gone into trunk for testing.  This is still a development branch, and as such +STABLE+, at any given</echo>
+    <echo>time, may not function as expected.</echo>
+    <echo />
+    <echo>Although we endeavor to ensure that the +STABLE+ branch compiles and runs at all times, this cannot be guaranteed.</echo>
+    <echo>In addition, while code is developed in trunk before including it in +STABLE+, more people run +STABLE+ than</echo>
+    <echo>trunk, so it is inevitable that bugs will sometimes be found in +STABLE+ that were not apparent in trunk.</echo>
   </target>
 
   <target name="compile-junit">
@@ -220,7 +229,16 @@
     </zip>
 
     <echo>Done!</echo>
-    <echo>WARNING: This version of DrFTPD+ is unstable test code, and you should probably NOT use it in a production environment.</echo>
+    <echo />
+    <echo>NOTICE: This +STABLE+ branch of DrFTPD+ is a development branch from which major releases are made.</echo>
+    <echo />
+    <echo>Changes go into this branch at a different pace, and with the general assumption that they have first</echo>
+    <echo>gone into trunk for testing.  This is still a development branch, and as such +STABLE+, at any given</echo>
+    <echo>time, may not function as expected.</echo>
+    <echo />
+    <echo>Although we endeavor to ensure that the +STABLE+ branch compiles and runs at all times, this cannot be guaranteed.</echo>
+    <echo>In addition, while code is developed in trunk before including it in +STABLE+, more people run +STABLE+ than</echo>
+    <echo>trunk, so it is inevitable that bugs will sometimes be found in +STABLE+ that were not apparent in trunk.</echo>
   </target>
 
   <target name="classjar">
