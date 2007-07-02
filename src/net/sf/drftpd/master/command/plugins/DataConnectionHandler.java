@@ -127,6 +127,12 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
     }
 
     private Reply doAUTH(BaseFtpConnection conn) {
+        // only AUTH SSL/TLS are currently supported, reject other types.
+        if (!conn.getRequest().getArgument().equals("TLS")
+                && !conn.getRequest().getArgument().equals("SSL")) {
+            return new Reply(504, conn.getRequest().getCommandLine() + " unsupported");
+        }
+
         if (_ctx == null) {
             return new Reply(500, "TLS not configured");
         }
