@@ -264,6 +264,7 @@ public class Transfer {
             	} catch (IOException e) {
             	}
             }
+            _conn.abort();
 		}
 	}
 
@@ -315,6 +316,7 @@ public class Transfer {
             	} catch (IOException e) {
             	}
             }
+            _conn.abort();
     	}
     }
 
