@@ -588,3 +588,4 @@
 * Improved default logging configuration,
   now logging to slave.log, filelist.log, sysop.log.
 * Changed build.xml classpath to *.jar instead of *.
+
