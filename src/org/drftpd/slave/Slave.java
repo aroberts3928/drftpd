@@ -219,9 +219,7 @@ public class Slave {
     }
 
     public static void main(String[] args) throws Exception {
-        BasicConfigurator.configure();
-        System.out.println(
-            "DrFTPD Slave starting, further logging will be done through log4j");
+        System.out.println("DrFTPD Slave starting, further logging will be done through log4j");
 
         Properties p = new Properties();
         p.load(new FileInputStream("slave.conf"));
