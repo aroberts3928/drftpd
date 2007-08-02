@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Iterator;
 import java.util.zip.CRC32;
@@ -247,31 +246,13 @@ public class Transfer {
 			// _slave.delete(root + File.separator + filename);
 			throw e; // so the Master can still handle the exception
 		} finally {
-            if (_sock != null) {
-            	try {
-            		_sock.close();
-            	} catch (IOException e) {
-            	}
-            }
-            if (_out != null) {
-            	try {
-            		_out.close();
-            	} catch (IOException e) {
-            	}            }
-            if (_in != null) {
-            	try {
-            		_in.close();
-            	} catch (IOException e) {
-            	}
-            }
-            _conn.abort();
+			reset();
 		}
 	}
 
     public TransferStatus sendFile(String path, char type, long resumePosition)
     throws IOException {
     	try {
-
     		_in = new FileInputStream(_file = new File(_slave.getRoots()
     				.getFile(path)));
     		
@@ -299,30 +280,36 @@ public class Transfer {
 			}
     		return getTransferStatus();
 		} finally {
-            if (_sock != null) {
-            	try {
-            		_sock.close();
-            	} catch (IOException e) {
-            	}
-            }
-            if (_out != null) {
-            	try {
-            		_out.close();
-            	} catch (IOException e) {
-            	}            }
-            if (_in != null) {
-            	try {
-            		_in.close();
-            	} catch (IOException e) {
-            	}
-            }
-            _conn.abort();
+			reset();
     	}
     }
 
     private void accept() throws IOException {
         _sock = _conn.connect(_slave.getBufferSize());
+    }
+    
+    private void reset() {
+    	logger.debug("Transfer.reset() called");
+    	
+        if (_sock != null) {
+        	try {
+        		_sock.close();
+        	} catch (IOException e) {
+        	}
+        }
+        if (_out != null) {
+        	try {
+        		_out.close();
+        	} catch (IOException e) {
+        	}            }
+        if (_in != null) {
+        	try {
+        		_in.close();
+        	} catch (IOException e) {
+        	}
+        }
         
+        _conn.abort();
         _conn = null;
     }
 
