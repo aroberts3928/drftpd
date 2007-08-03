@@ -35,7 +35,7 @@ import javax.net.ssl.TrustManager;
 
 /**
  * @author mog
- * @version $Id: SiteBotSSL.java,v 1.7 2004/11/03 16:46:45 mog Exp $
+ * @version $Id$
  */
 public class SiteBotSSL extends SiteBot {
     private static final Logger logger = Logger.getLogger(SiteBot.class);

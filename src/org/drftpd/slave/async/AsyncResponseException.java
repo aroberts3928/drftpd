@@ -20,7 +20,7 @@ package org.drftpd.slave.async;
 
 /**
  * @author mog
- * @version $Id: AsyncResponseException.java,v 1.4 2004/11/08 18:39:31 mog Exp $
+ * @version $Id$
  */
 public class AsyncResponseException extends AsyncResponse {
     private static final long serialVersionUID = -6024340147843529987L;

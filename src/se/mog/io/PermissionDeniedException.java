@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * @author mog
- * @version $Id: PermissionDeniedException.java,v 1.1 2004/11/09 19:00:01 mog Exp $
+ * @version $Id$
  */
 public class PermissionDeniedException extends IOException {
     public PermissionDeniedException() {

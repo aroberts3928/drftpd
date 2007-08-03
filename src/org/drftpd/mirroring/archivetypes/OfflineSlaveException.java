@@ -20,7 +20,7 @@ package org.drftpd.mirroring.archivetypes;
 
 /*
  * @author zubov
- * @version $Id: OfflineSlaveException.java,v 1.2 2004/08/03 20:14:05 zubov Exp $
+ * @version $Id$
  */
 public class OfflineSlaveException extends Exception {
     public OfflineSlaveException() {

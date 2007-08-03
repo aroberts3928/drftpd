@@ -21,7 +21,7 @@ package org.drftpd.slave;
 
 /**
  * @author mog
- * @version $Id: SlaveStatus.java,v 1.4 2004/11/11 13:31:39 mog Exp $
+ * @version $Id$
  */
 public class SlaveStatus {
     private long _bytesReceived;

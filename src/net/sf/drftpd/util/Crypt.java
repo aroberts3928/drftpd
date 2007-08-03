@@ -27,7 +27,7 @@ package net.sf.drftpd.util;
  *
  ****************************************************************************/
 /**
- * @version $Id: Crypt.java,v 1.5 2004/08/03 20:14:03 zubov Exp $
+ * @version $Id$
  */
 public class Crypt {
     private static final int ITERATIONS = 16;

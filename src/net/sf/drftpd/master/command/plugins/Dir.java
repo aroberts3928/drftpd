@@ -69,7 +69,7 @@ import org.tanesha.replacer.SimplePrintf;
 
 /**
  * @author mog
- * @version $Id: Dir.java 1452 2006-04-03 17:32:08Z zubov $
+ * @version $Id$
  */
 public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
     private final static SimpleDateFormat DATE_FMT = new SimpleDateFormat(
