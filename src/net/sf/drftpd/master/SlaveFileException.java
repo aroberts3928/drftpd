@@ -20,7 +20,7 @@ package net.sf.drftpd.master;
 
 /**
  * @author zubov
- * @version $Id: SlaveFileException.java,v 1.2 2004/08/03 20:13:56 zubov Exp $
+ * @version $Id$
  */
 public class SlaveFileException extends Exception {
     public SlaveFileException() {

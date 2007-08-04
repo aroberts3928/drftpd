@@ -20,7 +20,7 @@ package se.mog.io;
 
 /**
  * @author <a href="mailto:drftpd@mog.se">Morgan Christiansson</a>
- * @version $Id: WindowsFileSystem.java,v 1.5 2004/08/03 20:14:11 zubov Exp $
+ * @version $Id$
  */
 class WindowsFileSystem extends FileSystem {
     public File[] listMounts() {

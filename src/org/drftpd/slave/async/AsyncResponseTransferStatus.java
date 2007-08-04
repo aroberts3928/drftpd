@@ -22,7 +22,7 @@ import org.drftpd.slave.TransferStatus;
 
 /**
  * @author zubov
- * @version $Id: AsyncResponseTransferStatus.java,v 1.5 2004/11/09 21:49:59 zubov Exp $
+ * @version $Id$
  */
 public class AsyncResponseTransferStatus extends AsyncResponse {
     private TransferStatus _ts;

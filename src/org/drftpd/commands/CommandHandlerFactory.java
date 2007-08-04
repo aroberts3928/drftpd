@@ -24,7 +24,7 @@ import net.sf.drftpd.master.command.CommandManagerFactory;
 
 /**
  * @author mog
- * @version $Id: CommandHandlerFactory.java,v 1.4 2004/11/08 18:39:29 mog Exp $
+ * @version $Id$
  */
 public interface CommandHandlerFactory {
     public abstract CommandHandler initialize(BaseFtpConnection conn,

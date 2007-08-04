@@ -34,7 +34,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * @author mog
- * @version $Id: DummySocket.java,v 1.2 2004/08/03 20:14:10 zubov Exp $
+ * @version $Id$
  */
 public class DummySocket extends Socket {
     private ByteArrayOutputStream _out = new ByteArrayOutputStream();
