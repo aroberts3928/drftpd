@@ -23,7 +23,7 @@ import org.drftpd.slave.DiskStatus;
 
 /**
  * @author zubov
- * @version $Id: AsyncResponseDiskStatus.java,v 1.2 2004/11/11 13:31:39 mog Exp $
+ * @version $Id$
  */
 public class AsyncResponseDiskStatus extends AsyncResponse {
     private DiskStatus _status;

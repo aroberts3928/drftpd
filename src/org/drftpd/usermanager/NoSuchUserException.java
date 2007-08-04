@@ -21,7 +21,7 @@ package org.drftpd.usermanager;
 /**
  * @author mog
  *
- * @version $Id: NoSuchUserException.java,v 1.1 2004/11/03 16:46:49 mog Exp $
+ * @version $Id$
  */
 public class NoSuchUserException extends Exception {
     /**

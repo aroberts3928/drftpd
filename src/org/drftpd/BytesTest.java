@@ -23,7 +23,7 @@ import junit.framework.TestSuite;
 
 /**
  * @author mog
- * @version $Id: BytesTest.java,v 1.1 2004/11/09 18:59:53 mog Exp $
+ * @version $Id$
  */
 public class BytesTest extends TestCase {
     public BytesTest() {

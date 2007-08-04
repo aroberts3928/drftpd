@@ -23,7 +23,7 @@ import java.io.Serializable;
 /**
  * @author jbarrett
  * @author zubov
- * @version $Id: AsyncCommand.java,v 1.6 2004/11/02 07:32:53 zubov Exp $
+ * @version $Id$
  */
 public class AsyncCommand implements Serializable {
     private static final long serialVersionUID = 2937803123798047158L;

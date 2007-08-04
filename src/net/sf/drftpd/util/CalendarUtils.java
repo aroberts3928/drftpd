@@ -24,7 +24,7 @@ import java.util.Calendar;
 
 /**
  * @author mog
- * @version $Id: CalendarUtils.java,v 1.7 2004/08/03 20:14:03 zubov Exp $
+ * @version $Id$
  */
 public class CalendarUtils {
     private static final Logger logger = Logger.getLogger(CalendarUtils.class);

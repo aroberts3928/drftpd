@@ -21,7 +21,7 @@ package org.drftpd.usermanager;
 /**
  * @author mog
  * @deprecated used only by glftpdusermanager
- * @version $Id: CorruptUserFileException.java,v 1.1 2004/11/03 16:46:49 mog Exp $
+ * @version $Id$
  */
 public class CorruptUserFileException extends UserFileException {
     public CorruptUserFileException(String message) {

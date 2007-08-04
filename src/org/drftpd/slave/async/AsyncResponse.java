@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 /**
  * @author mog
- * @version $Id: AsyncResponse.java,v 1.3 2004/11/08 18:39:31 mog Exp $
+ * @version $Id$
  */
 public class AsyncResponse implements Serializable {
     private static final long serialVersionUID = -6915699035949526136L;

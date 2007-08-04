@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * @author zubov
- * @version $Id: RemoteIOException.java,v 1.2 2004/11/08 18:39:31 mog Exp $
+ * @version $Id$
  */
 public class RemoteIOException extends Exception {
     public RemoteIOException(IOException cause) {

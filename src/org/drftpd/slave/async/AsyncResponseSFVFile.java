@@ -22,7 +22,7 @@ import org.drftpd.LightSFVFile;
 
 /**
  * @author zubov
- * @version $Id: AsyncResponseSFVFile.java,v 1.5 2004/11/15 01:12:17 mog Exp $
+ * @version $Id$
  */
 public class AsyncResponseSFVFile extends AsyncResponse {
     private LightSFVFile _sfv;
