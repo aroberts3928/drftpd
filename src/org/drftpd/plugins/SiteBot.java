@@ -51,6 +51,7 @@ import net.sf.drftpd.Nukee;
 import net.sf.drftpd.ObjectNotFoundException;
 import net.sf.drftpd.SlaveUnavailableException;
 import net.sf.drftpd.event.DirectoryFtpEvent;
+import net.sf.drftpd.event.DirectorySiteBotEvent;
 import net.sf.drftpd.event.Event;
 import net.sf.drftpd.event.FtpListener;
 import net.sf.drftpd.event.InviteEvent;
@@ -987,7 +988,7 @@ public class SiteBot extends FtpListener implements Observer {
         }
 
         try {
-            _conn.setSendDelay(Integer.parseInt(ircCfg.getProperty("irc.sendDelay")));
+            _conn.setSendDelay(Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.sendDelay")));
         } catch (NumberFormatException e1) {
             logger.warn("irc.sendDelay not set, defaulting to 300ms");
         }
@@ -999,7 +1000,7 @@ public class SiteBot extends FtpListener implements Observer {
         _conn.addCommandObserver(this);
 
         for (int i = 1;; i++) {
-            String classname = ircCfg.getProperty("martyr.plugins." + i);
+            String classname = PropertyHelper.getProperty(ircCfg, "martyr.plugins." + i, null);
 
             if (classname == null) {
                 break;
@@ -1333,13 +1334,10 @@ public class SiteBot extends FtpListener implements Observer {
      */
     protected void reload(Properties ircCfg) throws IOException {
         _server = PropertyHelper.getProperty(ircCfg, "irc.server");
-        _port = Integer
-        .parseInt(PropertyHelper.getProperty(ircCfg, "irc.port"));
+        _port = Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.port"));
 
-        _enableAnnounce = ircCfg.getProperty("irc.enable.announce", "false")
-        .equals("true");
-        Debug.setDebugLevel(Integer.parseInt(ircCfg.getProperty(
-                "irc.debuglevel", "15")));
+        _enableAnnounce = PropertyHelper.getProperty(ircCfg, "irc.enable.announce", "false").equals("true");
+        Debug.setDebugLevel(Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.debuglevel", "15")));
         CaseInsensitiveHashMap<String, ChannelConfig> oldChannelMap = null;
         if (_channelMap != null) { // reload config
             oldChannelMap = _channelMap;
@@ -1350,16 +1348,15 @@ public class SiteBot extends FtpListener implements Observer {
             _channelMap = new CaseInsensitiveHashMap<String, ChannelConfig>();
 
             for (int i = 1;; i++) {
-                String channelName = ircCfg.getProperty("irc.channel." + i);
-                String blowKey = ircCfg.getProperty("irc.channel." + i
+                String channelName = PropertyHelper.getProperty(ircCfg, "irc.channel." + i, null);
+                if (channelName == null) break;
+
+                String blowKey = PropertyHelper.getProperty(ircCfg, "irc.channel." + i
                         + ".blowkey");
-                String chanKey = ircCfg.getProperty("irc.channel." + i
+                String chanKey = PropertyHelper.getProperty(ircCfg, "irc.channel." + i
                         + ".chankey");
-                String permissions = ircCfg.getProperty("irc.channel." + i
+                String permissions = PropertyHelper.getProperty(ircCfg, "irc.channel." + i
                         + ".perms");
-                if (channelName == null) {
-                    break;
-                }
                 if (i == 1) {
                     _primaryChannelName = channelName.toUpperCase();
                 }
@@ -1379,7 +1376,7 @@ public class SiteBot extends FtpListener implements Observer {
             for (String event : events) {
                 ArrayList<String> eChans = new ArrayList<String>();
                 for (int i = 1;; i++) {
-                    String channel = ircCfg.getProperty("irc.event." + event + ".channel." + i);
+                    String channel = PropertyHelper.getProperty(ircCfg, "irc.event." + event + ".channel." + i, null);
                     if (channel == null) break;
                     eChans.add(channel.trim().toLowerCase());
                 }
@@ -1390,13 +1387,13 @@ public class SiteBot extends FtpListener implements Observer {
 
             _sections = new Hashtable<String, SectionSettings>();
             for (int i = 1;; i++) {
-                String name = ircCfg.getProperty("irc.section." + i);
+                String name = PropertyHelper.getProperty(ircCfg, "irc.section." + i, null);
 
                 if (name == null) {
                     break;
                 }
 
-                String chan = ircCfg.getProperty("irc.section." + i + ".channel");
+                String chan = PropertyHelper.getProperty(ircCfg, "irc.section." + i + ".channel");
 
                 if (chan == null) {
                     chan = _primaryChannelName;
@@ -1420,8 +1417,7 @@ public class SiteBot extends FtpListener implements Observer {
                 logger.info("Switching to new nick");
                 _autoRegister.disable();
                 _autoRegister = addAutoRegister(ircCfg);
-                _conn.sendCommand(new NickCommand(ircCfg
-                        .getProperty("irc.nick")));
+                _conn.sendCommand(new NickCommand(PropertyHelper.getProperty(ircCfg, "irc.nick")));
             }
             for (Iterator iter = new ArrayList(
                     Collections.list(getIRCConnection().getClientState()
@@ -1467,13 +1463,13 @@ public class SiteBot extends FtpListener implements Observer {
 
         //maximum announcements for race results
         try {
-            _maxUserAnnounce = Integer.parseInt(ircCfg.getProperty("irc.max.racers", "100"));
+            _maxUserAnnounce = Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.max.racers", "100"));
         } catch (NumberFormatException e) {
             logger.warn("Invalid setting in irc.conf: irc.max.racers", e);
             _maxUserAnnounce = 100;
         }
         try {
-            _maxGroupAnnounce = Integer.parseInt(ircCfg.getProperty("irc.max.groups", "100"));
+            _maxGroupAnnounce = Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.max.groups", "100"));
         } catch (NumberFormatException e) {
             logger.warn("Invalid setting in irc.conf: irc.max.groups", e);
             _maxGroupAnnounce = 100;
@@ -1481,12 +1477,22 @@ public class SiteBot extends FtpListener implements Observer {
     }
 
     public void say(SectionInterface section, String message) {
+    	say(section, message, new ArrayList<String>());
+    }
+    
+    public void say(SectionInterface section, String message, ArrayList<String> forceToChannels) {
         SectionSettings sn = null;
 
         if (section != null) {
             sn = (SectionSettings) _sections.get(section.getName());
         }
-        say((sn != null) ? sn.getChannel() : _primaryChannelName, message);
+        String sc = (sn != null) ? sn.getChannel() : _primaryChannelName;
+
+        if (!forceToChannels.contains(sc)) forceToChannels.add(sc);
+        
+    	for (String chan : forceToChannels) {
+            say(chan, message);
+    	}
     }
 
     public void say(String message) {
@@ -1526,12 +1532,30 @@ public class SiteBot extends FtpListener implements Observer {
      * @param section
      */
     public void sayEvent(String event, String msg, SectionInterface section) {
+    	sayEvent(event, msg, section, new ArrayList<String>());
+    }
+
+    /**
+     * Say message to irc channels listed in per event override. If no
+     * override found, message the section output channel.
+     * 
+     * @param event
+     * @param msg
+     * @param section
+     * @param forceToChannels List of additional IRC channels/users any applicable messages should be sent to.
+     */
+    public void sayEvent(String event, String msg, SectionInterface section, ArrayList<String> forceToChannels) {
         if (_eventChannelMap.containsKey(event.toLowerCase())) {
             for (String chan : _eventChannelMap.get(event.toLowerCase())) {
-                say(chan, msg);
+            	if (forceToChannels.contains(chan)) forceToChannels.remove(chan);
+            }
+            if (!forceToChannels.isEmpty()) {
+            	for (String chan : forceToChannels) {
+                    say(chan, msg);
+            	}
             }
         } else {
-            say(section, msg);
+            say(section, msg, forceToChannels);
         }
     }
 
@@ -1626,7 +1650,11 @@ public class SiteBot extends FtpListener implements Observer {
             env.add("requestname", output.substring(1 + output.indexOf("-", 1)));
         }
 
-        sayEvent(string, SimplePrintf.jprintf(format, env), ret.getSection());
+        if ( direvent instanceof DirectorySiteBotEvent) {
+            sayEvent(string, SimplePrintf.jprintf(format, env), ret.getSection(), ((DirectorySiteBotEvent) direvent).getForceToChannels());
+        } else {
+        	sayEvent(string, SimplePrintf.jprintf(format, env), ret.getSection());
+        }
     }
 
     public void sayGlobal(String string) {

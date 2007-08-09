@@ -27,7 +27,7 @@ import java.util.StringTokenizer;
 import java.util.Collection;
 
 import net.sf.drftpd.FileExistsException;
-import net.sf.drftpd.event.DirectoryFtpEvent;
+import net.sf.drftpd.event.DirectorySiteBotEvent;
 import net.sf.drftpd.util.ReplacerUtils;
 
 import org.apache.log4j.Logger;
@@ -184,8 +184,10 @@ public class Request extends IRCCommand {
                         try {
                             file.renameTo(file.getParentFile().getPath(),fdirname);
                             fdir = true;
-                            getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(
-                                    user, "REQFILLED", file));
+                            ArrayList<String> forceToChannels = new ArrayList<String>();
+                            forceToChannels.add(msgc.getDest());
+                            getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(
+                                    user, "REQFILLED", file, forceToChannels));
                             try {
                                 user.commit();
                             } catch (UserFileException e) {
@@ -224,11 +226,11 @@ public class Request extends IRCCommand {
         env.add("ftpuser",user.getName());
         
         String dirName = args;
-        if (dirName.length()==0) { 
+        if (dirName.length()==0) {
             out.add(ReplacerUtils.jprintf("request.usage", env, Request.class)); 
-            return out; 
-        } 
-            
+            return out;
+        }
+        
         env.add("rdirname",dirName);
         String requser = user.getName();
         
@@ -258,8 +260,10 @@ public class Request extends IRCCommand {
             LinkedRemoteFileInterface reqdir = dir.getFile("REQUEST-by." + requser + "-" + dirName);
             reqdir.setOwner(requser);
             user.getKeyedMap().setObject(Request.REQUESTS, user.getKeyedMap().getObjectInt(Request.REQUESTS)+1);;
-            getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(
-                    user, "REQUEST", reqdir));
+            ArrayList<String> forceToChannels = new ArrayList<String>();
+            forceToChannels.add(msgc.getDest());
+            getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(
+                    user, "REQUEST", reqdir, forceToChannels));
             user.getKeyedMap().incrementObjectInt(org.drftpd.commands.Request.WEEKREQS, 1);
             try {
                 user.commit();
@@ -317,8 +321,10 @@ public class Request extends IRCCommand {
                         if (file.getUsername().equals(user.getName()) || user.isAdmin()) {
                             file.delete();
                             deldir = true;
-                            getGlobalContext().dispatchFtpEvent(new DirectoryFtpEvent(   
-                            		user, "REQDEL", file));   
+                            ArrayList<String> forceToChannels = new ArrayList<String>();
+                            forceToChannels.add(msgc.getDest());
+                            getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(   
+                            		user, "REQDEL", file, forceToChannels));   
                             break;
                         } else {
                             out.add(ReplacerUtils.jprintf("reqdel.notowner", env, Request.class));
