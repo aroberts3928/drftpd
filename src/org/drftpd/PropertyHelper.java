@@ -30,12 +30,19 @@ public class PropertyHelper {
 
 	public static String getProperty(Properties p, String name)
 	    throws NullPointerException {
-	    String result = p.getProperty(name);
-	
-	    if (result == null) {
+		String result = getProperty(p, name, null);
+
+		if (result == null) {
 	        throw new NullPointerException("Error getting setting " + name);
 	    }
+
+		return result;
+	}
 	
-	    return result;
+	public static String getProperty(Properties p, String name,
+			String defaultValue) {
+	    String result = p.getProperty(name, defaultValue);
+
+	    return (result != null) ? result.trim() : null;
 	}
 }
