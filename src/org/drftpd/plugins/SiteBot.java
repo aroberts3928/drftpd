@@ -1547,7 +1547,10 @@ public class SiteBot extends FtpListener implements Observer {
     public void sayEvent(String event, String msg, SectionInterface section, ArrayList<String> forceToChannels) {
         if (_eventChannelMap.containsKey(event.toLowerCase())) {
             for (String chan : _eventChannelMap.get(event.toLowerCase())) {
-            	if (forceToChannels.contains(chan)) forceToChannels.remove(chan);
+            	say(chan, msg);
+            	if (forceToChannels.contains(chan)) {
+            		forceToChannels.remove(chan);
+            	}
             }
             if (!forceToChannels.isEmpty()) {
             	for (String chan : forceToChannels) {
