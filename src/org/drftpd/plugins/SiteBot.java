@@ -1488,7 +1488,7 @@ public class SiteBot extends FtpListener implements Observer {
         }
         String sc = (sn != null) ? sn.getChannel() : _primaryChannelName;
 
-        if (!forceToChannels.contains(sc)) forceToChannels.add(sc);
+        if (!forceToChannels.contains(sc.toLowerCase())) forceToChannels.add(sc.toLowerCase());
         
     	for (String chan : forceToChannels) {
             say(chan, message);
@@ -1536,7 +1536,7 @@ public class SiteBot extends FtpListener implements Observer {
     }
 
     /**
-     * Say message to irc channels listed in per event override. If no
+     * Say message to IRC channels listed in per event override. If no
      * override found, message the section output channel.
      * 
      * @param event
@@ -1548,8 +1548,8 @@ public class SiteBot extends FtpListener implements Observer {
         if (_eventChannelMap.containsKey(event.toLowerCase())) {
             for (String chan : _eventChannelMap.get(event.toLowerCase())) {
             	say(chan, msg);
-            	if (forceToChannels.contains(chan)) {
-            		forceToChannels.remove(chan);
+            	if (forceToChannels.contains(chan.toLowerCase())) {
+            		forceToChannels.remove(chan.toLowerCase());
             	}
             }
             if (!forceToChannels.isEmpty()) {

@@ -54,7 +54,14 @@ public class DirectorySiteBotEvent extends DirectoryFtpEvent {
 	public DirectorySiteBotEvent(User user, String command,
 			LinkedRemoteFileInterface directory, ArrayList<String> forceToChannels, long time) {
 		super(user, command, directory, time);
-		this._forceToChannels = forceToChannels;
+		
+		/* Convert list to lower case for later comparison. */
+		// Since IRC RFC defines it to be case insensitive, this should be compatible with all IRC servers.
+		ArrayList<String> forceToChannels2 = new ArrayList<String>();
+		for (String c : forceToChannels) {
+			forceToChannels2.add(c.toLowerCase());
+		}
+		this._forceToChannels = forceToChannels2;
 	}
 
     public ArrayList<String> getForceToChannels() {
