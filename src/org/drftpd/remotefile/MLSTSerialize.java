@@ -41,6 +41,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 
 /**
@@ -51,6 +52,7 @@ public class MLSTSerialize {
     private static final Logger logger = Logger.getLogger(MLSTSerialize.class);
     public static final SimpleDateFormat timeval = new SimpleDateFormat(
             "yyyyMMddHHmmss.SSS");
+    public static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 
     public static void serialize(LinkedRemoteFileInterface dir, PrintWriter out) {
         out.println(dir.getPath() + ":");
@@ -91,6 +93,7 @@ public class MLSTSerialize {
         }
 
         ret.append("size=" + file.length() + ";");
+        timeval.setTimeZone(GMT);
         ret.append("modify=" + timeval.format(new Date(file.lastModified())) +
             ";");
 
