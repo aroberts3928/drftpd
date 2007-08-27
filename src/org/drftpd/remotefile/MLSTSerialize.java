@@ -41,6 +41,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 
 /**
@@ -49,15 +50,23 @@ import java.util.StringTokenizer;
  */
 public class MLSTSerialize {
     private static final Logger logger = Logger.getLogger(MLSTSerialize.class);
-    public static final SimpleDateFormat timeval = new SimpleDateFormat(
-            "yyyyMMddHHmmss.SSS");
+    // files.mlst format (local/configured time zone)
+    public static final SimpleDateFormat timeval = getSDF(false);
+    // MLST/MLSD ftp command format (always GMT time zone)
+    public static final SimpleDateFormat timeval_gmt = getSDF(true);
+
+    private static final SimpleDateFormat getSDF(boolean gmt) {
+    	SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
+    	if (gmt) sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+		return sdf;
+    }
 
     public static void serialize(LinkedRemoteFileInterface dir, PrintWriter out) {
         out.println(dir.getPath() + ":");
 
         for (Iterator iter = dir.getMap().values().iterator(); iter.hasNext();) {
             LinkedRemoteFile file = (LinkedRemoteFile) iter.next();
-            out.println(toMLST(file));
+            out.println(toMLST(file, timeval));
         }
 
         out.println();
@@ -73,6 +82,10 @@ public class MLSTSerialize {
     }
 
     public static String toMLST(RemoteFileInterface file) {
+    	return toMLST(file, timeval_gmt);
+    }
+
+    public static String toMLST(RemoteFileInterface file, SimpleDateFormat sdf) {
         StringBuffer ret = new StringBuffer();
 
         if (file.isLink()) {
@@ -91,7 +104,7 @@ public class MLSTSerialize {
         }
 
         ret.append("size=" + file.length() + ";");
-        ret.append("modify=" + timeval.format(new Date(file.lastModified())) +
+        ret.append("modify=" + sdf.format(new Date(file.lastModified())) +
             ";");
 
         ret.append("unix.owner=" + file.getUsername() + ";");
