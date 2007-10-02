@@ -100,6 +100,7 @@ import f00f.net.irc.martyr.CommandRegister;
 import f00f.net.irc.martyr.Debug;
 import f00f.net.irc.martyr.IRCConnection;
 import f00f.net.irc.martyr.clientstate.Channel;
+import f00f.net.irc.martyr.clientstate.Member;
 import f00f.net.irc.martyr.commands.InviteCommand;
 import f00f.net.irc.martyr.commands.MessageCommand;
 import f00f.net.irc.martyr.commands.NickCommand;
@@ -644,7 +645,7 @@ public class SiteBot extends FtpListener implements Observer {
         ReplacerEnvironment env = new ReplacerEnvironment(GLOBAL_ENV);
         env.add("user",event.getUser());
         env.add("nick",event.getIrcNick());
-        
+
         if ("INVITE".equals(event.getCommand()) ||
         		"SITE INVITE".equals(event.getCommand())) {
 
@@ -654,8 +655,19 @@ public class SiteBot extends FtpListener implements Observer {
             	e.hasMoreElements();) {
             	Channel chan = (Channel) e.nextElement();
 
-            	if (chan.findMember(getIRCConnection().getClientState().getNick()
-                                    .getNick()).hasOps()) {
+            	Member m = chan.findMember(getIRCConnection().getClientState().getNick().getNick());
+
+            	// A work around for a martyr bug.
+            	// The bug only effects sitebot that connects to a bnc which is already in channel,
+            	// when the sitebot has a mode-flag other than @ and +.
+            	// Below are the only other cases I know about, should be easy to add more as discovered.
+            	if (m == null)
+            		m = chan.findMember("~" + getIRCConnection().getClientState().getNick().getNick());
+
+                if (m == null)
+                	chan.findMember("%" + getIRCConnection().getClientState().getNick().getNick());
+
+            	if (m != null && m.hasOps()) {
             		ChannelConfig cc = _channelMap.get(chan.getName());
             		if (cc != null) {
             			if (cc.checkPerms(event.getUser())) {
@@ -674,6 +686,7 @@ public class SiteBot extends FtpListener implements Observer {
             		}
             	}
             }
+
         	synchronized (_identWhoisList) {
         		_identWhoisList.add(new WhoisEntry(nick,event.getUser()));
         	}
