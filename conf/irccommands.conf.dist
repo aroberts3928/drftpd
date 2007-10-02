@@ -78,6 +78,7 @@
 !user org.drftpd.sitebot.IRCUserManagement.doUSER public =siteop
 !u org.drftpd.sitebot.IRCUserManagement.doUSER public =siteop
 !lastseen org.drftpd.sitebot.IRCUserManagement.doLASTSEEN public =siteop
+!unident org.drftpd.sitebot.IRCUserManagement.doUNIDENT public =siteop
 ##
 
 !master-uptime org.drftpd.sitebot.Uptime.doMasterUptime public =siteop
