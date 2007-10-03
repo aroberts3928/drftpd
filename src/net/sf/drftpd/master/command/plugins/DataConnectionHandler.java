@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -585,78 +586,159 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
         return Reply.RESPONSE_350_PENDING_FURTHER_INFORMATION;
     }
 
-    private Reply doSITE_RESCAN(BaseFtpConnection conn) {
-        FtpRequest request = conn.getRequest();
-        boolean forceRescan = (request.hasArgument() &&
-            request.getArgument().equalsIgnoreCase("force"));
-        LinkedRemoteFileInterface directory = conn.getCurrentDirectory();
-        SFVFile sfv;
+    /**
+	 * Use ZipScript features to manually scan a directory containing a sfv
+	 * file.
+	 * 
+	 * @author Dom
+	 * @author tdsoul
+	 * @since plus-2.0.6
+	 */
+	private Reply doSITE_RESCAN(BaseFtpConnection conn) {
+		PrintWriter out = conn.getControlWriter();
 
-        try {
-            sfv = conn.getCurrentDirectory().lookupSFVFile();
-        } catch (Exception e) {
-            return new Reply(200, "Error getting SFV File: " +
-                e.getMessage());
-        }
+		FtpRequest request = conn.getRequest();
+		boolean recursive = false;
+		boolean forceRescan = false;
+		boolean deleteBad = false;
+		boolean quiet = false;
+		boolean usecached = false;
+		if (request.hasArgument()) {
+			StringTokenizer args = new StringTokenizer(request.getArgument());
+			while (args.hasMoreTokens()) {
+				String arg = args.nextToken();
+				if (arg.equalsIgnoreCase("-r")
+						|| arg.equalsIgnoreCase("-recursive")) {
+					recursive = true;
+				} else if (arg.equalsIgnoreCase("force")) {
+					forceRescan = true;
+				} else if (arg.equalsIgnoreCase("-q")
+						|| arg.equalsIgnoreCase("-quiet")) {
+					quiet = true;
+				} else if (arg.equalsIgnoreCase("-c")
+						|| arg.equalsIgnoreCase("-cached")) {
+					usecached = true;
+				} else if (arg.equalsIgnoreCase("-delete")) {
+						deleteBad = true;
+				}
+			}
+		}
 
-        PrintWriter out = conn.getControlWriter();
+		LinkedList<LinkedRemoteFileInterface> dirs = new LinkedList<LinkedRemoteFileInterface>();
+		dirs.add(conn.getCurrentDirectory());
+		out.println("200- Initial dirs: " + dirs.size());
+		out.flush();
+		while (dirs.size() > 0) {
+			LinkedRemoteFileInterface workingDir = dirs.poll();
+			SFVFile workingSfv = null;
+			if (recursive) {
+				dirs.addAll(workingDir.getDirectories());
+				// out.println("200- Size now: " + dirs.size());
+				// out.flush();
+			}
 
-        for (Iterator i = sfv.getEntries().entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry) i.next();
-            String fileName = (String) entry.getKey();
-            Long checkSum = (Long) entry.getValue();
-            LinkedRemoteFileInterface file;
+			try {
+				workingSfv = workingDir.lookupSFVFile();
+			} catch (FileNotFoundException e2) {
+				/*
+				 * No sfv in this dir, silently ignore so not to add useless
+				 * output in recursive mode
+				 */
+				continue;
+			} catch (NoAvailableSlaveException e2) {
+				out.println("200- No available slave with sfv for: " + workingDir.getPath());
+				out.flush();
+				continue;
+			} catch (FileStillTransferringException e2) {
+				// Silently skip
+				continue;
+			} catch (IOException e2) {
+				out.println("200- IOError reading sfv for: " + workingDir.getPath());
+				out.flush();
+				continue;
+			}
+			out.println("200- Rescanning: " + workingDir.getPath());
+			out.flush();
+			for (Iterator<Map.Entry<String, Long>> i = workingSfv.getEntries().entrySet().iterator(); i.hasNext();) {
+				Map.Entry<String, Long> entry = i.next();
+				String fileName = entry.getKey();
+				Long checkSum = entry.getValue();
+				LinkedRemoteFileInterface file;
 
-            try {
-                file = directory.lookupFile(fileName);
-            } catch (FileNotFoundException ex) {
-                out.write("200- SFV: " +
-                    Checksum.formatChecksum(checkSum.longValue()) + " SLAVE: " +
-                    fileName + " MISSING" + BaseFtpConnection.NEWLINE);
+				try {
+					file = workingDir.lookupFile(fileName);
+				} catch (FileNotFoundException ex) {
+					out.write("200- SFV: "
+							+ Checksum.formatChecksum(checkSum.longValue())
+							+ " SLAVE: " + fileName + " MISSING"
+							+ BaseFtpConnection.NEWLINE);
+					continue;
+				}
 
-                continue;
-            }
+				String status;
+				long fileCheckSum = 0;
 
-            String status;
-            long fileCheckSum = 0;
+				try {
+					if (forceRescan) {
+						fileCheckSum = file.getCheckSumFromSlave();
+					} else {
+						if (usecached)
+							fileCheckSum = file.getCheckSumCached();
+						else
+							fileCheckSum = file.getCheckSum();
+					}
+				} catch (NoAvailableSlaveException e1) {
+					out.println("200- " + fileName + "SFV: "
+							+ Checksum.formatChecksum(checkSum.longValue())
+							+ " SLAVE: OFFLINE");
+					out.flush();
+					continue;
+				} catch (IOException ex) {
+					out.print("200- " + fileName + " SFV: "
+							+ Checksum.formatChecksum(checkSum.longValue())
+							+ " SLAVE: IO error: " + ex.getMessage());
+					out.flush();
+					continue;
+				}
 
-            try {
-                if (forceRescan) {
-                    fileCheckSum = file.getCheckSumFromSlave();
-                } else {
-                    fileCheckSum = file.getCheckSum();
-                }
-            } catch (NoAvailableSlaveException e1) {
-                out.println("200- " + fileName + "SFV: " +
-                    Checksum.formatChecksum(checkSum.longValue()) +
-                    " SLAVE: OFFLINE");
+				if (fileCheckSum == 0L) {
+					if (forceRescan)
+						status = "FAILED - failed to checksum file";
+					else
+						status = "UNKNOWN - This file has no checksum on file.  Use the FORCE option.";
+				} else if (checkSum.longValue() == fileCheckSum) {
+					status = quiet ? "" : "OK";
+				} else {
+					status = "FAILED - checksum mismatch";
+					if (deleteBad) {
+						// check permission
+						if (file.getUsername().equals(conn.getUserNull().getName())) {
+							if (!conn.getGlobalContext().getConfig().checkPathPermission("deleteown", conn.getUserNull(), file)) {
+								status += " (delete failed, no permission)";
+							}
+						} else if (!conn.getGlobalContext().getConfig().checkPathPermission("delete", conn.getUserNull(), file)) {
+							status += " (delete failed, no permission)";
+						} else {
+							file.delete();
+							status += " (deleted)";
+						}
+					}
+				}
 
-                continue;
-            } catch (IOException ex) {
-                out.print("200- " + fileName + " SFV: " +
-                    Checksum.formatChecksum(checkSum.longValue()) +
-                    " SLAVE: IO error: " + ex.getMessage());
+				if (status != "") {
+					out.println("200- " + fileName + " SFV: "
+							+ Checksum.formatChecksum(checkSum.longValue())
+							+ " SLAVE: "
+							+ Checksum.formatChecksum(fileCheckSum) + " "
+							+ status);
+					out.flush();
+				}
 
-                continue;
-            }
-
-            if (fileCheckSum == 0L) {
-                status = "FAILED - failed to checksum file";
-            } else if (checkSum.longValue() == fileCheckSum) {
-                status = "OK";
-            } else {
-                status = "FAILED - checksum mismatch";
-            }
-
-            out.println("200- " + fileName + " SFV: " +
-                Checksum.formatChecksum(checkSum.longValue()) + " SLAVE: " +
-                Checksum.formatChecksum(fileCheckSum) + " " + status);
-
-            continue;
-        }
-
-        return Reply.RESPONSE_200_COMMAND_OK;
-    }
+				continue;
+			}
+		}
+		return Reply.RESPONSE_200_COMMAND_OK;
+	}
 
     private Reply doXDUPE(BaseFtpConnection conn) {
         LinkedRemoteFileInterface dir = conn.getCurrentDirectory();
