@@ -103,6 +103,7 @@ import f00f.net.irc.martyr.CommandRegister;
 import f00f.net.irc.martyr.Debug;
 import f00f.net.irc.martyr.IRCConnection;
 import f00f.net.irc.martyr.clientstate.Channel;
+import f00f.net.irc.martyr.clientstate.Member;
 import f00f.net.irc.martyr.commands.InviteCommand;
 import f00f.net.irc.martyr.commands.KickCommand;
 import f00f.net.irc.martyr.commands.MessageCommand;
@@ -693,33 +694,43 @@ public class SiteBot extends FtpListener implements Observer {
             e.hasMoreElements();) {
                 Channel chan = (Channel) e.nextElement();
 
-                if (chan.findMember(getIRCConnection().getClientState().getNick()
-                        .getNick()).hasOps()) {
-                    ChannelConfig cc = _channelMap.get(chan.getName());
-                    if (cc != null) {
-                        if (cc.checkPerms(event.getUser())) {
-                            _conn.sendCommand(new InviteCommand(nick, chan.getName()));
-                            channels.add(chan.getName());
-                            try {
-                                notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
-                            } catch (ObjectNotFoundException execption) {
-                                // no key or not enough permissions
-                            }
-                        } else {
-                            logger.warn("User does not have enough permissions to invite into " + chan.getName());
-                        }
-                    } else {
-                        logger.error("Could not find ChannelConfig for " + chan.getName() + " this is a bug, please report it!", new Throwable());
-                    }
-                }
+            	Member m = chan.findMember(getIRCConnection().getClientState().getNick().getNick());
+
+            	// A work around for a martyr bug.
+            	// The bug only effects sitebot that connects to a bnc which is already in channel,
+            	// when the sitebot has a mode-flag other than @ and +.
+            	// Below are the only other cases I know about, should be easy to add more as discovered.
+            	if (m == null)
+            		m = chan.findMember("~" + getIRCConnection().getClientState().getNick().getNick());
+
+                if (m == null)
+                	chan.findMember("%" + getIRCConnection().getClientState().getNick().getNick());
+
+            	if (m != null && m.hasOps()) {
+            		ChannelConfig cc = _channelMap.get(chan.getName());
+            		if (cc != null) {
+            			if (cc.checkPerms(event.getUser())) {
+            				_conn.sendCommand(new InviteCommand(nick, chan.getName()));
+                            	channels.add(chan.getName());
+            	    		try {
+            	    			notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
+            	    		} catch (ObjectNotFoundException execption) {
+            	    			// no key or not enough permissions
+            	    		}
+            			} else {
+            				logger.warn("User does not have enough permissions to invite into " + chan.getName());
+            			}
+            		} else {
+            			logger.error("Could not find ChannelConfig for " + chan.getName() + " this is a bug, please report it!", new Throwable());
+            		}
+            	}
             }
 
-            sayEvent("invite", SimplePrintf.jprintf(format, env), channels);
+		sayEvent("invite", SimplePrintf.jprintf(format, env), channels);
 
-            synchronized (_identWhoisList) {
-                _identWhoisList.add(new WhoisEntry(nick,event.getUser()));
-            }
-
+		synchronized (_identWhoisList) {
+        		_identWhoisList.add(new WhoisEntry(nick,event.getUser()));
+        	}
             logger.info("Looking up "+ nick + " to set IRCIdent");
             _conn.sendCommand(new WhoisCommand(nick));
         } else if ("BINVITE".equals(event.getCommand())) {
