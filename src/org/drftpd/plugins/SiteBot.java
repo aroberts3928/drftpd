@@ -103,7 +103,9 @@ import f00f.net.irc.martyr.CommandRegister;
 import f00f.net.irc.martyr.Debug;
 import f00f.net.irc.martyr.IRCConnection;
 import f00f.net.irc.martyr.clientstate.Channel;
+import f00f.net.irc.martyr.clientstate.Member;
 import f00f.net.irc.martyr.commands.InviteCommand;
+import f00f.net.irc.martyr.commands.KickCommand;
 import f00f.net.irc.martyr.commands.MessageCommand;
 import f00f.net.irc.martyr.commands.NickCommand;
 import f00f.net.irc.martyr.commands.NoticeCommand;
@@ -141,6 +143,7 @@ public class SiteBot extends FtpListener implements Observer {
     private HashMap<String,Object[]> _methodMap;
     protected IRCConnection _conn;
     private boolean _enableAnnounce;
+    private boolean _singlesession = false;
     private int _maxUserAnnounce;
     private int _maxGroupAnnounce;
     private CaseInsensitiveHashMap<String,ChannelConfig> _channelMap;
@@ -691,33 +694,43 @@ public class SiteBot extends FtpListener implements Observer {
             e.hasMoreElements();) {
                 Channel chan = (Channel) e.nextElement();
 
-                if (chan.findMember(getIRCConnection().getClientState().getNick()
-                        .getNick()).hasOps()) {
-                    ChannelConfig cc = _channelMap.get(chan.getName());
-                    if (cc != null) {
-                        if (cc.checkPerms(event.getUser())) {
-                            _conn.sendCommand(new InviteCommand(nick, chan.getName()));
-                            channels.add(chan.getName());
-                            try {
-                                notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
-                            } catch (ObjectNotFoundException execption) {
-                                // no key or not enough permissions
-                            }
-                        } else {
-                            logger.warn("User does not have enough permissions to invite into " + chan.getName());
-                        }
-                    } else {
-                        logger.error("Could not find ChannelConfig for " + chan.getName() + " this is a bug, please report it!", new Throwable());
-                    }
-                }
+            	Member m = chan.findMember(getIRCConnection().getClientState().getNick().getNick());
+
+            	// A work around for a martyr bug.
+            	// The bug only effects sitebot that connects to a bnc which is already in channel,
+            	// when the sitebot has a mode-flag other than @ and +.
+            	// Below are the only other cases I know about, should be easy to add more as discovered.
+            	if (m == null)
+            		m = chan.findMember("~" + getIRCConnection().getClientState().getNick().getNick());
+
+                if (m == null)
+                	chan.findMember("%" + getIRCConnection().getClientState().getNick().getNick());
+
+            	if (m != null && m.hasOps()) {
+            		ChannelConfig cc = _channelMap.get(chan.getName());
+            		if (cc != null) {
+            			if (cc.checkPerms(event.getUser())) {
+            				_conn.sendCommand(new InviteCommand(nick, chan.getName()));
+                            	channels.add(chan.getName());
+            	    		try {
+            	    			notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
+            	    		} catch (ObjectNotFoundException execption) {
+            	    			// no key or not enough permissions
+            	    		}
+            			} else {
+            				logger.warn("User does not have enough permissions to invite into " + chan.getName());
+            			}
+            		} else {
+            			logger.error("Could not find ChannelConfig for " + chan.getName() + " this is a bug, please report it!", new Throwable());
+            		}
+            	}
             }
 
-            sayEvent("invite", SimplePrintf.jprintf(format, env), channels);
+		sayEvent("invite", SimplePrintf.jprintf(format, env), channels);
 
-            synchronized (_identWhoisList) {
-                _identWhoisList.add(new WhoisEntry(nick,event.getUser()));
-            }
-
+		synchronized (_identWhoisList) {
+        		_identWhoisList.add(new WhoisEntry(nick,event.getUser()));
+        	}
             logger.info("Looking up "+ nick + " to set IRCIdent");
             _conn.sendCommand(new WhoisCommand(nick));
         } else if ("BINVITE".equals(event.getCommand())) {
@@ -1337,6 +1350,7 @@ public class SiteBot extends FtpListener implements Observer {
         _port = Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.port", null));
 
         _enableAnnounce = PropertyHelper.getProperty(ircCfg, "irc.enable.announce", "false").equals("true");
+        _singlesession = PropertyHelper.getProperty(ircCfg, "irc.singlesession", "false").equals("true");
         Debug.setDebugLevel(Integer.parseInt(PropertyHelper.getProperty(ircCfg, "irc.debuglevel", "15")));
         CaseInsensitiveHashMap<String, ChannelConfig> oldChannelMap = null;
         if (_channelMap != null) { // reload config
@@ -1707,8 +1721,7 @@ public class SiteBot extends FtpListener implements Observer {
                 .hasNext();) {
                     WhoisEntry we = iter.next();
                     if (we._nick.equalsIgnoreCase(nick)) {
-                        we._user.getKeyedMap().setObject(
-                                UserManagement.IRCIDENT, fullIdent);
+						replaceIdent(we._user, fullIdent);
                         iter.remove();
                         continue;
                     }
@@ -1793,6 +1806,90 @@ public class SiteBot extends FtpListener implements Observer {
             }
         }
     }
+
+    /*
+     *  Replace irc ident record in user record.  If identical record is found in another user file, remove it.
+     *  If a different irc ident is found in this user record, remove the irc user from all channels. Makes an 
+     *  effort to protect the SiteBot from idiots who try to exploit this mechanism to make the bot kick itself.
+     *  
+     *  @param user
+     *  @param fullIdent
+     */
+	public void replaceIdent(User user, String fullident) {
+		if (fullident == null || fullident.length() == 0)
+			return;
+		
+    	Collection<User> ret;
+		try {
+			ret = _gctx.getUserManager().getAllUsers();
+		} catch (UserFileException e) {
+			// something is wrong with getting all users, try to just fix this one and ignore the error.
+			logger.debug("There was a problem trying to getAllUsers(): " + e.getMessage());
+			logger.debug("Falling back to old behavior and setting new ident on user " + user.getName());
+			user.getKeyedMap().setObject(UserManagement.IRCIDENT, fullident);
+			return;
+		}
+
+		// check if same ident it associated with another user on ftp, and if so, clear such a record.
+		// since each irc user can only be associated with one ftp user at a time.
+		for (Iterator<User> iter = ret.iterator(); iter.hasNext();){
+			User u = iter.next();
+			String ident = u.getKeyedMap().getObjectString(UserManagement.IRCIDENT);
+			if (user.isDeleted() || user.getName().equals(u.getName()) || ident == null
+					|| ident.equals("") || ident.equalsIgnoreCase("N/A")) // seems to handle everything
+				continue;
+
+			if (ident.equalsIgnoreCase(fullident)) {
+				logger.debug("Removing ident record from user " + u.getName() + " since it now belongs to " + user.getName());
+				u.getKeyedMap().setObject(UserManagement.IRCIDENT, "");
+			}
+		}
+
+		// next, check to see if another nick in the channel is already identified as this user
+		// before overwriting the irc ident information, if another nick is found, kick them.
+		String botnick = getIRCConnection().getClientState().getNick().getNick();
+		String newnick = fullident.substring(0, fullident.indexOf("!"));
+		String oldident = user.getKeyedMap().getObjectString(UserManagement.IRCIDENT);
+		String oldnick = "";
+		if (oldident != null && oldident.length() > 0)
+			oldnick = oldident.substring(0, oldident.indexOf("!"));
+
+		if (_singlesession && (botnick.equalsIgnoreCase(oldnick) || botnick.equalsIgnoreCase(newnick)
+				|| (oldnick.length() > 0 && !oldnick.equalsIgnoreCase(newnick)))) {
+			Boolean abort = false;
+			Boolean clear = false;
+	    	for (Enumeration e = getIRCConnection().getClientState().getChannels(); e.hasMoreElements();) {
+	    		Channel chan = (Channel) e.nextElement();
+	    		
+	    		if (botnick.equalsIgnoreCase(oldnick)) {
+	    			abort = true;
+	    			if (!botnick.equalsIgnoreCase(newnick))
+	    				getIRCConnection().getCommandSender().sendCommand(new KickCommand(chan.getName(), newnick, "This is what happens when you try to be smart."));
+	    			else
+	    				clear = true;
+	    		}
+	    		else if (botnick.equalsIgnoreCase(newnick)) {
+	    			abort = true;
+	    			if (!botnick.equalsIgnoreCase(oldnick))
+	    				getIRCConnection().getCommandSender().sendCommand(new KickCommand(chan.getName(), oldnick, "This is what happens when you try to be smart."));
+	    			else
+	    				clear = true;
+	    		}
+	    		else if (!botnick.equalsIgnoreCase(oldnick) && chan.isMemberInChannel(oldnick)) {
+	    			getIRCConnection().getCommandSender().sendCommand(new KickCommand(chan.getName(), oldnick, "Kicked by: " + newnick + ", only one session per user allowed"));
+	    		}
+	    	}
+
+	    	// clear ident on user
+	    	if (clear) user.getKeyedMap().setObject(UserManagement.IRCIDENT, "");
+
+	    	// abort setting new ident
+	    	if (abort) return;
+		}
+
+		// now after all is said and done, set new ident:
+		user.getKeyedMap().setObject(UserManagement.IRCIDENT, fullident);
+	}
 
     /**
      * Returns the source of the message, (channel or nickname)

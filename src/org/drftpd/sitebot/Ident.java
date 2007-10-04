@@ -19,6 +19,8 @@ package org.drftpd.sitebot;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import net.sf.drftpd.ObjectNotFoundException;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.drftpd.GlobalContext;
@@ -68,8 +70,16 @@ public class Ident extends IRCCommand {
          	String ident = msgc.getSource().getNick() + "!" 
 							+ msgc.getSource().getUser() + "@" 
 							+ msgc.getSource().getHost();
-        	user.getKeyedMap().setObject(UserManagement.IRCIDENT,ident);
         	try {
+        		// instead of just setting new ident info on the user record, verify it is unique
+        		// and the user is not in the channel twice.
+				((SiteBot) getGlobalContext().getFtpListener(SiteBot.class)).replaceIdent(user, ident);
+			} catch (ObjectNotFoundException e) {
+				// If for some reason sitebot can't be found in FTPListener list, just proceed with old behavior
+	        	user.getKeyedMap().setObject(UserManagement.IRCIDENT,ident);
+			}
+			
+			try {
 				user.commit();
 	           	logger.info("Set IRC ident to '"+ident+"' for "+user.getName());
             	out.add("Set IRC ident to '"+ident+"' for "+user.getName());

@@ -2,15 +2,14 @@
 # WARN: This filters MUST work in a synchronized way with SlaveSelection.
 #		Better explanation in:
 # 		http://trac.drftpd.org/ticket/85
-
+#
 1.filter=cycle
 
-#
 #1.filter=minfreespace
 #1.minfreespace=100MB
 #1.assign=all
 #1.multiplier=1
-#
+
 # If there's a tie on the ScoreChart, Cycle adds a point to the most unused root.
 # Should always be last filter on the Chain.
 #2.filter=cycle

@@ -1277,5 +1277,46 @@ public class IRCUserManagement extends IRCCommand {
 		}
 		return out;
 	}
-
+	
+	public ArrayList<String> doUNIDENT(String args, MessageCommand msgc) {
+		ArrayList<String> out = new ArrayList<String>();
+		ReplacerEnvironment env = new ReplacerEnvironment(SiteBot.GLOBAL_ENV);
+		
+		env.add("ircnick", msgc.getSource().getNick());
+		
+		User adder = getUser(msgc.getSource());
+		if (adder == null) {
+			out.add(ReplacerUtils.jprintf("ident.noident", env, IRCUserManagement.class));
+			return out;
+		}
+		
+		StringTokenizer st = new StringTokenizer(args);
+		if (!st.hasMoreTokens()) {
+			out.add(ReplacerUtils.jprintf("unident.syntax", env, IRCUserManagement.class));
+			return out;
+		}
+		
+		User luser = null;
+		String login = st.nextToken();
+		env.add("ftpuser", login);
+		
+		try {
+			luser = getGlobalContext().getUserManager().getUserByName(login);
+			String ircident = luser.getKeyedMap().getObjectString(UserManagement.IRCIDENT);
+			if (ircident == null || ircident.length() == 0) {
+				out.add(ReplacerUtils.jprintf("unident.error", env, IRCUserManagement.class));
+			} else {
+				env.add("ircident", ircident);
+				out.add(ReplacerUtils.jprintf("unident.success", env, IRCUserManagement.class));
+			}
+			luser.getKeyedMap().setObject(UserManagement.IRCIDENT, "");
+		} catch (NoSuchUserException e) {
+			out.add(ReplacerUtils.jprintf("nosuch.user", env, IRCUserManagement.class));
+			return out;
+		} catch (UserFileException e) {
+			out.add(ReplacerUtils.jprintf("error.user", env, IRCUserManagement.class));
+			return out;
+		} 
+		return out;
+	}
 }
