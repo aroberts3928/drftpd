@@ -117,7 +117,7 @@ public class HostMask {
     			"^(?:\\*|[-a-zA-Z0-9]+)@(?:\\d{1,3}\\.){3}(?:\\d{1,3}|\\*)$",
     			// Covers: ident@(x.x.*|x.x.*.*)
     			"^[-a-zA-Z0-9]+@(?:\\d{1,3}\\.){2}(?:\\.?\\*){1,2}$",
-    			// Covers: ident@*.someisp.com|*.someisp.com.uk)
+    			// Covers: ident@(*.someisp.com|*.someisp.com.uk)
     			"^[-a-zA-Z0-9]+@\\*(?:\\.[-a-zA-Z0-9]{4,})+(?:\\.[a-zA-Z]{2,3}|\\.[a-zA-Z]{2,3}\\.[a-zA-Z]{2})$"
     		};
     	for (int i = 0; i < patterns.length; i++) {

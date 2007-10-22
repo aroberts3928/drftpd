@@ -103,7 +103,6 @@ public class MaxbandwidthFilterTest extends TestCase {
 
         public void setSFVFile(SFVFile sfvFile) {
             // TODO Auto-generated method stub
-            
         }
     }
 

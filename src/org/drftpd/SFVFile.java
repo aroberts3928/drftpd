@@ -135,7 +135,7 @@ public class SFVFile extends AbstractSFVFile {
     public long getTotalBytesCompleted() {
     	return getTotalBytes(true);
     }
-    
+
     /**
 	 * @return The sum of the size of all files listed in this SFVFile, even
 	 *         those which are still being transfered.
@@ -143,7 +143,7 @@ public class SFVFile extends AbstractSFVFile {
     public long getTotalBytes() {
     	return getTotalBytes(false);
     }
-    
+
     /**
 	 * 
 	 * @param onlyCompletedFiles -

@@ -88,7 +88,6 @@ public class Ident extends IRCCommand {
 				out.add("Error saving userfile for "+user.getName());
 			}
          }
-
         return out;
 	}
 	

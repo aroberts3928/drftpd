@@ -511,7 +511,7 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         if (ret.exists()) {
         	return new Reply(550,
         			"Requested action not taken. " + arg +
-        	" already exists");
+        			" already exists");
         }
 
         // is this a legal name?

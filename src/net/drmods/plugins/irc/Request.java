@@ -259,7 +259,7 @@ public class Request extends IRCCommand {
             dir.createDirectory("REQUEST-by." + requser + "-" + dirName);
             LinkedRemoteFileInterface reqdir = dir.getFile("REQUEST-by." + requser + "-" + dirName);
             reqdir.setOwner(requser);
-            user.getKeyedMap().setObject(Request.REQUESTS, user.getKeyedMap().getObjectInt(Request.REQUESTS)+1);;
+            user.getKeyedMap().setObject(Request.REQUESTS, user.getKeyedMap().getObjectInt(Request.REQUESTS)+1);
             ArrayList<String> forceToChannels = new ArrayList<String>();
             forceToChannels.add(msgc.getDest());
             getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(
@@ -318,13 +318,17 @@ public class Request extends IRCCommand {
                 if (file.isDirectory()) {
                     if (file.getName().endsWith(dirName)) {
                         nodir = false;
-                        if (file.getUsername().equals(user.getName()) || user.isAdmin()) {
+                        if (file.dirSize() > 0 && (file.getUsername().equals(user.getName()) || user.isAdmin())) {
                             file.delete();
                             deldir = true;
                             ArrayList<String> forceToChannels = new ArrayList<String>();
                             forceToChannels.add(msgc.getDest());
-                            getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(   
-                            		user, "REQDEL", file, forceToChannels));   
+                            getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(
+                            		user, "REQDEL", file, forceToChannels));
+                            // decrement request counter
+                            int reqsMade = user.getKeyedMap().getObjectInt(Request.REQUESTS);
+                            if (reqsMade > 0)
+                            	user.getKeyedMap().setObject(Request.REQUESTS, --reqsMade);
                             break;
                         } else {
                             out.add(ReplacerUtils.jprintf("reqdel.notowner", env, Request.class));

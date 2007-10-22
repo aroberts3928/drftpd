@@ -78,15 +78,16 @@ public class RootCollection {
      * Get a directory specified by dir under an approperiate root for storing storing files in.
      * @param directory to store file in
      * @throws PermissionDeniedException If creation of dir failed in the slave root selected by getARootFileDir().
+     * @throws IOException
      */
-    public File getARootFileDir(String dir) throws PermissionDeniedException {
+    public File getARootFileDir(String dir) throws PermissionDeniedException, IOException {
         Root bestRoot = DiskSelection.getDiskSelection().getBestRoot(dir);
 
     	// to avoid this error SlaveSelectionManager MUST work
     	// synchronized with DiskSelection.
     	if (bestRoot == null) {
     		throw new PermissionDeniedException("No suitable root was found.");
-            }
+        }
         bestRoot.touch();
 
         File file = bestRoot.getFile(dir);

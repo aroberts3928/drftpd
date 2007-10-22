@@ -627,8 +627,8 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 		LinkedList<LinkedRemoteFileInterface> dirs = new LinkedList<LinkedRemoteFileInterface>();
 		dirs.add(conn.getCurrentDirectory());
 		out.println("200- Initial dirs: " + dirs.size());
-		out.flush();
 		while (dirs.size() > 0) {
+			out.flush();
 			LinkedRemoteFileInterface workingDir = dirs.poll();
 			SFVFile workingSfv = null;
 			if (recursive) {
@@ -647,19 +647,17 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 				continue;
 			} catch (NoAvailableSlaveException e2) {
 				out.println("200- No available slave with sfv for: " + workingDir.getPath());
-				out.flush();
 				continue;
 			} catch (FileStillTransferringException e2) {
 				// Silently skip
 				continue;
 			} catch (IOException e2) {
 				out.println("200- IOError reading sfv for: " + workingDir.getPath());
-				out.flush();
 				continue;
 			}
 			out.println("200- Rescanning: " + workingDir.getPath());
-			out.flush();
 			for (Iterator<Map.Entry<String, Long>> i = workingSfv.getEntries().entrySet().iterator(); i.hasNext();) {
+				out.flush();
 				Map.Entry<String, Long> entry = i.next();
 				String fileName = entry.getKey();
 				Long checkSum = entry.getValue();
@@ -691,13 +689,11 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 					out.println("200- " + fileName + "SFV: "
 							+ Checksum.formatChecksum(checkSum.longValue())
 							+ " SLAVE: OFFLINE");
-					out.flush();
 					continue;
 				} catch (IOException ex) {
 					out.print("200- " + fileName + " SFV: "
 							+ Checksum.formatChecksum(checkSum.longValue())
 							+ " SLAVE: IO error: " + ex.getMessage());
-					out.flush();
 					continue;
 				}
 
@@ -731,12 +727,11 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 							+ " SLAVE: "
 							+ Checksum.formatChecksum(fileCheckSum) + " "
 							+ status);
-					out.flush();
 				}
-
 				continue;
 			}
 		}
+		out.flush();
 		return Reply.RESPONSE_200_COMMAND_OK;
 	}
 
@@ -1274,7 +1269,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 	if (xdupe!=0)
                 		return doXDUPE(conn);
                 	else
-                    return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN_FILE_EXISTS;
+                		return Reply.RESPONSE_553_REQUESTED_ACTION_NOT_TAKEN_FILE_EXISTS;
 
                     //_transferFile = targetDir;
                     //targetDir = _transferFile.getParent();
@@ -1331,23 +1326,23 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                         }
                     }
                 } catch (FileNotFoundException e1) {
-                    // no sfv found in dir 
-                	if (SfvFirstEnforcedPath) { 
-                		// check if .sfv, and if so should it be allowed. 
-                		String badsubdir = zsCfg.checkSfvDenyUL(targetDir, conn.getUserNull()); 
-                		if (checkName.endsWith(".sfv") 
-                				&& badsubdir != "") { 
-                			return new Reply(533, 
-                					"Requested action not taken. You can not upload an SFV here due to subdir '" + badsubdir + "' (ZipScript+)."); 
-                		} 
-                		if (!zsCfg.checkAllowedExtension(checkName)) { 
-                			// filename not explicitly permitted 
-                			// ForceSfvFirst is on, and file is in an enforced 
-                			// path. 
-                			return new Reply(533, 
-                			"Requested action not taken. You must upload sfv first."); 
-                		} 
-                	} 
+                    // no sfv found in dir
+                	if (SfvFirstEnforcedPath) {
+                		// check if .sfv, and if so should it be allowed.
+                		String badsubdir = zsCfg.checkSfvDenyUL(targetDir, conn.getUserNull());
+                		if (checkName.endsWith(".sfv")
+                				&& badsubdir != "") {
+                			return new Reply(533,
+                					"Requested action not taken. You can not upload an SFV here due to subdir '" + badsubdir + "' (ZipScript+).");
+                		}
+                		if (!zsCfg.checkAllowedExtension(checkName)) {
+                			// filename not explicitly permitted
+                			// ForceSfvFirst is on, and file is in an enforced
+                			// path.
+                			return new Reply(533,
+                			"Requested action not taken. You must upload sfv first.");
+                		}
+                	}
                 } catch (IOException e1) {
                     //error reading sfv, do nothing
                 } catch (NoAvailableSlaveException e1) {
@@ -1378,9 +1373,9 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                 		targetDir.getPath() + "/" + targetFileName, "file");
                 if (DeniedReason != null) {
                 	// reset(); already done in finally block
-                	return new Reply(530, "Access denied (" + DeniedReason +")");
+                	return new Reply(530, "Access denied (" + DeniedReason + ")");
                     
-                } 
+                }
 
                 break;
 
@@ -1589,11 +1584,11 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
                         	_delay = System.currentTimeMillis() - _lastCheck;
                         	// Min speed per section, check at most every 10 seconds.
                         	if (first ? _delay >= 30000 : _delay >= 10000) {
-                        		boolean cont = checkSpeed(speedUp); 
-                        		first = false; 
+                        		boolean cont = checkSpeed(speedUp);
+                        		first = false;
 
-                        		if (!cont) { 
-                        			avg = status.getTransfered() / (status.getElapsed() / 1000); 
+                        		if (!cont) {
+                        			avg = status.getTransfered() / (status.getElapsed() / 1000);
                         			slowTransfer = true;
 									slowReason = "Slow transfer: "
 											+ Bytes.formatBytes(avg)
@@ -1889,7 +1884,7 @@ public class DataConnectionHandler implements CommandHandler, CommandHandlerFact
 	                    	} else {
 	                    		// The file has checksum = 0, although the size is != 0,
 	                    		// meaning that we are not using checked transfers.
-	                        response.addComment(
+	                            response.addComment(
 	                            "checksum match: SLAVE/SFV: DISABLED");
 	                    	}
 	                    } else {

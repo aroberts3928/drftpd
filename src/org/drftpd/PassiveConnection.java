@@ -41,7 +41,7 @@ public class PassiveConnection extends Connection {
     private ServerSocket _serverSocket;
     // Default is to initiate the handshake
     private boolean _useSSLClientMode = false;
-    
+
     /**
      * @param ctx
      * @param portRange
@@ -59,7 +59,7 @@ public class PassiveConnection extends Connection {
     	}
     	_serverSocket.setSoTimeout(TIMEOUT);
     }
-    
+
  
 	public Socket connect(int bufferSize) throws IOException {
 		Socket sock = null;
@@ -73,7 +73,7 @@ public class PassiveConnection extends Connection {
 		}
 
         setSockOpts(sock);
-        
+
         if (sock instanceof SSLSocket) {
         	SSLSocket sslsock = (SSLSocket) sock;
         	sslsock.setUseClientMode(_useSSLClientMode);

@@ -323,7 +323,7 @@ public class FtpConfig extends Observable implements ConfigInterface {
 
         _bouncerIps = bouncerIps;
 
-        // check for (optional) passcrypt config 
+        // check for (optional) passcrypt config
         String passcrypt = cfg.getProperty("passcrypt", "md5").trim().toLowerCase();
         if (passcrypt.equals("crypt")) { _passwordCrypt = "crypt"; }
         else if (passcrypt.equals("md5")) { _passwordCrypt = "md5"; }

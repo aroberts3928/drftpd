@@ -56,7 +56,7 @@ public abstract class AbstractUserManager implements UserManager {
 
 	/**
 	 * <p>Cannot be a constructor because the child class fields don't get
-	 * initialized until super (this) class gets run.</p> 
+	 * initialized until super (this) class gets run.</p>
 	 */
     protected void init(boolean createIfNoUser) throws UserFileException {
         if (!getUserpathFile().exists() && !getUserpathFile().mkdirs()) {
@@ -245,7 +245,7 @@ public abstract class AbstractUserManager implements UserManager {
     	return _gctx;
     }
     public User getUserByIdent(String ident)
-		throws NoSuchUserException, UserFileException { 
+		throws NoSuchUserException, UserFileException {
         for (Iterator iter = getAllUsers().iterator(); iter.hasNext();) {
 		    User user = (User) iter.next();
 	        try {
@@ -254,7 +254,7 @@ public abstract class AbstractUserManager implements UserManager {
                     return user;
                 }
             } catch (KeyNotFoundException e1) {
-            }	       
+            }
 		}
         throw new NoSuchUserException("No user found with ident = " + ident);
     }
