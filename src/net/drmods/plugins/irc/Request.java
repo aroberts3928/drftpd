@@ -318,7 +318,7 @@ public class Request extends IRCCommand {
                 LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
                 if (file.isDirectory() && file.getName().endsWith(dirName)) {
                     nodir = false;
-                    if (file.dirSize() > 0) {
+                    if (file.dirSize() == 0) {
                     	if (user.isAdmin() || file.getUsername().equals(user.getName())) {
 	                    	User requestowner = null;
 								try {
