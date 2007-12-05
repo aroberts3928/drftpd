@@ -181,7 +181,7 @@ public class Transfer {
 				if (!transfer.isReceivingUploading()) {
 					continue;
 				}
-				if (transfer._pathForUpload.equalsIgnoreCase(path)) {
+				if (transfer._pathForUpload.replace(File.separatorChar, '/').equalsIgnoreCase(path)) {
 					return transfer;
 				}
 			}

@@ -29,8 +29,6 @@ import org.drftpd.slave.Root;
 import org.drftpd.slave.RootCollection;
 import org.drftpd.slave.Slave;
 
-import se.mog.io.PermissionDeniedException;
-
 /**
  * DiskSelection core.<br>
  * This class takes care of processing each ScoreChart,<br>
@@ -137,8 +135,10 @@ public class DiskSelection {
 	/**
 	 * Creates a new ScoreChart, process it and pick up the root with more
 	 * positive points.
+	 * 
+	 * @throws IOException
 	 */
-	public Root getBestRoot(String path) {
+	public Root getBestRoot(String path) throws IOException {
 
 		ScoreChart sc = new ScoreChart(getRootCollection());
 		process(sc, path);

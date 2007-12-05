@@ -1124,9 +1124,9 @@ public class IRCUserManagement extends IRCCommand {
 		if (found) {
 			ident = luser.getKeyedMap().getObjectString(UserManagement.IRCIDENT);
 			env.add("nick.nickname", ident.substring(0, ident.lastIndexOf('!')));
-			out.add(ReplacerUtils.jprintf("nick.success", env,IRCUserManagement.class));
+			out.add(ReplacerUtils.jprintf("nick.success", env, IRCUserManagement.class));
 		} else {
-			out.add(ReplacerUtils.jprintf("nick.failed", env,IRCUserManagement.class));
+			out.add(ReplacerUtils.jprintf("nick.failed", env, IRCUserManagement.class));
 		}
 		return out;
 	}
@@ -1143,7 +1143,7 @@ public class IRCUserManagement extends IRCCommand {
 			return out;
 		}
 
-		if (args != null && args.equals("")) {
+		if (args == null || args.length() == 0) {
 			out.add(ReplacerUtils.jprintf("finduser.syntax", env, IRCUserManagement.class));
 			return out;
 		}

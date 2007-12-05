@@ -103,5 +103,4 @@ public class OnConnect extends GenericAutoService {
     public String getCommandsHelp(User user) {
     	return "";
     }
-    
 }

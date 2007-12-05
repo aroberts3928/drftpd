@@ -59,7 +59,6 @@ import net.sf.drftpd.event.MessageEvent;
 import net.sf.drftpd.event.NukeEvent;
 import net.sf.drftpd.event.SlaveEvent;
 import net.sf.drftpd.event.TransferEvent;
-import net.sf.drftpd.master.FtpRequest;
 import net.sf.drftpd.master.GroupPosition;
 import net.sf.drftpd.master.UploaderPosition;
 import net.sf.drftpd.master.config.FtpConfig;
@@ -323,7 +322,7 @@ public class SiteBot extends FtpListener implements Observer {
         } catch (FileNotFoundException ex) {
             logger.info("No id3tag info for " +
                     direvent.getDirectory().getPath() +
-            ", can't publish id3tag info");
+                    ", can't publish id3tag info");
 
             return;
         } catch (NoAvailableSlaveException e) {
@@ -378,7 +377,7 @@ public class SiteBot extends FtpListener implements Observer {
             // throws IOException, ObjectNotFoundException, NoAvailableSlaveException
         } catch (FileNotFoundException ex) {
             logger.info("No sfv file in " + direvent.getDirectory().getPath() +
-            ", can't publish race info");
+                ", can't publish race info");
 
             return;
         } catch (NoAvailableSlaveException e) {
@@ -492,15 +491,15 @@ public class SiteBot extends FtpListener implements Observer {
             int position = 1;
 
             for (Iterator iter = racers.iterator();
-            iter.hasNext() && (position <= _maxUserAnnounce);
-            position++) {
+                    iter.hasNext() && (position <= _maxUserAnnounce);
+                    position++) {
                 UploaderPosition stat = (UploaderPosition) iter.next();
 
                 User raceuser;
 
                 try {
                     raceuser = getGlobalContext().getUserManager()
-                    .getUserByName(stat.getUsername());
+                                  .getUserByName(stat.getUsername());
                 } catch (NoSuchUserException e2) {
                     continue;
                 } catch (UserFileException e2) {
@@ -519,8 +518,7 @@ public class SiteBot extends FtpListener implements Observer {
                 raceenv.add("size", Bytes.formatBytes(stat.getBytes()));
                 raceenv.add("files", Integer.toString(stat.getFiles()));
                 raceenv.add("percent",
-                        Integer.toString((stat.getFiles() * 100) / sfvfile.size()) +
-                "%");
+                        Integer.toString((stat.getFiles() * 100) / sfvfile.size()) + "%");
                 raceenv.add("speed",
                         Bytes.formatBytes(stat.getXferspeed()) + "/s");
                 raceenv.add("alup",
@@ -562,8 +560,8 @@ public class SiteBot extends FtpListener implements Observer {
             position = 1;
 
             for (Iterator iter = groups.iterator();
-            iter.hasNext() && (position <= _maxGroupAnnounce);
-            position++) {
+                     iter.hasNext() && (position <= _maxGroupAnnounce);
+                     position++) {
                 GroupPosition stat = (GroupPosition) iter.next();
 
                 ReplacerEnvironment raceenv = new ReplacerEnvironment(GLOBAL_ENV);
@@ -590,15 +588,13 @@ public class SiteBot extends FtpListener implements Observer {
             env.add("leadspeed", Bytes.formatBytes(stat.getXferspeed()) + "/s");
             env.add("leadfiles", Integer.toString(stat.getFiles()));
             env.add("leadsize", Bytes.formatBytes(stat.getBytes()));
-            env.add("leadpercent",
-                    Integer.toString((stat.getFiles() * 100) / sfvfile.size()) +
-            "%");
+            env.add("leadpercent", Integer.toString((stat.getFiles() * 100) / sfvfile.size()) + "%");
             env.add("filesleft", Integer.toString(sfvstatus.getMissing()));
 
             User leaduser = null;
             try {
                 leaduser = getGlobalContext().getUserManager()
-                .getUserByName(stat.getUsername());
+                        .getUserByName(stat.getUsername());
             } catch (NoSuchUserException e3) {
                 logger.log(Level.WARN, "", e3);
             } catch (UserFileException e3) {
@@ -606,6 +602,7 @@ public class SiteBot extends FtpListener implements Observer {
             }
             env.add("leaduser", leaduser != null ? leaduser.getName() : stat.getUsername());
             env.add("leadgroup", leaduser != null ? leaduser.getGroup() : "");
+
             //HALFWAY
             if (sfvstatus.getMissing() == halfway) {
                 Ret ret = getPropertyFileSuffix("store.halfway", dir);
@@ -655,23 +652,19 @@ public class SiteBot extends FtpListener implements Observer {
                     }
                 }
                 if (oldstat != null && stat.getFiles() - oldstat.getFiles() > 2) {
-                    env.add("overtakenuser", _raceleader.get(dir.getName())
-                            .getName());
-                    env.add("overtakengroup", _raceleader.get(dir.getName())
-                            .getGroup());
+                    env.add("overtakenuser", _raceleader.get(dir.getName()).getName());
+                    env.add("overtakengroup", _raceleader.get(dir.getName()).getGroup());
                     env.add("filesaheadby", stat.getFiles() - oldstat.getFiles());
 
                     _raceleader.put(dir.getName(), leaduser);
-                    logger
-                    .info("New Race Leader '"
+                    logger.info("New Race Leader '"
                             + _raceleader.get(dir.getName()).getName()
                             + "' by "
                             + (stat.getFiles() - oldstat.getFiles())
                             + " files.");
                     Ret ret = getPropertyFileSuffix("store.newleader", dir);
                     fillEnvSection(env, direvent, ret.getSection());
-                    say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(),
-                            env));
+                    say(ret.getSection(), SimplePrintf.jprintf(ret.getFormat(), env));
                 }
             }
         }
@@ -691,7 +684,7 @@ public class SiteBot extends FtpListener implements Observer {
             ReplacerFormat format = ReplacerUtils.finalFormat(SiteBot.class,"invite.success");
             logger.info("Invited " + nick);
             for (Enumeration e = getIRCConnection().getClientState().getChannels();
-            e.hasMoreElements();) {
+                    e.hasMoreElements();) {
                 Channel chan = (Channel) e.nextElement();
 
             	Member m = chan.findMember(getIRCConnection().getClientState().getNick().getNick());
@@ -704,14 +697,14 @@ public class SiteBot extends FtpListener implements Observer {
             		m = chan.findMember("~" + getIRCConnection().getClientState().getNick().getNick());
 
                 if (m == null)
-                	chan.findMember("%" + getIRCConnection().getClientState().getNick().getNick());
+                	m = chan.findMember("%" + getIRCConnection().getClientState().getNick().getNick());
 
             	if (m != null && m.hasOps()) {
             		ChannelConfig cc = _channelMap.get(chan.getName());
             		if (cc != null) {
             			if (cc.checkPerms(event.getUser())) {
             				_conn.sendCommand(new InviteCommand(nick, chan.getName()));
-                            	channels.add(chan.getName());
+                            channels.add(chan.getName());
             	    		try {
             	    			notice(nick, "Channel key for " + chan.getName() + " is " + cc.getChannelKey(event.getUser()));
             	    		} catch (ObjectNotFoundException execption) {
@@ -726,9 +719,9 @@ public class SiteBot extends FtpListener implements Observer {
             	}
             }
 
-		sayEvent("invite", SimplePrintf.jprintf(format, env), channels);
+            sayEvent("invite", SimplePrintf.jprintf(format, env), channels);
 
-		synchronized (_identWhoisList) {
+            synchronized (_identWhoisList) {
         		_identWhoisList.add(new WhoisEntry(nick,event.getUser()));
         	}
             logger.info("Looking up "+ nick + " to set IRCIdent");
@@ -988,7 +981,7 @@ public class SiteBot extends FtpListener implements Observer {
      * Loads settings that require the IRCConnection _conn
      */
     private synchronized void connect(Properties ircCfg)
-    throws UnknownHostException, IOException {
+            throws UnknownHostException, IOException {
         disconnect();
 
         _conn = new IRCConnection();
@@ -1028,8 +1021,7 @@ public class SiteBot extends FtpListener implements Observer {
                                       .newInstance(new Object[] { this });
             } catch (Exception e) {
                 logger.warn("", e);
-                throw new RuntimeException("Error loading Martyr plugin :" +
-                        classname, e);
+                throw new RuntimeException("Error loading Martyr plugin :" + classname, e);
             }
         }
 
@@ -1177,7 +1169,7 @@ public class SiteBot extends FtpListener implements Observer {
         }
 
         if (totalsfv > 0) {
-            env.add("totalfiles", "" + totalfiles);
+            env.add("totalfiles", Integer.toString(totalfiles));
             env.add("totalsize",  Bytes.formatBytes(totalbytes));
 
             if (totalxfertime > 0) {
@@ -1205,11 +1197,9 @@ public class SiteBot extends FtpListener implements Observer {
             env.add("diskusedpercent", "n/a");
         } else {
             env.add("diskfreepercent",
-                    ((status.getDiskSpaceAvailable() * 100) / status.getDiskSpaceCapacity()) +
-            "%");
+                    ((status.getDiskSpaceAvailable() * 100) / status.getDiskSpaceCapacity()) + "%");
             env.add("diskusedpercent",
-                    ((status.getDiskSpaceUsed() * 100) / status.getDiskSpaceCapacity()) +
-            "%");
+                    ((status.getDiskSpaceUsed() * 100) / status.getDiskSpaceCapacity()) + "%");
         }
 
         env.add("xfers", "" + status.getTransfers());
@@ -1245,7 +1235,7 @@ public class SiteBot extends FtpListener implements Observer {
         String dirpath = dir.getPath();
         if (!dirpath.endsWith("/")) dirpath += "/";
         SectionInterface sectionObj = getGlobalContext()
-        .getSectionManager().lookup(dirpath);
+                .getSectionManager().lookup(dirpath);
 
         try {
             return new Ret(ResourceBundle.getBundle(SiteBot.class.getName())
@@ -1330,8 +1320,7 @@ public class SiteBot extends FtpListener implements Observer {
                             new IRCPermission(scopeList, permissions) });
                 } catch (Exception e) {
                     logger.error(
-                            "Invalid class/method listed in irccommands.conf - "
-                            + line, e);
+                            "Invalid class/method listed in irccommands.conf - " + line, e);
                     throw new RuntimeException(e);
                 }
             }
@@ -1747,7 +1736,7 @@ public class SiteBot extends FtpListener implements Observer {
                         logger.warn("Unable to decrypt '"
                                 + msgc.getSourceString() + "'");
                         return; // should not accept plaintext messages
-                        // encrypted channels
+                                // encrypted channels
                     }
                 }
                 int index = msgc.getMessage().indexOf(" ");
@@ -1766,8 +1755,8 @@ public class SiteBot extends FtpListener implements Observer {
                     String scope = msgc.isPrivateToUs(_conn.getClientState()) ? "private"
                             : msgc.getDest();
                     if (!perm.checkScope(scope)) { // not a recognized command
-                        // on this channel or
-                        // through privmsg
+                                                   // on this channel or
+                                                   // through privmsg
                         logger.warn(trigger + " is not in scope - " + scope);
                         return;
                     }
@@ -1830,7 +1819,7 @@ public class SiteBot extends FtpListener implements Observer {
 			return;
 		}
 
-		// check if same ident it associated with another user on ftp, and if so, clear such a record.
+		// check if same ident is associated with another user on ftp, and if so, clear such a record.
 		// since each irc user can only be associated with one ftp user at a time.
 		for (Iterator<User> iter = ret.iterator(); iter.hasNext();){
 			User u = iter.next();
@@ -1851,7 +1840,7 @@ public class SiteBot extends FtpListener implements Observer {
 		String newnick = fullident.substring(0, fullident.indexOf("!"));
 		String oldident = user.getKeyedMap().getObjectString(UserManagement.IRCIDENT);
 		String oldnick = "";
-		if (oldident != null && oldident.length() > 0)
+		if (oldident != null && oldident.length() > 0 && oldident.indexOf("!") != -1)
 			oldnick = oldident.substring(0, oldident.indexOf("!"));
 
 		if (_singlesession && (botnick.equalsIgnoreCase(oldnick) || botnick.equalsIgnoreCase(newnick)

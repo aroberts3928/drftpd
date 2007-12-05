@@ -162,7 +162,6 @@ public abstract class ArchiveType {
 
             if (oldestDir == null) {
                 oldestDir = temp;
-
                 continue;
             }
 

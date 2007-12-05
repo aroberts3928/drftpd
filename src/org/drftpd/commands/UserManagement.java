@@ -29,12 +29,10 @@ import java.util.StringTokenizer;
 
 import net.sf.drftpd.DuplicateElementException;
 import net.sf.drftpd.ObjectNotFoundException;
-import net.sf.drftpd.SlaveUnavailableException;
 import net.sf.drftpd.master.BaseFtpConnection;
 import net.sf.drftpd.master.FtpRequest;
 import net.sf.drftpd.master.command.CommandManager;
 import net.sf.drftpd.master.command.CommandManagerFactory;
-import org.drftpd.master.ConnectionManager;
 import net.sf.drftpd.master.config.FtpConfig;
 import net.sf.drftpd.util.ReplacerUtils;
 
@@ -46,7 +44,6 @@ import org.drftpd.dynamicdata.Key;
 import org.drftpd.permissions.Permission;
 import org.drftpd.plugins.Statistics;
 import org.drftpd.slave.Transfer;
-import org.drftpd.slave.TransferFailedException;
 import org.drftpd.thirdparty.plus.Default;
 import org.drftpd.thirdparty.plus.config.PlusConfig;
 import org.drftpd.usermanager.HostMask;
@@ -263,12 +260,12 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
             newUser.getKeyedMap().setObject(UserManagement.RATIO, def.RATIO);
             newUser.getKeyedMap().setObject(UserManagement.GROUPSLOTS,0);
             newUser.getKeyedMap().setObject(UserManagement.LEECHSLOTS,0);
-            newUser.getKeyedMap().setObject(UserManagement.MAXLOGINS,def.MAXLOGINS);
-            newUser.getKeyedMap().setObject(UserManagement.MAXLOGINSIP,def.MAXLOGINSIP);
-            newUser.getKeyedMap().setObject(UserManagement.MINRATIO,def.MINRATIO);
-            newUser.getKeyedMap().setObject(UserManagement.MAXRATIO,def.MAXRATIO);
-            newUser.getKeyedMap().setObject(UserManagement.MAXSIMUP,def.MAXSIMUP);
-            newUser.getKeyedMap().setObject(UserManagement.MAXSIMDN,def.MAXSIMDN);
+            newUser.getKeyedMap().setObject(UserManagement.MAXLOGINS, def.MAXLOGINS);
+            newUser.getKeyedMap().setObject(UserManagement.MAXLOGINSIP, def.MAXLOGINSIP);
+            newUser.getKeyedMap().setObject(UserManagement.MINRATIO, def.MINRATIO);
+            newUser.getKeyedMap().setObject(UserManagement.MAXRATIO, def.MAXRATIO);
+            newUser.getKeyedMap().setObject(UserManagement.MAXSIMUP, def.MAXSIMUP);
+            newUser.getKeyedMap().setObject(UserManagement.MAXSIMDN, def.MAXSIMDN);
             newUser.getKeyedMap().setObject(Statistics.LOGINS,0);
             newUser.getKeyedMap().setObject(UserManagement.CREATED, new Date());
             newUser.getKeyedMap().setObject(UserManagement.LASTSEEN, new Date());
@@ -309,17 +306,17 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
                 env.add("mask", string);
 
                 if ((new HostMask(string)).isAllowed()) {
-                try {
-                    newUser.addIPMask(string);
-                    response.addComment(conn.jprintf(UserManagement.class,
-                            "addip.success", env));
-                    logger.info("'" + conn.getUserNull().getName() +
-                        "' added ip '" + string + "' to '" +
-                        newUser.getName() + "'");
-                } catch (DuplicateElementException e1) {
-                    response.addComment(conn.jprintf(UserManagement.class,
-                            "addip.dupe", env));
-                }
+                	try {
+                		newUser.addIPMask(string);
+                		response.addComment(conn.jprintf(UserManagement.class,
+                				"addip.success", env));
+                		logger.info("'" + conn.getUserNull().getName() +
+                				"' added ip '" + string + "' to '" +
+                				newUser.getName() + "'");
+                	} catch (DuplicateElementException e1) {
+                		response.addComment(conn.jprintf(UserManagement.class,
+                				"addip.dupe", env));
+                	}
                 } else {
                 	response.addComment(conn.jprintf(UserManagement.class,
                 			"addip.invalid", env));
@@ -524,7 +521,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 			userToChange = userIterator.next();
 
 			if ("ratio".equals(command)) {
-				// //// Ratio //////
+				////// Ratio //////
 				if (commandArguments.length != 1) {
 					throw new ImproperUsageException();
 				}
@@ -533,7 +530,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 
 				if (conn.getUserNull().isGroupAdmin()
 						&& !conn.getUserNull().isAdmin()) {
-					// //// Group Admin Ratio //////
+					////// Group Admin Ratio //////
 					if (!conn.getUserNull().getGroup().equals(userToChange.getGroup())) {
 						return Reply.RESPONSE_530_ACCESS_DENIED;
 					}
@@ -624,8 +621,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 						+ userToChange.getKeyedMap().getObjectString(
 								UserManagement.COMMENT) + " to '"
 						+ fullCommandArgument + "'");
-				userToChange.getKeyedMap().setObject(UserManagement.COMMENT,
-						fullCommandArgument);
+				userToChange.getKeyedMap().setObject(UserManagement.COMMENT, fullCommandArgument);
 				env.add("comment", userToChange.getKeyedMap().getObjectString(
 						UserManagement.COMMENT));
 				response.addComment(conn.jprintf(UserManagement.class,
@@ -738,8 +734,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 					maxdn = Integer.parseInt(commandArguments[0]);
 					maxup = Integer.parseInt(commandArguments[1]);
 
-					logger
-							.info("'"
+					logger.info("'"
 									+ conn.getUserNull().getName()
 									+ "' changed max simultaneous download/upload slots for '"
 									+ userToChange.getName() + "' from '"

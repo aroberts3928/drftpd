@@ -36,6 +36,7 @@ import org.drftpd.dynamicdata.Key;
 import org.drftpd.plugins.SiteBot;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.sitebot.IRCCommand;
+import org.drftpd.usermanager.NoSuchUserException;
 import org.drftpd.usermanager.User;
 import org.drftpd.usermanager.UserFileException;
 import org.tanesha.replacer.ReplacerEnvironment;
@@ -259,7 +260,7 @@ public class Request extends IRCCommand {
             dir.createDirectory("REQUEST-by." + requser + "-" + dirName);
             LinkedRemoteFileInterface reqdir = dir.getFile("REQUEST-by." + requser + "-" + dirName);
             reqdir.setOwner(requser);
-            user.getKeyedMap().setObject(Request.REQUESTS, user.getKeyedMap().getObjectInt(Request.REQUESTS)+1);;
+            user.getKeyedMap().setObject(Request.REQUESTS, user.getKeyedMap().getObjectInt(Request.REQUESTS)+1);
             ArrayList<String> forceToChannels = new ArrayList<String>();
             forceToChannels.add(msgc.getDest());
             getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(
@@ -315,23 +316,38 @@ public class Request extends IRCCommand {
             
             for (Iterator iter = dirs.iterator(); iter.hasNext();) {
                 LinkedRemoteFileInterface file = (LinkedRemoteFileInterface) iter.next();
-                if (file.isDirectory()) {
-                    if (file.getName().endsWith(dirName)) {
-                        nodir = false;
-                        if (file.getUsername().equals(user.getName()) || user.isAdmin()) {
-                            file.delete();
-                            deldir = true;
-                            ArrayList<String> forceToChannels = new ArrayList<String>();
-                            forceToChannels.add(msgc.getDest());
-                            getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(   
-                            		user, "REQDEL", file, forceToChannels));   
-                            break;
-                        } else {
-                            out.add(ReplacerUtils.jprintf("reqdel.notowner", env, Request.class));
-                            break;
-                        }
-                    } else nodir = true;
-                }
+                if (file.isDirectory() && file.getName().endsWith(dirName)) {
+                    nodir = false;
+                    if (file.dirSize() == 0) {
+                    	if (user.isAdmin() || file.getUsername().equals(user.getName())) {
+	                    	User requestowner = null;
+								try {
+									requestowner = getGlobalContext().getUserManager().getUserByName(file.getUsername());
+								} catch (NoSuchUserException e) {
+								} catch (UserFileException e) {
+								}
+	                        file.delete();
+	                        deldir = true;
+	                        ArrayList<String> forceToChannels = new ArrayList<String>();
+	                        forceToChannels.add(msgc.getDest());
+	                        getGlobalContext().dispatchFtpEvent(new DirectorySiteBotEvent(
+	                        		user, "REQDEL", file, forceToChannels));
+	                        // decrement request counter
+	                        if (requestowner != null) {
+	                        	int reqsMade = requestowner.getKeyedMap().getObjectInt(Request.REQUESTS);
+	                        	if (reqsMade > 0)
+	                        		requestowner.getKeyedMap().setObject(Request.REQUESTS, --reqsMade);
+	                        }
+	                        break;
+	                    } else {
+	                        out.add(ReplacerUtils.jprintf("reqdel.notowner", env, Request.class));
+	                        break;
+	                    }
+                    } else {
+                        out.add(ReplacerUtils.jprintf("reqdel.notempty", env, Request.class));
+                        break;
+	                }
+                } else nodir = true;
             }
             
             if (nodir && !deldir) 

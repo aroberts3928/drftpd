@@ -92,8 +92,8 @@ public class SectionManager implements SectionManagerInterface {
 
     public class Section implements SectionInterface {
         private LinkedRemoteFileInterface _lrf;
-        private Long _minSpeedUp = 0L;
-        private Long _minSpeedDn = 0L;
+        private Long _minSpeedUp = new Long(0);
+        private Long _minSpeedDn = new Long(0);
 
         public Section(LinkedRemoteFileInterface lrf) {
             _lrf = lrf;

@@ -59,7 +59,7 @@ public class FileUtils {
 	        if(file.isDirectory()) {
 	        	try {
 	        		LinkedRemoteFile oldestFile2 = getOldestFile(file);
-	        		if(oldestFile.lastModified() > oldestFile2.lastModified())
+	        		if (oldestFile.lastModified() > oldestFile2.lastModified())
 	        			oldestFile = oldestFile2;
 	        	} catch(ObjectNotFoundException e) {
 	        		continue;

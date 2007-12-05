@@ -70,13 +70,13 @@ public class ZipscriptConfig {
 
 	private String _SfvFirstUsers;
 
-	private boolean _SfvDenySubdirEnabled; 
+	private boolean _SfvDenySubdirEnabled;
 
 	private String[] _SfvDenySubdirExempt; 
 
-	private boolean _SfvDenyMKDEnabled; 
+	private boolean _SfvDenyMKDEnabled;
 
-	private String[] _SfvDenyMKDExempt; 
+	private String[] _SfvDenyMKDExempt;
 
 	public ZipscriptConfig(GlobalContext gctx) throws IOException {
 		_gctx = gctx;
@@ -126,12 +126,12 @@ public class ZipscriptConfig {
 				+ " sfv";
 		_SfvFirstUsers = cfg.getProperty("sfvfirst.users") == null ? "*" : cfg
 				.getProperty("sfvfirst.users");
-		_SfvDenySubdirEnabled = cfg.getProperty("sfvdeny.subdir.enabled") == null ? false 
+		_SfvDenySubdirEnabled = cfg.getProperty("sfvdeny.subdir.enabled") == null ? false
 				: cfg.getProperty("sfvdeny.subdir.enabled").trim().equalsIgnoreCase("true");
-		_SfvDenyMKDEnabled = cfg.getProperty("sfvdeny.mkd.enabled") == null     ? false 
-				: cfg.getProperty("sfvdeny.mkd.enabled").trim().equalsIgnoreCase("true"); 
-		_SfvDenyMKDExempt = cfg.getProperty("sfvdeny.mkd.exempt") == null ? "".split("") 
-				: cfg.getProperty("sfvdeny.mkd.exempt").trim().split("\\s+"); 
+		_SfvDenyMKDEnabled = cfg.getProperty("sfvdeny.mkd.enabled") == null ? false
+				: cfg.getProperty("sfvdeny.mkd.enabled").trim().equalsIgnoreCase("true");
+		_SfvDenyMKDExempt = cfg.getProperty("sfvdeny.mkd.exempt") == null ? "".split("")
+				: cfg.getProperty("sfvdeny.mkd.exempt").trim().split("\\s+");
 
 		// Locals
 		String SfvFirstPathIgnore = cfg.getProperty("sfvfirst.pathignore") == null ? "*"
@@ -169,7 +169,7 @@ public class ZipscriptConfig {
 							new GlobPathPermission(new GlobCompiler()
 									.compile("*/" + st.nextToken() + "/"), FtpConfig
 									.makeUsers(new StringTokenizer("*", " "))));
-				} 
+				}
 			} catch (MalformedPatternException e) {
 				logger.warn("Exception when reading " + zsConf, e);
 			}

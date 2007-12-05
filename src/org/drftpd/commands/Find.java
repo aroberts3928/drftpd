@@ -414,16 +414,32 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 	
 	private static class OptionMissing implements Option {
 		private String arg;
+		private Boolean dirs;
 		
 		public OptionMissing(String _arg) {
 			arg = _arg;
+			dirs = false;
+		}
+
+		public OptionMissing(String _arg, Boolean _dirs) {
+			arg = _arg;
+			dirs = _dirs;
 		}
 
 		public boolean isTrueFor(LinkedRemoteFileInterface file) {
 			try {
 				if (!file.isDirectory()) return false;
 				for (LinkedRemoteFileInterface f : file.getFiles2()) {
-					if (f.isFile() && f.getName().matches(arg)) {
+					if (dirs) {
+						// if in dir mode, skip files
+						if (f.isFile()) { continue; }
+					} else {
+						// if not in dir mode, skip dirs
+						if (f.isDirectory()) { continue; }
+					}
+
+					// check for matching files/dirs
+					if (f.getName().matches(arg)) {
 						return false;
 					}
 				}
@@ -801,6 +817,12 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 					cmd = iter.next();
 				}
 				options.add(new OptionMissing(cmd));
+			} else if (arg.toLowerCase().equals("-missingdir")) {
+				String cmd = "";
+				if (!iter.peek().startsWith("-")) {
+					cmd = iter.next();
+				}
+				options.add(new OptionMissing(cmd, true));
 			} else if (arg.toLowerCase().equals("-incomplete")) {
 				forceDirsOnly = true;
 				String peek = null;
