@@ -1595,7 +1595,7 @@ public class SiteBot extends FtpListener implements Observer {
     	ArrayList<String> _scope = new ArrayList<String>();
     	String _permissions = null;
         public IRCPermission(String scope, String permissions) {
-        	for (String s : scope.split(",")) {
+        	for (String s : scope.toLowerCase().split(",")) {
         		_scope.add(s);
         	}
         	_permissions = permissions;
@@ -1606,6 +1606,7 @@ public class SiteBot extends FtpListener implements Observer {
          * Accepts channel names, "public", or "private"
          */
         public boolean checkScope(String scope) {
+        	scope = scope.toLowerCase();
         	if (_scope.contains(scope)) { // matches private or channel names
         		return true;
         	}
