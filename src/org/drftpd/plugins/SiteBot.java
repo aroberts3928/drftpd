@@ -1892,8 +1892,8 @@ public class SiteBot extends FtpListener implements Observer {
         ArrayList<String> _scope = new ArrayList<String>();
         String _permissions = null;
         public IRCPermission(String scope, String permissions) {
-            for (String s : scope.split(",")) {
-                _scope.add(s.toLowerCase());
+            for (String s : scope.toLowerCase().split(",")) {
+                _scope.add(s);
             }
             _permissions = permissions;
         }
