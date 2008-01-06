@@ -54,6 +54,8 @@ import org.drftpd.plugins.DIZPlugin;
 import org.drftpd.remotefile.FileStillTransferringException;
 import org.drftpd.remotefile.LinkedRemoteFileInterface;
 import org.drftpd.remotefile.MLSTSerialize;
+import org.drftpd.remotefile.RemoteFileInterface;
+import org.drftpd.sections.SectionInterface;
 import org.drftpd.usermanager.NoSuchUserException;
 import org.drftpd.usermanager.User;
 import org.drftpd.usermanager.UserFileException;
@@ -397,7 +399,83 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 			return false;
 		}
 	}
-	
+
+	private static class OptionNoSFV implements Option {
+
+		private GlobalContext gctx;
+
+		public OptionNoSFV(GlobalContext gctx) {
+			this.gctx = gctx;
+		}
+		
+		public boolean isTrueFor(LinkedRemoteFileInterface file) {
+			SectionInterface sec = gctx.getSectionManager().lookup(file);
+			String path = file.getPath();
+			String name = file.getName();
+			
+			String sectionRoot = sec.getPath();
+			LinkedRemoteFileInterface parent = file.getParentFileNull();
+
+			List<String> list = Arrays.asList("Sample", "Cover", "Subs", "Approved", "Complete");
+			
+			if (file.isDirectory()) {
+				Iterator<RemoteFileInterface> iter = file.getFiles().iterator();
+				while (iter.hasNext()) {
+					LinkedRemoteFileInterface rf = (LinkedRemoteFileInterface) iter.next();
+					if (rf.isDirectory()) {
+						//System.out.println("rf = " + rf.toString());
+						//System.out.println("rf.getName() = " + rf.getName());						
+						for (String exempt : list) {
+							//System.out.println("Testin exempt string: " + exempt);
+							if (rf.getPath().indexOf(exempt) != -1) {
+								return false;
+							}
+						}
+					}
+				}
+			}
+			
+			if (sec.getBasePath().equals("/") && parent.getPath().equals("/")) {
+				// no section assigned
+				// and parent file is "/"
+				return false;
+			}			
+			
+			if (sectionRoot.equalsIgnoreCase(path)) {
+				//section root, ignore'em
+				return false;
+			} 
+			
+			if (path.equalsIgnoreCase("/")) {
+				//root dir
+				return false;
+			} else if (sec.getFile().getParentFileNull() == file.getParentFileNull()){
+				// dated dirs.
+				return false;
+			} else if (gctx.getZsConfig().checkSfvDenyMKD(parent, name)) {
+				System.out.println("DEBUG!");
+				return false;
+			}			
+			
+			try {
+				file.lookupSFVFile();
+			} catch (FileNotFoundException e1) {
+				// not found, handle it
+				return true;
+			} catch (IOException e2) {
+				// bad/not found, handle it
+				return true;
+			} catch (NoAvailableSlaveException e3) {
+				// should be handled by OptionOffline
+				// do nothing
+			} catch (FileStillTransferringException e) {
+				// treat still transferring sfvs as existing
+				return false;
+			}			
+			return false;
+		}		
+	}
+
 	private static class OptionEmpty implements Option {
 		public OptionEmpty() {
 		}
@@ -836,6 +914,9 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 				} else {
 					options.add(new OptionIncomplete());
 				}
+			} else if (arg.toLowerCase().equals("-nosfv")) {
+				forceDirsOnly = true;
+				options.add(new OptionNoSFV(getGlobalContext()));
 			} else if (arg.toLowerCase().equals("-offline")) {
 				forceDirsOnly = true;
 				options.add(new OptionOffline());
