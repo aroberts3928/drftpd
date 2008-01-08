@@ -416,21 +416,37 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 			String sectionRoot = sec.getPath();
 			LinkedRemoteFileInterface parent = file.getParentFileNull();
 
-			List<String> list = Arrays.asList("Sample", "Cover", "Subs", "Approved", "Complete");
+			// Exempt if a subdirectory matches one of these patterns:
+			List<String> list = Arrays.asList("CD", "DVD", "DISK", "DISC", "PART");
 			
 			if (file.isDirectory()) {
 				Iterator<RemoteFileInterface> iter = file.getFiles().iterator();
 				while (iter.hasNext()) {
 					LinkedRemoteFileInterface rf = (LinkedRemoteFileInterface) iter.next();
 					if (rf.isDirectory()) {
-						//System.out.println("rf = " + rf.toString());
-						//System.out.println("rf.getName() = " + rf.getName());						
+						// System.out.println("rf = " + rf.toString());
+						// System.out.println("rf.getName() = " + rf.getName());						
 						for (String exempt : list) {
-							//System.out.println("Testin exempt string: " + exempt);
-							if (rf.getPath().indexOf(exempt) != -1) {
+							if (rf.getName().toUpperCase().startsWith(exempt.toUpperCase())
+									&& (1 + exempt.length()) == rf.getName().length()) {
+								// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "') found a '" + exempt + "' subdirectory. Returning FALSE");
 								return false;
 							}
 						}
+					}
+				}
+			}
+			
+			// Exempt if dir matches one of these patterns:
+			list = Arrays.asList("Sample", "Cover", "Approved", "[NUKED]", "REASON-", "Complete");
+			
+			if (file.isDirectory()) {
+				// System.out.println("file = " + file.toString());
+				// System.out.println("file.getName() = " + file.getName());						
+				for (String exempt : list) {
+					if (file.getName().toUpperCase().startsWith(exempt.toUpperCase())) {
+						// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "') is exempted by '" + exempt + "'. Returning FALSE");
+						return false;
 					}
 				}
 			}
@@ -451,6 +467,7 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 				return false;
 			} else if (sec.getFile().getParentFileNull() == file.getParentFileNull()){
 				// dated dirs.
+				System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "' is a dated dir, ignoring.");
 				return false;
 			} else if (gctx.getZsConfig().checkSfvDenyMKD(parent, name)) {
 				System.out.println("DEBUG!");
