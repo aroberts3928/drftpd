@@ -467,10 +467,10 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 				return false;
 			} else if (sec.getFile().getParentFileNull() == file.getParentFileNull()){
 				// dated dirs.
-				System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "' is a dated dir, ignoring.");
+				// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "' is a dated dir, ignoring.");
 				return false;
 			} else if (gctx.getZsConfig().checkSfvDenyMKD(parent, name)) {
-				System.out.println("DEBUG!");
+				// System.out.println("DEBUG!");
 				return false;
 			}			
 			
