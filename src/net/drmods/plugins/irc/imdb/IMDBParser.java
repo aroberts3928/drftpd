@@ -95,8 +95,8 @@ public class IMDBParser {
             
             if (data.indexOf("<b>No Matches.</b>") > 0)
                 return false;
-            
-            if (data.indexOf("<title>IMDb name and title search") >= 0 ||
+
+            if (data.indexOf("<title>IMDb  Search</title>") >= 0 ||
                     data.indexOf("<a href=\"/title/tt") >= 0) {
                 int start = data.indexOf("/title/tt");
                 if (start > 0) {
@@ -125,14 +125,14 @@ public class IMDBParser {
 				in.close();
 			}
             
-           _title = parseData(data, "<strong class=\"title\">", "<small>");
-           _genre = parseData(data, "<b class=\"ch\">Genre:</b>", "<br><br>");
-           _genre = _genre.replaceAll("\\(more\\)", "").trim();
-           _plot = parseData(data, "<b class=\"ch\">Plot Outline:</b>", "<a href=\"");
-           _rating = parseData(data, "<b class=\"ch\">User Rating:</b>", "</b>");
+           _title = parseData(data, "<h1>", " <span>");
+           _genre = parseData(data, "<h5>Genre:</h5>", "</div>");
+           _genre = _genre.replaceAll("more", "").trim();
+           _plot = parseData(data, "<h5>Plot Outline:</h5>", "<a href=\"");
+           _rating = parseData(data, "<b>User Rating:</b>", "<small>");
            _rating = _rating.equals("N/A") || _rating.indexOf("/") < 0 ? "N/A" 
                        : _rating.substring(0,_rating.indexOf("/"));
-           _votes = parseData(data, "<b class=\"ch\">User Rating:</b>", "<br><br>");
+           _votes = parseData(data, "<b>User Rating:</b>", "</small>");
            _votes = _votes.indexOf("(") < 0 || _votes.indexOf("votes") < 0 ? "N/A" 
                        : _votes.substring(_votes.indexOf("(")+1, _votes.indexOf("votes")).trim();
            _year = parseData(data, "<a href=\"/Sections/Years/", "</a>");
