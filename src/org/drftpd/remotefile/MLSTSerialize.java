@@ -91,8 +91,9 @@ public class MLSTSerialize {
         }
 
         ret.append("size=" + file.length() + ";");
-        ret.append("modify=" + timeval.format(new Date(file.lastModified())) +
-            ";");
+        synchronized (timeval) { /* SimpleDateFormat is not thread-safe. */
+        	ret.append("modify=" + timeval.format(new Date(file.lastModified())) + ";");
+        }
 
         ret.append("unix.owner=" + file.getUsername() + ";");
         ret.append("unix.group=" + file.getGroupname() + ";");

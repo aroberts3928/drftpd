@@ -445,8 +445,10 @@ public class Dir implements CommandHandler, CommandHandlerFactory, Cloneable {
         //File reqFile = new File(physicalName);
         // now print date
         //if (reqFile.exists()) {
-        return new Reply(213,
-            DATE_FMT.format(new Date(reqFile.lastModified())));
+        synchronized (DATE_FMT) {
+        	return new Reply(213,
+        			DATE_FMT.format(new Date(reqFile.lastModified())));
+        }
 
         //out.print(ftpStatus.getResponse(213, request, user, args));
         //} else {
