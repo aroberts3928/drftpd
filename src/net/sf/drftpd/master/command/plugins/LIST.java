@@ -148,17 +148,23 @@ public class LIST implements CommandHandler, CommandHandlerFactory {
         long nowTime = System.currentTimeMillis();
 
         if (fulldate) {
-            return firstPart + FULL.format(date1);
-        } else if (Math.abs(nowTime - dateTime) > (183L * 24L * 60L * 60L * 1000L)) {
-            return firstPart + AFTER_SIX.format(date1);
-        } else {
-            return firstPart + BEFORE_SIX.format(date1);
-        }
+			synchronized (FULL) {
+				return firstPart + FULL.format(date1);
+			}
+		} else if (Math.abs(nowTime - dateTime) > (183L * 24L * 60L * 60L * 1000L)) {
+			synchronized (AFTER_SIX) {
+				return firstPart + AFTER_SIX.format(date1);
+			}
+		} else {
+			synchronized (BEFORE_SIX) {
+				return firstPart + BEFORE_SIX.format(date1);
+			}
+		}
     }
 
     /**
-     * Get each directory line.
-     */
+	 * Get each directory line.
+	 */
     private static void printLine(RemoteFileInterface fl, Writer out,
         boolean fulldate) throws IOException {
         StringBuffer line = new StringBuffer();

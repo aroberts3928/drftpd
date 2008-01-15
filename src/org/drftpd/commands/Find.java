@@ -409,6 +409,9 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 		}
 		
 		public boolean isTrueFor(LinkedRemoteFileInterface file) {
+			// if not a dir, it can't be checked for a .sfv file
+			if (!file.isDirectory()) return false;
+
 			SectionInterface sec = gctx.getSectionManager().lookup(file);
 			String path = file.getPath();
 			String name = file.getName();
@@ -416,41 +419,32 @@ public class Find implements CommandHandler, CommandHandlerFactory {
 			String sectionRoot = sec.getPath();
 			LinkedRemoteFileInterface parent = file.getParentFileNull();
 
-			// Exempt if a subdirectory matches one of these patterns:
-			List<String> list = Arrays.asList("CD", "DVD", "DISK", "DISC", "PART");
-			
-			if (file.isDirectory()) {
-				Iterator<RemoteFileInterface> iter = file.getFiles().iterator();
-				while (iter.hasNext()) {
-					LinkedRemoteFileInterface rf = (LinkedRemoteFileInterface) iter.next();
-					if (rf.isDirectory()) {
-						// System.out.println("rf = " + rf.toString());
-						// System.out.println("rf.getName() = " + rf.getName());						
-						for (String exempt : list) {
-							if (rf.getName().toUpperCase().startsWith(exempt.toUpperCase())
-									&& (1 + exempt.length()) == rf.getName().length()) {
-								// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "') found a '" + exempt + "' subdirectory. Returning FALSE");
-								return false;
-							}
+			// Exempt if dir matches one of these patterns:
+			List<String> list = Arrays.asList("Sample", "Cover", "Approved", "[NUKED]", "REASON-", "Complete");
+			for (String exempt : list) {
+				if (file.getName().toUpperCase().startsWith(exempt.toUpperCase())) {
+					// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "') is exempted by '" + exempt + "'. Returning FALSE");
+					return false;
+				}
+			}
+
+			// Exempt directory if a subdirectory matches one of these patterns:
+			list = Arrays.asList("CD", "DVD", "DISK", "DISC", "PART");
+
+			Iterator<RemoteFileInterface> iter = file.getFiles().iterator();
+			while (iter.hasNext()) {
+				LinkedRemoteFileInterface rf = (LinkedRemoteFileInterface) iter.next();
+				if (rf.isDirectory()) {
+					for (String exempt : list) {
+						if (rf.getName().toUpperCase().startsWith(exempt.toUpperCase())
+								&& (1 + exempt.length()) == rf.getName().length()) {
+							// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "') found a '" + exempt + "' subdirectory. Returning FALSE");
+							return false;
 						}
 					}
 				}
 			}
-			
-			// Exempt if dir matches one of these patterns:
-			list = Arrays.asList("Sample", "Cover", "Approved", "[NUKED]", "REASON-", "Complete");
-			
-			if (file.isDirectory()) {
-				// System.out.println("file = " + file.toString());
-				// System.out.println("file.getName() = " + file.getName());						
-				for (String exempt : list) {
-					if (file.getName().toUpperCase().startsWith(exempt.toUpperCase())) {
-						// System.out.println("OptionNoSFV.isTrueFor('" + file.getPath() + "') is exempted by '" + exempt + "'. Returning FALSE");
-						return false;
-					}
-				}
-			}
-			
+
 			if (sec.getBasePath().equals("/") && parent.getPath().equals("/")) {
 				// no section assigned
 				// and parent file is "/"
