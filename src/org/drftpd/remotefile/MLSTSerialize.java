@@ -104,9 +104,8 @@ public class MLSTSerialize {
         }
 
         ret.append("size=" + file.length() + ";");
-        synchronized (sdf) { /* sdf is not thread-safe. */
-        	ret.append("modify=" + sdf.format(new Date(file.lastModified())) + ";");
-        }
+        ret.append("modify=" + sdf.format(new Date(file.lastModified())) +
+            ";");
 
         ret.append("unix.owner=" + file.getUsername() + ";");
         ret.append("unix.group=" + file.getGroupname() + ";");
