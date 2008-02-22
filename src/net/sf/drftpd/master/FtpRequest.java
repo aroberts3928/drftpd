@@ -47,6 +47,7 @@ public class FtpRequest implements Serializable {
      * Parse the ftp command line.
      */
     private void parse() {
+    	line = line.replaceAll("\\s{2,}", " ");
         int spInd = line.indexOf(' ');
 
         if (spInd != -1) {
