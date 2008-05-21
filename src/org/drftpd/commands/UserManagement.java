@@ -254,7 +254,7 @@ public class UserManagement implements CommandHandler, CommandHandlerFactory {
 
             //action, no more NoSuchElementException below here
             newUser = conn.getGlobalContext().getUserManager().create(newUsername);
-            newUser.setPassword(pass);
+            newUser.setPasswordEnc(pass);
             newUser.getKeyedMap().setObject(UserManagement.CREATED, new Date());
             newUser.getKeyedMap().setObject(UserManagement.COMMENT, "Added by " + conn.getUserNull().getName());
             newUser.getKeyedMap().setObject(UserManagement.RATIO, def.RATIO);
