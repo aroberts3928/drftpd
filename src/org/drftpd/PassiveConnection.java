@@ -62,6 +62,11 @@ public class PassiveConnection extends Connection {
     
  
 	public Socket connect(int bufferSize) throws IOException {
+		if (_serverSocket == null) {
+			// can happen if abort() is called before connect()
+			throw new SocketException(
+					"abort() was called before connect()");
+		}
 		Socket sock = null;
 		try {
 			sock = _serverSocket.accept();
@@ -72,6 +77,13 @@ public class PassiveConnection extends Connection {
 			_serverSocket = null;
 		}
 
+		if (sock == null) {
+			// can happen if abort() is called while serverSocket.accept() is
+			// waiting
+			throw new SocketException(
+					"abort() was called while waiting for accept()");
+		}
+
         setSockOpts(sock);
         
         if (sock instanceof SSLSocket) {
@@ -79,11 +91,6 @@ public class PassiveConnection extends Connection {
         	sslsock.setUseClientMode(_useSSLClientMode);
            	sslsock.startHandshake();
         }
-        if (sock == null) {
-        	// can happen if abort() is called while serverSocket.accept() is waiting
-        	throw new SocketException("abort() was called while waiting for a connection");
-        }
-
         return sock;
     }
 
